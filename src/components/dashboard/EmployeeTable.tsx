@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -9,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUpRight } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useEmployeeCosts } from "@/hooks/useEmployeeCosts";
@@ -21,32 +21,49 @@ interface EmployeeTableProps {
     searchTerm?: string;
     activeOnly?: boolean;
   };
+  onEmployeeClick?: (employeeId: string) => void;
 }
 
-export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
-  const navigate = useNavigate();
+export const EmployeeTable = ({ filters, onEmployeeClick }: EmployeeTableProps) => {
   const { data: employees, isLoading } = useEmployees(filters);
   const { data: allCosts } = useEmployeeCosts();
 
   // Calculate annual costs for each employee
   const getEmployeeAnnualCosts = (employeeId: string) => {
     const currentYear = new Date().getFullYear();
-    const employeeCosts = allCosts?.filter(
+    const previousYear = currentYear - 1;
+    
+    const currentYearCosts = allCosts?.filter(
       (c) =>
         c.employee_id === employeeId &&
         c.period.startsWith(currentYear.toString())
     );
+    
+    const previousYearCosts = allCosts?.filter(
+      (c) =>
+        c.employee_id === employeeId &&
+        c.period.startsWith(previousYear.toString())
+    );
 
-    const brutoAnual = employeeCosts?.reduce(
+    const brutoAnual = currentYearCosts?.reduce(
       (sum, c) => sum + (c.bruto || 0),
       0
     );
-    const costeAnual = employeeCosts?.reduce(
+    const costeAnual = currentYearCosts?.reduce(
       (sum, c) => sum + (c.coste_empresa || 0),
       0
     );
+    
+    const brutoPreviousYear = previousYearCosts?.reduce(
+      (sum, c) => sum + (c.bruto || 0),
+      0
+    );
+    
+    const changePercent = brutoPreviousYear && brutoPreviousYear > 0
+      ? ((brutoAnual - brutoPreviousYear) / brutoPreviousYear) * 100
+      : null;
 
-    return { brutoAnual: brutoAnual || 0, costeAnual: costeAnual || 0 };
+    return { brutoAnual: brutoAnual || 0, costeAnual: costeAnual || 0, changePercent };
   };
 
   if (isLoading) {
@@ -88,18 +105,18 @@ export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
         </TableHeader>
         <TableBody>
           {employees.map((employee) => {
-            const { brutoAnual, costeAnual } = getEmployeeAnnualCosts(employee.id);
+            const { brutoAnual, costeAnual, changePercent } = getEmployeeAnnualCosts(employee.id);
             const isActive = !employee.termination_date;
 
             return (
               <TableRow
                 key={employee.id}
                 className="group cursor-pointer"
-                onClick={() => navigate(`/employees/${employee.id}`)}
+                onClick={() => onEmployeeClick?.(employee.id)}
               >
                 <TableCell className="font-medium">{employee.full_name}</TableCell>
                 <TableCell>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-foreground">
                     {employee.companies?.name || "—"}
                   </span>
                 </TableCell>
@@ -107,14 +124,34 @@ export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
                   <span className="text-sm">{formatDate(employee.hire_date)}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-foreground">
                     {employee.termination_date
                       ? formatDate(employee.termination_date)
                       : "—"}
                   </span>
                 </TableCell>
                 <TableCell className="text-right font-medium">
-                  {brutoAnual > 0 ? formatCurrency(brutoAnual) : "—"}
+                  {brutoAnual > 0 ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-help">
+                          {formatCurrency(brutoAnual)}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {changePercent !== null ? (
+                          <p className="text-xs">
+                            Cambio vs. año anterior: {changePercent > 0 ? "+" : ""}
+                            {changePercent.toFixed(1)}%
+                          </p>
+                        ) : (
+                          <p className="text-xs">Sin datos del año anterior</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    "—"
+                  )}
                 </TableCell>
                 <TableCell className="text-right font-medium">
                   {costeAnual > 0 ? formatCurrency(costeAnual) : "—"}
@@ -139,7 +176,7 @@ export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
                     variant="ghost"
                     size="icon"
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => navigate(`/employees/${employee.id}`)}
+                    onClick={() => onEmployeeClick?.(employee.id)}
                   >
                     <ArrowUpRight className="w-4 h-4" />
                   </Button>

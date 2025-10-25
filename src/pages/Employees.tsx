@@ -3,17 +3,36 @@ import { Card } from "@/components/ui/card";
 import { EmployeeTable } from "@/components/dashboard/EmployeeTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
 import { EmployeeDialog } from "@/components/employees/EmployeeDialog";
+import { EmployeeDrawer } from "@/components/employees/EmployeeDrawer";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { useCompanies } from "@/hooks/useCompanies";
 
 const Employees = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const { data: companies } = useCompanies();
+
+  const filters = {
+    searchTerm,
+    companyId: companyFilter !== "all" ? companyFilter : undefined,
+    activeOnly: statusFilter === "active" ? true : statusFilter === "inactive" ? false : undefined,
+  };
 
   return (
     <>
       <EmployeeDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      <EmployeeDrawer
+        employeeId={selectedEmployeeId}
+        open={!!selectedEmployeeId}
+        onOpenChange={(open) => !open && setSelectedEmployeeId(null)}
+      />
       
       <div className="p-8 space-y-6">
         <PageHeader
@@ -27,22 +46,52 @@ const Employees = () => {
           }
         />
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
-          <Input
-            placeholder="Buscar por nombre o puesto..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
+            <Input
+              placeholder="Buscar por nombre o puesto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <Select value={companyFilter} onValueChange={setCompanyFilter}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Todas las empresas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las empresas</SelectItem>
+              {companies?.map((company) => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Activos</SelectItem>
+              <SelectItem value="inactive">Inactivos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Employee List */}
         <div>
           <h2 className="text-lg font-semibold mb-4 text-foreground">Plantilla</h2>
           <Card className="p-6 border-gray-200">
-            <EmployeeTable filters={{ searchTerm }} />
+            <EmployeeTable 
+              filters={filters} 
+              onEmployeeClick={(id) => setSelectedEmployeeId(id)}
+            />
           </Card>
         </div>
       </div>
