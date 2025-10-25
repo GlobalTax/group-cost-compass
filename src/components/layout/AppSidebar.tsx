@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,21 @@ export function AppSidebar() {
       )}
       collapsible="icon"
     >
+      {/* Logo Header */}
+      {!collapsed && (
+        <SidebarHeader className="p-6 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center flex-shrink-0">
+              <CircleDot className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold">HR Cost Control</h2>
+              <p className="text-xs text-muted-foreground">Navarro Empresarial</p>
+            </div>
+          </div>
+        </SidebarHeader>
+      )}
+      
       <SidebarContent className="bg-background border-r border-border">
         {/* Navigation Groups */}
         {navigationItems.map((group) => (
@@ -77,8 +93,8 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         asChild
                         className={cn(
-                          "group relative flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-all",
-                          active && "bg-muted text-foreground font-medium before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-primary"
+                          "group relative flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all",
+                          active && "bg-black text-white hover:bg-black hover:text-white font-medium"
                         )}
                         tooltip={collapsed ? item.title : undefined}
                       >

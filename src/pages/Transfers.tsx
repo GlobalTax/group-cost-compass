@@ -4,22 +4,20 @@ import { useTransfers } from "@/hooks/useTransfers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/formatters";
 import { ArrowRight, Building2 } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const Transfers = () => {
   const { data: transfers, isLoading } = useTransfers();
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Traslados Internos</h1>
-        <p className="text-muted-foreground mt-1">
-          Historial de movimientos entre empresas del grupo
-        </p>
-      </div>
+      <PageHeader
+        title="Traslados"
+        subtitle="Historial de movimientos entre empresas del grupo"
+      />
 
       {/* Transfers List */}
-      <Card className="apollo-card p-6">
+      <Card className="p-6 border-gray-200">
         {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-24 w-full" />

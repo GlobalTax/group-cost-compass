@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Building2, Users, Euro, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const companies = [
   {
@@ -61,40 +62,43 @@ const Companies = () => {
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Estructura del Grupo</h1>
-        <p className="text-muted-foreground mt-1">
-          Visión consolidada de las empresas del grupo
-        </p>
-      </div>
+      <PageHeader
+        title="Empresas"
+        subtitle="Estructura del grupo empresarial"
+      />
 
       {/* Consolidated Stats */}
-      <Card className="apollo-card p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="p-6 border-gray-200">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground font-medium">Empresas Activas</p>
-            <p className="text-3xl font-bold">{companies.length}</p>
+            <p className="text-sm text-muted-foreground">Empresas Activas</p>
+            <p className="text-4xl font-bold">{companies.length}</p>
           </div>
+        </Card>
+        <Card className="p-6 border-gray-200">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground font-medium">Empleados Totales</p>
-            <p className="text-3xl font-bold">{totalEmployees}</p>
+            <p className="text-sm text-muted-foreground">Empleados Totales</p>
+            <p className="text-4xl font-bold">{totalEmployees}</p>
           </div>
+        </Card>
+        <Card className="p-6 border-gray-200">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground font-medium">Bruto Consolidado</p>
-            <p className="text-3xl font-bold">{formatCurrency(totalBruto)}</p>
+            <p className="text-sm text-muted-foreground">Bruto Consolidado</p>
+            <p className="text-4xl font-bold">{formatCurrency(totalBruto)}</p>
           </div>
+        </Card>
+        <Card className="p-6 border-gray-200">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground font-medium">Coste Consolidado</p>
-            <p className="text-3xl font-bold">{formatCurrency(totalCoste)}</p>
+            <p className="text-sm text-muted-foreground">Coste Consolidado</p>
+            <p className="text-4xl font-bold">{formatCurrency(totalCoste)}</p>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
 
       {/* Company Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {companies.map((company) => (
-          <Card key={company.id} className="apollo-card apollo-card-hover p-6">
+          <Card key={company.id} className="p-6 border-gray-200 hover:shadow-md transition-shadow">
             <div className="space-y-6">
               {/* Header */}
               <div className="flex items-start justify-between">
