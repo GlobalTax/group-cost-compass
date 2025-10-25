@@ -57,12 +57,12 @@ export function AppSidebar() {
       )}
       collapsible="icon"
     >
-      <SidebarContent className="bg-[#1a1a1a] text-white">
+      <SidebarContent className="bg-background border-r border-border">
         {/* Navigation Groups */}
         {navigationItems.map((group) => (
           <SidebarGroup key={group.section}>
             {!collapsed && (
-              <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold text-white/40 uppercase tracking-wider">
+              <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 {group.section}
               </SidebarGroupLabel>
             )}
@@ -77,8 +77,8 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         asChild
                         className={cn(
-                          "group relative flex items-center gap-3 px-4 py-2.5 text-white/70 hover:text-white hover:bg-white/5 transition-all",
-                          active && "bg-black text-white font-medium before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-white"
+                          "group relative flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-all",
+                          active && "bg-muted text-foreground font-medium before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-primary"
                         )}
                         tooltip={collapsed ? item.title : undefined}
                       >
