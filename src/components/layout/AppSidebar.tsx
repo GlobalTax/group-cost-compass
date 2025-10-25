@@ -58,22 +58,6 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarContent className="bg-[#1a1a1a] text-white">
-        {/* Logo */}
-        <div className={cn(
-          "flex items-center gap-3 px-4 py-6 border-b border-white/10",
-          collapsed && "justify-center px-2"
-        )}>
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-            <Building2 className="w-4 h-4 text-white" />
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-bold">Control Costes</span>
-              <span className="text-xs text-white/60">Grupo Navarro</span>
-            </div>
-          )}
-        </div>
-
         {/* Navigation Groups */}
         {navigationItems.map((group) => (
           <SidebarGroup key={group.section}>
