@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -26,6 +26,7 @@ const navigationItems = [
     section: "EMPLEADOS",
     items: [
       { title: "Empleados", url: "/employees", icon: Users },
+      { title: "Costes", url: "/costs", icon: DollarSign },
       { title: "Traslados", url: "/transfers", icon: ArrowRightLeft },
     ],
   },
