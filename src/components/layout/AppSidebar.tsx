@@ -67,7 +67,7 @@ export function AppSidebar() {
             </div>
             <div>
               <h2 className="text-sm font-bold">HR Cost Control</h2>
-              <p className="text-xs text-muted-foreground">Navarro Empresarial</p>
+              <p className="text-xs text-foreground">Navarro Empresarial</p>
             </div>
           </div>
         </SidebarHeader>
@@ -78,7 +78,7 @@ export function AppSidebar() {
         {navigationItems.map((group) => (
           <SidebarGroup key={group.section}>
             {!collapsed && (
-              <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold text-foreground uppercase tracking-wider">
                 {group.section}
               </SidebarGroupLabel>
             )}
@@ -93,7 +93,7 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         asChild
                         className={cn(
-                          "group relative flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all",
+                          "group relative flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-foreground hover:text-foreground hover:bg-muted transition-all",
                           active && "bg-black text-white hover:bg-black hover:text-white font-medium"
                         )}
                         tooltip={collapsed ? item.title : undefined}

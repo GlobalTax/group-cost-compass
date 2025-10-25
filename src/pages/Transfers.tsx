@@ -25,7 +25,7 @@ const Transfers = () => {
             <Skeleton className="h-24 w-full" />
           </div>
         ) : !transfers || transfers.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-center py-12 text-foreground">
             <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p>No hay traslados registrados</p>
             <p className="text-sm mt-2">
@@ -58,14 +58,14 @@ const Transfers = () => {
                     </div>
 
                     {transfer.reason && (
-                      <p className="text-sm text-muted-foreground mt-3">
+                      <p className="text-sm text-foreground mt-3">
                         <strong>Motivo:</strong> {transfer.reason}
                       </p>
                     )}
                   </div>
 
                   <div className="text-right">
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-foreground">
                       Fecha de traslado
                     </div>
                     <div className="text-sm font-medium">

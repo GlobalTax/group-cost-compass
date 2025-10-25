@@ -29,7 +29,7 @@ const Employees = () => {
 
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
           <Input
             placeholder="Buscar por nombre o puesto..."
             value={searchTerm}
@@ -40,7 +40,7 @@ const Employees = () => {
 
         {/* Employee List */}
         <div>
-          <h2 className="text-lg font-semibold mb-4">Plantilla</h2>
+          <h2 className="text-lg font-semibold mb-4 text-foreground">Plantilla</h2>
           <Card className="p-6 border-gray-200">
             <EmployeeTable filters={{ searchTerm }} />
           </Card>

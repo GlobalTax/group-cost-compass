@@ -57,7 +57,7 @@ const Dashboard = () => {
       <Card className="apollo-card p-6">
         <Tabs defaultValue="monthly" className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Evolución de Costes</h2>
+            <h2 className="text-xl font-semibold text-foreground">Evolución de Costes</h2>
             <TabsList>
               <TabsTrigger value="monthly">Mensual</TabsTrigger>
               <TabsTrigger value="yearly">Anual</TabsTrigger>
@@ -76,7 +76,7 @@ const Dashboard = () => {
 
       {/* Employee Table */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Empleados Activos</h2>
+        <h2 className="text-lg font-semibold mb-4 text-foreground">Empleados Activos</h2>
         <Card className="p-6 border-gray-200">
           <EmployeeTable filters={{ activeOnly: true }} />
         </Card>

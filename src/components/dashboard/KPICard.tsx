@@ -33,7 +33,7 @@ export const KPICard = ({
   return (
     <Card className={cn("p-6 border-gray-200", className)}>
       <div className="space-y-2">
-        <p className="text-sm text-muted-foreground">{title}</p>
+        <p className="text-sm text-foreground">{title}</p>
         <p className="text-4xl font-bold tracking-tight">
           {formatValue(value, format)}
         </p>

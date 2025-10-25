@@ -71,25 +71,25 @@ const Companies = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="p-6 border-gray-200">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Empresas Activas</p>
+            <p className="text-sm text-foreground">Empresas Activas</p>
             <p className="text-4xl font-bold">{companies.length}</p>
           </div>
         </Card>
         <Card className="p-6 border-gray-200">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Empleados Totales</p>
+            <p className="text-sm text-foreground">Empleados Totales</p>
             <p className="text-4xl font-bold">{totalEmployees}</p>
           </div>
         </Card>
         <Card className="p-6 border-gray-200">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Bruto Consolidado</p>
+            <p className="text-sm text-foreground">Bruto Consolidado</p>
             <p className="text-4xl font-bold">{formatCurrency(totalBruto)}</p>
           </div>
         </Card>
         <Card className="p-6 border-gray-200">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Coste Consolidado</p>
+            <p className="text-sm text-foreground">Coste Consolidado</p>
             <p className="text-4xl font-bold">{formatCurrency(totalCoste)}</p>
           </div>
         </Card>
@@ -108,7 +108,7 @@ const Companies = () => {
                   </div>
                   <div className="space-y-1">
                     <h3 className="font-bold text-lg leading-tight">{company.name}</h3>
-                    <p className="text-sm text-muted-foreground">{company.nif}</p>
+                    <p className="text-sm text-foreground">{company.nif}</p>
                   </div>
                 </div>
                 <Badge variant="success">
@@ -119,7 +119,7 @@ const Companies = () => {
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-foreground">
                     <Users className="w-4 h-4" />
                     <p className="text-sm font-medium">Empleados</p>
                   </div>
@@ -127,7 +127,7 @@ const Companies = () => {
                 </div>
                 
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-foreground">
                     <TrendingUp className="w-4 h-4" />
                     <p className="text-sm font-medium">Subida</p>
                   </div>
@@ -135,7 +135,7 @@ const Companies = () => {
                 </div>
                 
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-foreground">
                     <Euro className="w-4 h-4" />
                     <p className="text-sm font-medium">Bruto Anual</p>
                   </div>
@@ -143,7 +143,7 @@ const Companies = () => {
                 </div>
                 
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-foreground">
                     <Euro className="w-4 h-4" />
                     <p className="text-sm font-medium">Coste Anual</p>
                   </div>
