@@ -50,60 +50,63 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Corporate Blue Theme - Liquid Glass */
-    --background: 220 17% 98%;
-    --foreground: 220 16% 12%;
+    /* Apollo.io Style - Clean & Modern */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 16% 12%;
+    --card-foreground: 240 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 16% 12%;
+    --popover-foreground: 240 10% 10%;
 
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
     
-    --primary-glow: 217 91% 70%;
-    --primary-dark: 217 91% 45%;
+    --primary-hover: 217 91% 55%;
+    --primary-light: 217 91% 95%;
 
-    --secondary: 220 17% 96%;
-    --secondary-foreground: 220 16% 12%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 10%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 46%;
 
-    --accent: 217 91% 95%;
-    --accent-foreground: 217 91% 45%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 10% 10%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
+    --success-light: 142 71% 95%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 240 10% 10%;
+    --warning-light: 48 96% 95%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --purple: 252 95% 76%;
+    --purple-foreground: 0 0% 100%;
+    --purple-light: 252 95% 95%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
     --ring: 217 91% 60%;
 
-    --radius: 1rem;
+    --radius: 0.5rem;
 
-    /* Glass effects */
-    --glass-bg: 0 0% 100% / 0.7;
-    --glass-border: 220 13% 91% / 0.3;
-    --glass-shadow: 217 91% 60% / 0.1;
+    /* Sidebar colors */
+    --sidebar-bg: 240 6% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-muted: 240 5% 64%;
+    --sidebar-hover: 240 6% 16%;
+    --sidebar-active: 0 0% 0%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
-    --gradient-subtle: linear-gradient(180deg, hsl(220 17% 98%), hsl(220 14% 96%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 17% 99%));
-    
-    /* Shadows */
-    --shadow-glass: 0 8px 32px -8px hsl(217 91% 60% / 0.15);
-    --shadow-card: 0 4px 20px -4px hsl(220 9% 46% / 0.1);
-    --shadow-elevated: 0 12px 40px -8px hsl(217 91% 60% / 0.2);
+    /* Shadows - Apollo style (subtle) */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   }
 
   .dark {
@@ -155,32 +158,17 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  .glass-card {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
-    backdrop-filter: blur(16px);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: var(--shadow-glass);
+  .apollo-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-sm);
   }
 
-  .glass-elevated {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
-    backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: var(--shadow-elevated);
+  .apollo-card-hover {
+    transition: all 0.2s ease;
   }
 
-  .gradient-primary {
-    background: var(--gradient-primary);
-  }
-
-  .gradient-card {
-    background: var(--gradient-card);
-  }
-
-  .text-gradient {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .apollo-card-hover:hover {
+    box-shadow: var(--shadow-md);
   }
 }
