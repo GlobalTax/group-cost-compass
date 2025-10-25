@@ -37,6 +37,86 @@ export const useTransfers = (employeeId?: string) => {
   });
 };
 
+export const useTransfersWithDetails = (employeeId?: string) => {
+  return useQuery({
+    queryKey: ["transfers-detailed", employeeId],
+    queryFn: async () => {
+      let query = supabase
+        .from("hr_transfers")
+        .select(`
+          *,
+          hr_employees!inner (
+            id,
+            full_name,
+            dni
+          ),
+          from_company:companies!hr_transfers_from_company_fkey (
+            id,
+            name
+          ),
+          to_company:companies!hr_transfers_to_company_fkey (
+            id,
+            name
+          )
+        `)
+        .order("transfer_date", { ascending: false });
+
+      if (employeeId) {
+        query = query.eq("employee_id", employeeId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      // Enrich with calculations
+      const enrichedData = await Promise.all(
+        (data || []).map(async (transfer) => {
+          // Calculate days between contracts
+          const { data: fromEmp } = await supabase
+            .from("hr_employees")
+            .select("termination_date")
+            .eq("dni", transfer.hr_employees.dni)
+            .eq("company_id", transfer.from_company)
+            .maybeSingle();
+
+          const { data: toEmp } = await supabase
+            .from("hr_employees")
+            .select("hire_date")
+            .eq("dni", transfer.hr_employees.dni)
+            .eq("company_id", transfer.to_company)
+            .maybeSingle();
+
+          const daysBetween =
+            fromEmp?.termination_date && toEmp?.hire_date
+              ? Math.abs(
+                  (new Date(toEmp.hire_date).getTime() -
+                    new Date(fromEmp.termination_date).getTime()) /
+                    (1000 * 60 * 60 * 24)
+                )
+              : undefined;
+
+          // Calculate if recent
+          const daysAgo = Math.abs(
+            (new Date().getTime() -
+              new Date(transfer.transfer_date).getTime()) /
+              (1000 * 60 * 60 * 24)
+          );
+          const isRecent = daysAgo <= 180;
+
+          return {
+            ...transfer,
+            daysBetween: daysBetween ? Math.round(daysBetween) : undefined,
+            isRecent,
+            daysAgo: Math.round(daysAgo),
+          };
+        })
+      );
+
+      return enrichedData;
+    },
+  });
+};
+
 export const useCreateTransfer = () => {
   const queryClient = useQueryClient();
 
@@ -66,6 +146,7 @@ export const useCreateTransfer = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transfers"] });
+      queryClient.invalidateQueries({ queryKey: ["transfers-detailed"] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       toast.success("Traslado registrado correctamente");
     },
