@@ -1,0 +1,279 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { employeeSchema, type EmployeeFormData } from "@/lib/validators/employeeSchema";
+import { useCreateEmployee, useUpdateEmployee } from "@/hooks/useEmployees";
+import { useCompanies } from "@/hooks/useCompanies";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
+
+interface EmployeeDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  employee?: any; // For editing
+}
+
+export const EmployeeDialog = ({
+  open,
+  onOpenChange,
+  employee,
+}: EmployeeDialogProps) => {
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  const createEmployee = useCreateEmployee();
+  const updateEmployee = useUpdateEmployee();
+
+  const form = useForm<EmployeeFormData>({
+    resolver: zodResolver(employeeSchema),
+    defaultValues: employee
+      ? {
+          full_name: employee.full_name,
+          dni: employee.dni || "",
+          company_id: employee.company_id,
+          hire_date: employee.hire_date || "",
+          termination_date: employee.termination_date || "",
+          seniority_date: employee.seniority_date || "",
+          transfer_group: employee.transfer_group || false,
+          notes: employee.notes || "",
+        }
+      : {
+          full_name: "",
+          dni: "",
+          company_id: "",
+          hire_date: "",
+          termination_date: "",
+          seniority_date: "",
+          transfer_group: false,
+          notes: "",
+        },
+  });
+
+  const onSubmit = async (data: EmployeeFormData) => {
+    const payload = {
+      full_name: data.full_name,
+      dni: data.dni || null,
+      company_id: data.company_id || null,
+      hire_date: data.hire_date || null,
+      termination_date: data.termination_date || null,
+      seniority_date: data.seniority_date || null,
+      transfer_group: data.transfer_group || false,
+      notes: data.notes || null,
+    };
+
+    if (employee) {
+      await updateEmployee.mutateAsync({ id: employee.id, data: payload });
+    } else {
+      await createEmployee.mutateAsync(payload);
+    }
+    onOpenChange(false);
+    form.reset();
+  };
+
+  const isSubmitting = createEmployee.isPending || updateEmployee.isPending;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {employee ? "Editar Empleado" : "Nuevo Empleado"}
+          </DialogTitle>
+          <DialogDescription>
+            Complete los datos del empleado. Los campos marcados con * son obligatorios.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="full_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre Completo *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Apellidos, Nombre" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="dni"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>DNI/NIE</FormLabel>
+                    <FormControl>
+                      <Input placeholder="12345678A" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="company_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Empresa *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isLoadingCompanies}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar empresa" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {companies?.map((company) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="hire_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de Alta *</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="termination_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de Baja</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="seniority_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de Antigüedad</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Para cálculo de antigüedad
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="transfer_group"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Traslado interno del grupo
+                    </FormLabel>
+                    <FormDescription>
+                      Marcar si el empleado ha sido trasladado entre empresas del grupo
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notas</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Información adicional sobre el empleado..."
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="gradient-primary">
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {employee ? "Actualizar" : "Crear"} Empleado
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};

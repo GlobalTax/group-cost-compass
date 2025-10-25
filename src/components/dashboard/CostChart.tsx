@@ -2,6 +2,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 
 interface CostChartProps {
   type: "monthly" | "yearly";
+  data: { period: string; bruto: number; coste: number }[];
 }
 
 // Mock data
@@ -27,7 +28,12 @@ const yearlyData = [
   { year: "2025", bruto: 1340000, coste: 1690000 },
 ];
 
-export const CostChart = ({ type }: CostChartProps) => {
+export const CostChart = ({ type, data }: CostChartProps) => {
+  const chartData = data.map(d => ({
+    name: d.period.substring(5, 7), // MM
+    bruto: d.bruto,
+    coste: d.coste,
+  }));
   const data = type === "monthly" ? monthlyData : yearlyData;
   const xKey = type === "monthly" ? "month" : "year";
 

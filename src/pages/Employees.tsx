@@ -1,11 +1,17 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { EmployeeTable } from "@/components/dashboard/EmployeeTable";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Download } from "lucide-react";
+import { EmployeeDialog } from "@/components/employees/EmployeeDialog";
 
 const Employees = () => {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
   return (
+    <>
+      <EmployeeDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     <div className="min-h-screen bg-background">
       <DashboardHeader />
       
@@ -28,7 +34,7 @@ const Employees = () => {
               <Upload className="w-4 h-4 mr-2" />
               Importar
             </Button>
-            <Button className="gradient-primary">
+            <Button className="gradient-primary" onClick={() => setCreateDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Empleado
             </Button>
@@ -40,7 +46,7 @@ const Employees = () => {
           <EmployeeTable />
         </Card>
       </main>
-    </div>
+    </>
   );
 };
 
