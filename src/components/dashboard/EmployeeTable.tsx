@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -9,70 +10,66 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight } from "lucide-react";
+import { useEmployees } from "@/hooks/useEmployees";
+import { useEmployeeCosts } from "@/hooks/useEmployeeCosts";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 
-// Mock data
-const employees = [
-  {
-    id: 1,
-    name: "Virto Sanz, Alba",
-    company: "Navarro Legal",
-    hireDate: "01/01/2025",
-    terminationDate: null,
-    brutoAnual: 45000,
-    costeAnual: 56700,
-    transfer: true,
-  },
-  {
-    id: 2,
-    name: "Sanz Hernández, Sara",
-    company: "Navarro Legal",
-    hireDate: "01/01/2025",
-    terminationDate: null,
-    brutoAnual: 42000,
-    costeAnual: 52920,
-    transfer: true,
-  },
-  {
-    id: 3,
-    name: "Bellonch Boter, Clara",
-    company: "Navarro Legal",
-    hireDate: "14/07/2025",
-    terminationDate: null,
-    brutoAnual: 38000,
-    costeAnual: 47880,
-    transfer: true,
-  },
-  {
-    id: 4,
-    name: "Marc Tico Puigvert",
-    company: "Beglobal",
-    hireDate: "02/09/2024",
-    terminationDate: null,
-    brutoAnual: 35000,
-    costeAnual: 44100,
-    transfer: false,
-  },
-  {
-    id: 5,
-    name: "Pau Valls Viñals",
-    company: "Beglobal",
-    hireDate: "02/09/2024",
-    terminationDate: null,
-    brutoAnual: 33000,
-    costeAnual: 41580,
-    transfer: false,
-  },
-];
-
-export const EmployeeTable = () => {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("es-ES", {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+interface EmployeeTableProps {
+  filters?: {
+    companyId?: string;
+    searchTerm?: string;
+    activeOnly?: boolean;
   };
+}
+
+export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
+  const navigate = useNavigate();
+  const { data: employees, isLoading } = useEmployees(filters);
+  const { data: allCosts } = useEmployeeCosts();
+
+  // Calculate annual costs for each employee
+  const getEmployeeAnnualCosts = (employeeId: string) => {
+    const currentYear = new Date().getFullYear();
+    const employeeCosts = allCosts?.filter(
+      (c) =>
+        c.employee_id === employeeId &&
+        c.period.startsWith(currentYear.toString())
+    );
+
+    const brutoAnual = employeeCosts?.reduce(
+      (sum, c) => sum + (c.bruto || 0),
+      0
+    );
+    const costeAnual = employeeCosts?.reduce(
+      (sum, c) => sum + (c.coste_empresa || 0),
+      0
+    );
+
+    return { brutoAnual: brutoAnual || 0, costeAnual: costeAnual || 0 };
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    );
+  }
+
+  if (!employees || employees.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <p>No hay empleados registrados</p>
+        <p className="text-sm mt-2">
+          Importa datos desde A3Nom o crea empleados manualmente
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg border">
@@ -90,51 +87,66 @@ export const EmployeeTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employees.map((employee) => (
-            <TableRow key={employee.id} className="group">
-              <TableCell className="font-medium">{employee.name}</TableCell>
-              <TableCell>
-                <span className="text-sm text-muted-foreground">
-                  {employee.company}
-                </span>
-              </TableCell>
-              <TableCell>
-                <span className="text-sm">{employee.hireDate}</span>
-              </TableCell>
-              <TableCell>
-                <span className="text-sm text-muted-foreground">
-                  {employee.terminationDate || "—"}
-                </span>
-              </TableCell>
-              <TableCell className="text-right font-medium">
-                {formatCurrency(employee.brutoAnual)}
-              </TableCell>
-              <TableCell className="text-right font-medium">
-                {formatCurrency(employee.costeAnual)}
-              </TableCell>
-              <TableCell className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <Badge variant="default" className="bg-success">
-                    Activo
-                  </Badge>
-                  {employee.transfer && (
-                    <Badge variant="outline" className="border-primary text-primary">
-                      Traslado
+          {employees.map((employee) => {
+            const { brutoAnual, costeAnual } = getEmployeeAnnualCosts(employee.id);
+            const isActive = !employee.termination_date;
+
+            return (
+              <TableRow
+                key={employee.id}
+                className="group cursor-pointer"
+                onClick={() => navigate(`/employees/${employee.id}`)}
+              >
+                <TableCell className="font-medium">{employee.full_name}</TableCell>
+                <TableCell>
+                  <span className="text-sm text-muted-foreground">
+                    {employee.companies?.name || "—"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm">{formatDate(employee.hire_date)}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-muted-foreground">
+                    {employee.termination_date
+                      ? formatDate(employee.termination_date)
+                      : "—"}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {brutoAnual > 0 ? formatCurrency(brutoAnual) : "—"}
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {costeAnual > 0 ? formatCurrency(costeAnual) : "—"}
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Badge
+                      variant={isActive ? "default" : "secondary"}
+                      className={isActive ? "bg-success" : ""}
+                    >
+                      {isActive ? "Activo" : "Inactivo"}
                     </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <ArrowUpRight className="w-4 h-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+                    {employee.transfer_group && (
+                      <Badge variant="outline" className="border-primary text-primary">
+                        Traslado
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => navigate(`/employees/${employee.id}`)}
+                  >
+                    <ArrowUpRight className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

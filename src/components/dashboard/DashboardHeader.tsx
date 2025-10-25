@@ -10,9 +10,10 @@ export const DashboardHeader = () => {
   const location = useLocation();
   
   const navItems = [
-    { path: "/", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/employees", label: "Empleados", icon: Users },
     { path: "/companies", label: "Empresas", icon: Building },
+    { path: "/transfers", label: "Traslados", icon: Building2 },
     { path: "/upload", label: "Importar", icon: FileUp },
   ];
   
@@ -40,7 +41,8 @@ export const DashboardHeader = () => {
             <nav className="hidden lg:flex items-center gap-1 ml-6">
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+                const isActive = location.pathname === item.path || 
+                  (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
                 return (
                   <Link
                     key={item.path}
