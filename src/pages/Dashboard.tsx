@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Users, TrendingUp, Euro } from "lucide-react";
@@ -5,17 +6,15 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { CostChart } from "@/components/dashboard/CostChart";
 import { EmployeeTable } from "@/components/dashboard/EmployeeTable";
+import { useDashboardStats, useMonthlyCosts } from "@/hooks/useDashboardStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
+  const [selectedYear] = useState(new Date().getFullYear());
   const currentYear = new Date().getFullYear();
-
-  // Mock data - será reemplazado por datos reales de Supabase
-  const kpis = {
-    brutoTotal: 1234567.89,
-    costeTotal: 1567890.12,
-    numEmpleados: 43,
-    subidaSalarial: 8.5,
-  };
+  
+  const { data: stats, isLoading: isLoadingStats } = useDashboardStats({ year: selectedYear });
+  const { data: monthlyCosts, isLoading: isLoadingCosts } = useMonthlyCosts({ year: selectedYear });
 
   return (
     <div className="min-h-screen bg-background">
@@ -24,37 +23,46 @@ const Dashboard = () => {
       <main className="container mx-auto p-6 space-y-6">
         {/* KPIs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard
-            title="Bruto Total"
-            value={kpis.brutoTotal}
-            format="currency"
-            icon={Euro}
-            trend={5.2}
-            className="glass-elevated"
-          />
-          <KPICard
-            title="Coste Empresa"
-            value={kpis.costeTotal}
-            format="currency"
-            icon={TrendingUp}
-            trend={6.8}
-            className="glass-elevated"
-          />
-          <KPICard
-            title="Empleados Activos"
-            value={kpis.numEmpleados}
-            format="number"
-            icon={Users}
-            className="glass-elevated"
-          />
-          <KPICard
-            title="Subida Salarial"
-            value={kpis.subidaSalarial}
-            format="percentage"
-            icon={Building2}
-            trend={2.3}
-            className="glass-elevated"
-          />
+          {isLoadingStats ? (
+            <>
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+            </>
+          ) : (
+            <>
+              <KPICard
+                title="Empleados Activos"
+                value={stats?.activeEmployees || 0}
+                format="number"
+                icon={Users}
+                className="glass-elevated"
+              />
+              <KPICard
+                title="Coste Total Anual"
+                value={stats?.costeTotal || 0}
+                format="currency"
+                icon={Euro}
+                trend={stats?.brutoChange}
+                className="glass-elevated"
+              />
+              <KPICard
+                title="Bruto Total Anual"
+                value={stats?.brutoTotal || 0}
+                format="currency"
+                icon={TrendingUp}
+                className="glass-elevated"
+              />
+              <KPICard
+                title="Registros de Costes"
+                value={stats?.costsCount || 0}
+                format="number"
+                icon={Building2}
+                className="glass-elevated"
+              />
+            </>
+          )}
         </div>
 
         {/* Charts Section */}
@@ -74,7 +82,11 @@ const Dashboard = () => {
                   Evolución del bruto y coste empresa por mes
                 </p>
               </div>
-              <CostChart type="monthly" />
+              {isLoadingCosts ? (
+                <Skeleton className="h-80" />
+              ) : (
+                <CostChart type="monthly" data={monthlyCosts || []} />
+              )}
             </TabsContent>
             
             <TabsContent value="yearly" className="space-y-4">
@@ -86,7 +98,11 @@ const Dashboard = () => {
                   Evolución interanual de costes totales
                 </p>
               </div>
-              <CostChart type="yearly" />
+              {isLoadingCosts ? (
+                <Skeleton className="h-80" />
+              ) : (
+                <CostChart type="yearly" data={[]} />
+              )}
             </TabsContent>
           </Tabs>
         </Card>

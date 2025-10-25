@@ -29,12 +29,12 @@ const yearlyData = [
 ];
 
 export const CostChart = ({ type, data }: CostChartProps) => {
-  const chartData = data.map(d => ({
+  const chartData = data.length > 0 ? data.map(d => ({
     name: d.period.substring(5, 7), // MM
     bruto: d.bruto,
     coste: d.coste,
-  }));
-  const data = type === "monthly" ? monthlyData : yearlyData;
+  })) : (type === "monthly" ? monthlyData : yearlyData);
+  
   const xKey = type === "monthly" ? "month" : "year";
 
   const formatCurrency = (value: number) => {
@@ -50,7 +50,7 @@ export const CostChart = ({ type, data }: CostChartProps) => {
     <div className="w-full h-[400px]">
       <ResponsiveContainer width="100%" height="100%">
         {type === "monthly" ? (
-          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis
               dataKey={xKey}
@@ -95,7 +95,7 @@ export const CostChart = ({ type, data }: CostChartProps) => {
             />
           </BarChart>
         ) : (
-          <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis
               dataKey={xKey}
