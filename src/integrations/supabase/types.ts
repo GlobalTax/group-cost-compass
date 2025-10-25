@@ -748,6 +748,39 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           created_at: string | null
@@ -1332,6 +1365,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      companies: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          nif: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          nif?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          nif?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       contact_documents: {
         Row: {
@@ -4780,6 +4837,164 @@ export type Database = {
           org_id?: string
         }
         Relationships: []
+      }
+      hr_employee_costs: {
+        Row: {
+          bruto: number | null
+          coste_empresa: number | null
+          created_at: string | null
+          employee_id: string | null
+          id: string
+          period: string
+        }
+        Insert: {
+          bruto?: number | null
+          coste_empresa?: number | null
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          period: string
+        }
+        Update: {
+          bruto?: number | null
+          coste_empresa?: number | null
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          period?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_employee_costs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_employees: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          dni: string | null
+          full_name: string
+          hire_date: string | null
+          id: string
+          notes: string | null
+          seniority_date: string | null
+          termination_date: string | null
+          transfer_group: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          dni?: string | null
+          full_name: string
+          hire_date?: string | null
+          id?: string
+          notes?: string | null
+          seniority_date?: string | null
+          termination_date?: string | null
+          transfer_group?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          dni?: string | null
+          full_name?: string
+          hire_date?: string | null
+          id?: string
+          notes?: string | null
+          seniority_date?: string | null
+          termination_date?: string | null
+          transfer_group?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+        ]
+      }
+      hr_transfers: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          from_company: string | null
+          id: string
+          reason: string | null
+          to_company: string | null
+          transfer_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          from_company?: string | null
+          id?: string
+          reason?: string | null
+          to_company?: string | null
+          transfer_date: string
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          from_company?: string | null
+          id?: string
+          reason?: string | null
+          to_company?: string | null
+          transfer_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_transfers_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_from_company_fkey"
+            columns: ["from_company"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_from_company_fkey"
+            columns: ["from_company"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_to_company_fkey"
+            columns: ["to_company"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_to_company_fkey"
+            columns: ["to_company"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+        ]
       }
       interview_feedback: {
         Row: {
@@ -9524,6 +9739,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vw_costs_by_company_year: {
+        Row: {
+          bruto_total: number | null
+          company: string | null
+          company_id: string | null
+          coste_total: number | null
+          num_employees: number | null
+          year: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
