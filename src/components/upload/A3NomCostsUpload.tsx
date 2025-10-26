@@ -58,10 +58,10 @@ export const A3NomCostsUpload = () => {
     setImportProgress({ current: 0, total: validation.data.length });
 
     try {
-      // 1. Obtener catálogo de empresas
+      // 1. Obtener catálogo de empresas (incluyendo org_id)
       const { data: companies, error: companiesError } = await supabase
         .from("companies")
-        .select("id, name, nif");
+        .select("id, name, nif, org_id");
 
       if (companiesError) throw companiesError;
 
@@ -70,9 +70,9 @@ export const A3NomCostsUpload = () => {
         return;
       }
 
-      // Crear mapa NIF → company info
+      // Crear mapa NIF → company info (con org_id)
       const companyMap = new Map(
-        companies.map(c => [c.nif, { id: c.id, name: c.name }])
+        companies.map(c => [c.nif, { id: c.id, name: c.name, org_id: c.org_id }])
       );
 
       // 2. Validar que todas las empresas del archivo existan en el catálogo
@@ -126,25 +126,37 @@ export const A3NomCostsUpload = () => {
             employee_code: d.employee_code,
             full_name: d.employee_name,
             company_id: companyInfo.id,
+            org_id: companyInfo.org_id, // CRÍTICO: incluir org_id para pasar RLS
             hire_date: `${period}-01`,
             notes: `Creado automáticamente desde importación A3Nom ${period}`,
           };
         });
 
-        // Ejecutar creación en batch
-        const newEmployees = await createEmployees.mutateAsync(employeesToCreate);
+        // Ejecutar creación en batch con manejo de errores RLS
+        try {
+          const newEmployees = await createEmployees.mutateAsync(employeesToCreate);
+          
+          // Actualizar el mapa con los nuevos empleados (clave compuesta)
+          newEmployees.forEach(emp => {
+            if (emp.employee_code && emp.company_id) {
+              const compositeKey = `${emp.company_id}:${emp.employee_code}`;
+              employeeMap.set(compositeKey, emp.id);
+            }
+          });
 
-        // Actualizar el mapa con los nuevos empleados (clave compuesta)
-        newEmployees.forEach(emp => {
-          if (emp.employee_code && emp.company_id) {
-            const compositeKey = `${emp.company_id}:${emp.employee_code}`;
-            employeeMap.set(compositeKey, emp.id);
+          toast.success(
+            `✅ ${newEmployees.length} empleado(s) nuevo(s): ${newEmployees.slice(0, 3).map(e => e.full_name).join(", ")}${newEmployees.length > 3 ? "..." : ""}`
+          );
+        } catch (error) {
+          const errorMessage = (error as Error).message;
+          if (errorMessage.includes("row-level security") || errorMessage.includes("RLS")) {
+            toast.error("Error RLS: No se pudieron crear empleados. Verifica que org_id esté configurado correctamente.");
+          } else {
+            toast.error(`Error al crear empleados: ${errorMessage}`);
           }
-        });
+          throw error;
+        }
 
-        toast.success(
-          `✅ ${newEmployees.length} empleado(s) nuevo(s): ${newEmployees.slice(0, 3).map(e => e.full_name).join(", ")}${newEmployees.length > 3 ? "..." : ""}`
-        );
       }
 
       // 5. Preparar registros de costes con validación estricta de empresa
