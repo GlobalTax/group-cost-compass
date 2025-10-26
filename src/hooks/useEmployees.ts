@@ -105,7 +105,14 @@ export const useUpdateEmployee = () => {
         .from("hr_employees")
         .update(data)
         .eq("id", id)
-        .select()
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            nif
+          )
+        `)
         .single();
 
       if (error) throw error;
