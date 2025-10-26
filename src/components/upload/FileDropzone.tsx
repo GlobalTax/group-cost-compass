@@ -98,11 +98,16 @@ export const FileDropzone = ({
         )}
       >
         <input
+          id="file-upload-input"
           type="file"
           accept={accept}
           onChange={handleFileInput}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label="Seleccionar archivo para importar"
         />
+        <label htmlFor="file-upload-input" className="sr-only">
+          Seleccionar archivo CSV o Excel
+        </label>
 
         {selectedFile ? (
           <div className="flex items-center justify-center gap-3">
@@ -114,13 +119,15 @@ export const FileDropzone = ({
               </p>
             </div>
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 clearFile();
               }}
-              className="p-1 rounded-full hover:bg-muted"
+              className="p-1 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              aria-label="Eliminar archivo seleccionado"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         ) : (

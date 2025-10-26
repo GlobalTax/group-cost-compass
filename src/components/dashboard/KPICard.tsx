@@ -37,11 +37,22 @@ export const KPICard = memo(({
     return formatValue(value, format);
   }, [value, format]);
 
+  const titleId = `kpi-title-${title.toLowerCase().replace(/\s+/g, '-')}`;
+
   return (
-    <Card className={cn("p-6 border-gray-200", className)}>
+    <Card 
+      className={cn("p-6 border-gray-200", className)}
+      role="region"
+      aria-label={`${title}: ${formattedValue}`}
+    >
       <div className="space-y-2">
-        <p className="text-sm text-foreground">{title}</p>
-        <p className="text-4xl font-bold tracking-tight">
+        <p className="text-sm text-foreground" id={titleId}>
+          {title}
+        </p>
+        <p 
+          className="text-4xl font-bold tracking-tight"
+          aria-labelledby={titleId}
+        >
           {formattedValue}
         </p>
       </div>

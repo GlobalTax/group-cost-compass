@@ -99,8 +99,17 @@ export const CostsDetailTable = ({ employees, isLoading }: CostsDetailTableProps
               {employees.map((employee) => (
                 <TableRow
                   key={employee.id}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   onClick={() => setSelectedEmployeeId(employee.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedEmployeeId(employee.id);
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Ver detalles de ${employee.name}`}
                 >
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell>

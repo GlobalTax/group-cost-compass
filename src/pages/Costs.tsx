@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { CostsChart } from "@/components/costs/CostsChart";
 import { CostsDetailTable } from "@/components/costs/CostsDetailTable";
@@ -55,7 +56,7 @@ const Costs = () => {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div id="main-content" className="p-8 space-y-8">
       <PageHeader
         title="Costes Mensuales"
         subtitle="Análisis detallado de costes por empresa y periodo"
@@ -64,47 +65,62 @@ const Costs = () => {
 
       {/* Filtros */}
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-        <Select value={companyId} onValueChange={setCompanyId}>
-          <SelectTrigger className="w-full md:w-[250px]">
-            <SelectValue placeholder="Todas las empresas" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las empresas</SelectItem>
-            {companies?.map((company) => (
-              <SelectItem key={company.id} value={company.id}>
-                {company.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-1.5 w-full md:w-[250px]">
+          <Label htmlFor="company-filter" className="text-sm font-medium">
+            Empresa
+          </Label>
+          <Select value={companyId} onValueChange={setCompanyId}>
+            <SelectTrigger id="company-filter">
+              <SelectValue placeholder="Todas las empresas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las empresas</SelectItem>
+              {companies?.map((company) => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={year.toString()} onValueChange={(v) => setYear(Number(v))}>
-          <SelectTrigger className="w-full md:w-[150px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {years.map((y) => (
-              <SelectItem key={y} value={y.toString()}>
-                {y}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-1.5 w-full md:w-[150px]">
+          <Label htmlFor="year-filter" className="text-sm font-medium">
+            Año
+          </Label>
+          <Select value={year.toString()} onValueChange={(v) => setYear(Number(v))}>
+            <SelectTrigger id="year-filter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((y) => (
+                <SelectItem key={y} value={y.toString()}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={month.toString()} onValueChange={(v) => setMonth(Number(v))}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {months.map((m) => (
-              <SelectItem key={m.value} value={m.value.toString()}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-1.5 w-full md:w-[180px]">
+          <Label htmlFor="month-filter" className="text-sm font-medium">
+            Mes
+          </Label>
+          <Select value={month.toString()} onValueChange={(v) => setMonth(Number(v))}>
+            <SelectTrigger id="month-filter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((m) => (
+                <SelectItem key={m.value} value={m.value.toString()}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Button onClick={handleExport} variant="outline" className="w-full md:w-auto">
+        <Button onClick={handleExport} variant="outline" className="w-full md:w-auto md:mt-6">
           <Download className="w-4 h-4 mr-2" />
           Exportar CSV
         </Button>

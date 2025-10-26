@@ -139,8 +139,9 @@ export function AppSidebar() {
               collapsed && "justify-center"
             )}
             onClick={handleLogout}
+            aria-label={collapsed ? "Cerrar sesión" : undefined}
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <LogOut className="w-4 h-4 flex-shrink-0" aria-hidden={collapsed ? "false" : "true"} />
             {!collapsed && <span className="text-sm">Cerrar Sesión</span>}
           </Button>
         </SidebarFooter>
