@@ -1372,6 +1372,7 @@ export type Database = {
           id: string
           name: string
           nif: string | null
+          org_id: string
           updated_at: string | null
         }
         Insert: {
@@ -1379,6 +1380,7 @@ export type Database = {
           id?: string
           name: string
           nif?: string | null
+          org_id: string
           updated_at?: string | null
         }
         Update: {
@@ -1386,9 +1388,18 @@ export type Database = {
           id?: string
           name?: string
           nif?: string | null
+          org_id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contact_documents: {
         Row: {
@@ -4845,6 +4856,7 @@ export type Database = {
           created_at: string | null
           employee_id: string | null
           id: string
+          org_id: string | null
           period: string
         }
         Insert: {
@@ -4853,6 +4865,7 @@ export type Database = {
           created_at?: string | null
           employee_id?: string | null
           id?: string
+          org_id?: string | null
           period: string
         }
         Update: {
@@ -4861,6 +4874,7 @@ export type Database = {
           created_at?: string | null
           employee_id?: string | null
           id?: string
+          org_id?: string | null
           period?: string
         }
         Relationships: [
@@ -4878,6 +4892,13 @@ export type Database = {
             referencedRelation: "vw_employee_annual"
             referencedColumns: ["employee_id"]
           },
+          {
+            foreignKeyName: "hr_employee_costs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       hr_employees: {
@@ -4892,6 +4913,7 @@ export type Database = {
           id: string
           notes: string | null
           nss: string | null
+          org_id: string | null
           phone: string | null
           seniority_date: string | null
           termination_date: string | null
@@ -4909,6 +4931,7 @@ export type Database = {
           id?: string
           notes?: string | null
           nss?: string | null
+          org_id?: string | null
           phone?: string | null
           seniority_date?: string | null
           termination_date?: string | null
@@ -4926,6 +4949,7 @@ export type Database = {
           id?: string
           notes?: string | null
           nss?: string | null
+          org_id?: string | null
           phone?: string | null
           seniority_date?: string | null
           termination_date?: string | null
@@ -4954,6 +4978,13 @@ export type Database = {
             referencedRelation: "vw_employee_annual"
             referencedColumns: ["company_id"]
           },
+          {
+            foreignKeyName: "hr_employees_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       hr_transfers: {
@@ -4963,6 +4994,7 @@ export type Database = {
           employee_id: string | null
           from_company: string | null
           id: string
+          org_id: string | null
           reason: string | null
           to_company: string | null
           transfer_date: string
@@ -4974,6 +5006,7 @@ export type Database = {
           employee_id?: string | null
           from_company?: string | null
           id?: string
+          org_id?: string | null
           reason?: string | null
           to_company?: string | null
           transfer_date: string
@@ -4985,6 +5018,7 @@ export type Database = {
           employee_id?: string | null
           from_company?: string | null
           id?: string
+          org_id?: string | null
           reason?: string | null
           to_company?: string | null
           transfer_date?: string
@@ -5025,6 +5059,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_employee_annual"
             referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "hr_transfers_to_company_fkey"
@@ -9799,10 +9840,18 @@ export type Database = {
           company: string | null
           company_id: string | null
           coste_total: number | null
-          employee_count: number | null
+          org_id: string | null
           year: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vw_employee_annual: {
         Row: {
@@ -9810,25 +9859,40 @@ export type Database = {
           company: string | null
           company_id: string | null
           coste_anual: number | null
-          employee_code: string | null
           employee_id: string | null
           full_name: string | null
-          months_worked: number | null
+          org_id: string | null
           year: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hr_employees_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vw_transfers_summary: {
         Row: {
           days_between: number | null
-          dni: string | null
-          employee_name: string | null
           from_company: string | null
+          full_name: string | null
+          org_id: string | null
           reason: string | null
           to_company: string | null
           transfer_date: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hr_transfers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -9916,6 +9980,10 @@ export type Database = {
         }[]
       }
       get_user_org_id: { Args: never; Returns: string }
+      has_role: {
+        Args: { role_name: string; user_uuid: string }
+        Returns: boolean
+      }
       identify_churn_risk_clients: {
         Args: { org_uuid: string }
         Returns: {
