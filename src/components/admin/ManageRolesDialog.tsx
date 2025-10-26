@@ -31,6 +31,7 @@ interface ManageRolesDialogProps {
 }
 
 export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialogProps) {
+  const NONE_VALUE = 'none';
   const [selectedRoles, setSelectedRoles] = useState<Set<AppRole>>(new Set());
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const assignRole = useAssignRole();
@@ -98,15 +99,15 @@ export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialo
               Empresa (opcional)
             </Label>
             <Select
-              value={selectedOrgId || ''}
-              onValueChange={(value) => setSelectedOrgId(value || null)}
+              value={selectedOrgId || NONE_VALUE}
+              onValueChange={(value) => setSelectedOrgId(value === NONE_VALUE ? null : value)}
               disabled={isLoading || companiesLoading}
             >
               <SelectTrigger id="company">
                 <SelectValue placeholder="Seleccionar empresa..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin empresa asignada</SelectItem>
+                <SelectItem value={NONE_VALUE}>Sin empresa asignada</SelectItem>
                 {companies?.map((company) => (
                   <SelectItem key={company.id} value={company.id}>
                     {company.name}
