@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Users, TrendingUp, ArrowRightLeft } from "lucide-react";
@@ -20,10 +21,10 @@ interface CompanyCardProps {
   salaryIncreasePercent: number;
   transfers: number;
   color?: string;
-  onClick?: () => void;
 }
 
 export const CompanyCard = ({
+  id,
   name,
   nif,
   activeEmployees,
@@ -32,8 +33,12 @@ export const CompanyCard = ({
   salaryIncreasePercent,
   transfers,
   color = "bg-primary",
-  onClick,
 }: CompanyCardProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/companies/${id}`);
+  };
   return (
     <TooltipProvider>
       <Tooltip>
@@ -44,7 +49,7 @@ export const CompanyCard = ({
               "hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer",
               "group"
             )}
-            onClick={onClick}
+            onClick={handleClick}
           >
             <div className="space-y-6">
               {/* Header */}

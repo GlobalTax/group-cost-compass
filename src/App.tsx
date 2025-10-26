@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import Companies from "./pages/Companies";
+import CompanyDetail from "./pages/CompanyDetail";
 import Upload from "./pages/Upload";
 import Transfers from "./pages/Transfers";
 import Costs from "./pages/Costs";
@@ -30,6 +31,7 @@ const ProtectedAudit = withAuth(['admin', 'super_admin'])(Audit);
 const ProtectedEmployees = withAuth(['admin', 'manager', 'super_admin'])(Employees);
 const ProtectedEmployeeDetail = withAuth(['admin', 'manager', 'super_admin'])(EmployeeDetail);
 const ProtectedCompanies = withAuth(['admin', 'finance', 'super_admin'])(Companies);
+const ProtectedCompanyDetail = withAuth(['admin', 'finance', 'super_admin'])(CompanyDetail);
 const ProtectedUpload = withAuth(['admin', 'super_admin'])(Upload);
 const ProtectedTransfers = withAuth(['admin', 'manager', 'super_admin'])(Transfers);
 const ProtectedAdminRoles = withAuth(['super_admin'])(AdminRoles);
@@ -65,10 +67,11 @@ const App = () => (
                     <Route path="/setup" element={<Setup />} />
                     <Route path="/" element={<ProtectedDashboard />} />
                     <Route path="/dashboard" element={<ProtectedDashboard />} />
-                    <Route path="/employees" element={<ProtectedEmployees />} />
-                    <Route path="/employees/:id" element={<ProtectedEmployeeDetail />} />
-                    <Route path="/companies" element={<ProtectedCompanies />} />
-                    <Route path="/upload" element={<ProtectedUpload />} />
+              <Route path="/employees" element={<ProtectedEmployees />} />
+              <Route path="/employees/:id" element={<ProtectedEmployeeDetail />} />
+              <Route path="/companies" element={<ProtectedCompanies />} />
+              <Route path="/companies/:id" element={<ProtectedCompanyDetail />} />
+              <Route path="/upload" element={<ProtectedUpload />} />
                     <Route path="/transfers" element={<ProtectedTransfers />} />
                     <Route path="/costs" element={<ProtectedCosts />} />
                     <Route path="/audit" element={<ProtectedAudit />} />

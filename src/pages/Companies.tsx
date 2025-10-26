@@ -1,16 +1,13 @@
-import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { CompanyCard } from "@/components/companies/CompanyCard";
 import { CompanyOrgChart } from "@/components/companies/CompanyOrgChart";
-import { CompanyDrawer } from "@/components/companies/CompanyDrawer";
 import { useCompanyMetrics } from "@/hooks/useCompanyMetrics";
 import { formatCurrency } from "@/lib/formatters";
 import { Building2, Users, Euro, TrendingUp } from "lucide-react";
 
 const Companies = () => {
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const currentYear = new Date().getFullYear();
   const { data: companies, isLoading } = useCompanyMetrics(currentYear);
 
@@ -26,10 +23,6 @@ const Companies = () => {
   const totalEmployees = companies?.reduce((sum, c) => sum + c.activeEmployees, 0) || 0;
   const totalBruto = companies?.reduce((sum, c) => sum + c.totalBruto, 0) || 0;
   const totalCoste = companies?.reduce((sum, c) => sum + c.totalCoste, 0) || 0;
-
-  const handleCompanyClick = (companyId: string) => {
-    setSelectedCompanyId(companyId);
-  };
 
   return (
     <div className="p-8 space-y-8">
@@ -101,10 +94,7 @@ const Companies = () => {
       {isLoading ? (
         <Skeleton className="h-96" />
       ) : (
-        <CompanyOrgChart
-          companies={companies || []}
-          onCompanyClick={handleCompanyClick}
-        />
+        <CompanyOrgChart companies={companies || []} />
       )}
 
       {/* Company Cards */}
@@ -122,18 +112,10 @@ const Companies = () => {
               key={company.id}
               {...company}
               color={colors[index % colors.length]}
-              onClick={() => handleCompanyClick(company.id)}
             />
           ))
         )}
       </div>
-
-      {/* Company Drawer */}
-      <CompanyDrawer
-        companyId={selectedCompanyId}
-        open={!!selectedCompanyId}
-        onOpenChange={(open) => !open && setSelectedCompanyId(null)}
-      />
     </div>
   );
 };

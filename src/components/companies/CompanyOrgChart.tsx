@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,12 +15,22 @@ interface CompanyOrgChartProps {
 }
 
 export const CompanyOrgChart = ({ companies, onCompanyClick }: CompanyOrgChartProps) => {
+  const navigate = useNavigate();
+  
   const colors = [
     "bg-primary",
     "bg-purple",
     "bg-success",
     "bg-warning",
   ];
+
+  const handleCompanyClick = (companyId: string) => {
+    if (onCompanyClick) {
+      onCompanyClick(companyId);
+    } else {
+      navigate(`/companies/${companyId}`);
+    }
+  };
 
   return (
     <Card className="p-8 border border-border backdrop-blur-sm bg-card/50">
@@ -79,7 +90,7 @@ export const CompanyOrgChart = ({ companies, onCompanyClick }: CompanyOrgChartPr
               <div
                 key={company.id}
                 className="group cursor-pointer"
-                onClick={() => onCompanyClick?.(company.id)}
+                onClick={() => handleCompanyClick(company.id)}
               >
                 <div
                   className={cn(
