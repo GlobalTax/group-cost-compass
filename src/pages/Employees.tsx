@@ -8,6 +8,8 @@ import { Plus, Search } from "lucide-react";
 import { EmployeeDialog } from "@/components/employees/EmployeeDialog";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useCompanies } from "@/hooks/useCompanies";
+import { useEmployees } from "@/hooks/useEmployees";
+import { Badge } from "@/components/ui/badge";
 
 const Employees = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -22,6 +24,12 @@ const Employees = () => {
     companyId: companyFilter !== "all" ? companyFilter : undefined,
     activeOnly: statusFilter === "active" ? true : statusFilter === "inactive" ? false : undefined,
   };
+
+  const { data: employees = [] } = useEmployees(filters);
+  
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter(emp => !emp.termination_date).length;
+  const inactiveEmployees = employees.filter(emp => emp.termination_date).length;
 
   return (
     <>
@@ -75,6 +83,23 @@ const Employees = () => {
               <SelectItem value="inactive">Inactivos</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Employee Counter */}
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Total:</span>
+            <span className="font-semibold text-lg text-foreground">{totalEmployees}</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-2">
+            <Badge variant="success">Activos</Badge>
+            <span className="font-medium text-foreground">{activeEmployees}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Inactivos</Badge>
+            <span className="font-medium text-foreground">{inactiveEmployees}</span>
+          </div>
         </div>
 
         {/* Employee List */}
