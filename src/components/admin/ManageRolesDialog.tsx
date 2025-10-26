@@ -11,13 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAssignRole, useRevokeRole, type UserWithRoles } from '@/hooks/useUserRoles';
 import { useCompanies } from '@/hooks/useCompanies';
 import { allRoles, roleConfig } from '@/lib/roleUtils';
@@ -31,9 +24,9 @@ interface ManageRolesDialogProps {
 }
 
 export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialogProps) {
-  const NONE_VALUE = 'none';
+  const ALL_COMPANIES = 'all';
   const [selectedRoles, setSelectedRoles] = useState<Set<AppRole>>(new Set());
-  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+  const [selectedOrgIds, setSelectedOrgIds] = useState<Set<string>>(new Set());
   const assignRole = useAssignRole();
   const revokeRole = useRevokeRole();
   const { data: companies, isLoading: companiesLoading } = useCompanies();
@@ -41,7 +34,7 @@ export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialo
   useEffect(() => {
     if (user) {
       setSelectedRoles(new Set(user.roles));
-      setSelectedOrgId(null); // Reset company selection
+      setSelectedOrgIds(new Set()); // Reset company selection
     }
   }, [user]);
 
@@ -57,22 +50,68 @@ export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialo
     setSelectedRoles(newSelected);
   };
 
+  const handleToggleCompany = (companyId: string) => {
+    const newSelected = new Set(selectedOrgIds);
+    
+    if (companyId === ALL_COMPANIES) {
+      if (newSelected.has(ALL_COMPANIES)) {
+        newSelected.clear();
+      } else {
+        newSelected.clear();
+        newSelected.add(ALL_COMPANIES);
+        companies?.forEach(c => newSelected.add(c.id));
+      }
+    } else {
+      if (newSelected.has(companyId)) {
+        newSelected.delete(companyId);
+        newSelected.delete(ALL_COMPANIES);
+      } else {
+        newSelected.add(companyId);
+        if (companies && newSelected.size === companies.length) {
+          newSelected.add(ALL_COMPANIES);
+        }
+      }
+    }
+    
+    setSelectedOrgIds(newSelected);
+  };
+
   const handleSave = async () => {
     const currentRoles = new Set(user.roles);
     const rolesToAssign = Array.from(selectedRoles).filter((role) => !currentRoles.has(role));
     const rolesToRevoke = Array.from(currentRoles).filter((role) => !selectedRoles.has(role));
 
     try {
+      // Asignar cada rol nuevo
       for (const role of rolesToAssign) {
-        await assignRole.mutateAsync({ 
-          userId: user.id, 
-          role, 
-          orgId: selectedOrgId 
-        });
+        // Si no hay empresas seleccionadas, asignar con org_id = null
+        if (selectedOrgIds.size === 0) {
+          await assignRole.mutateAsync({ 
+            userId: user.id, 
+            role, 
+            orgId: null 
+          });
+        } else {
+          // Asignar a cada empresa seleccionada (excluyendo ALL_COMPANIES)
+          const orgIdsArray = Array.from(selectedOrgIds).filter(
+            id => id !== ALL_COMPANIES
+          );
+          
+          for (const orgId of orgIdsArray) {
+            await assignRole.mutateAsync({ 
+              userId: user.id, 
+              role, 
+              orgId 
+            });
+          }
+        }
       }
+
+      // Revocar roles (global, de todas las empresas)
       for (const role of rolesToRevoke) {
         await revokeRole.mutateAsync({ userId: user.id, role });
       }
+
       onOpenChange(false);
     } catch (error) {
       // Errors are handled by the mutation hooks
@@ -92,31 +131,52 @@ export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialo
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Selector de Empresa */}
+          {/* Selector de Empresas (Múltiple) */}
           <div className="space-y-2">
-            <Label htmlFor="company" className="flex items-center gap-2 text-sm font-medium">
+            <Label className="flex items-center gap-2 text-sm font-medium">
               <Building2 className="h-4 w-4" />
-              Empresa (opcional)
+              Empresas (opcional)
             </Label>
-            <Select
-              value={selectedOrgId || NONE_VALUE}
-              onValueChange={(value) => setSelectedOrgId(value === NONE_VALUE ? null : value)}
-              disabled={isLoading || companiesLoading}
-            >
-              <SelectTrigger id="company">
-                <SelectValue placeholder="Seleccionar empresa..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE_VALUE}>Sin empresa asignada</SelectItem>
-                {companies?.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
+              {/* Opción: Todas las empresas */}
+              <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent/50">
+                <Checkbox
+                  id={ALL_COMPANIES}
+                  checked={selectedOrgIds.has(ALL_COMPANIES)}
+                  onCheckedChange={() => handleToggleCompany(ALL_COMPANIES)}
+                  disabled={isLoading || companiesLoading}
+                />
+                <Label htmlFor={ALL_COMPANIES} className="flex-1 cursor-pointer font-medium">
+                  Todas las empresas
+                </Label>
+              </div>
+
+              {/* Lista de empresas individuales */}
+              {companiesLoading ? (
+                <p className="text-sm text-muted-foreground p-2">Cargando empresas...</p>
+              ) : (
+                companies?.map((company) => (
+                  <div key={company.id} className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent/50">
+                    <Checkbox
+                      id={company.id}
+                      checked={selectedOrgIds.has(company.id)}
+                      onCheckedChange={() => handleToggleCompany(company.id)}
+                      disabled={isLoading}
+                    />
+                    <Label htmlFor={company.id} className="flex-1 cursor-pointer text-sm">
+                      {company.name}
+                    </Label>
+                  </div>
+                ))
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Al asignar nuevos roles, se asociarán a esta empresa
+              {selectedOrgIds.size === 0 
+                ? 'Sin empresa seleccionada (roles globales)'
+                : selectedOrgIds.has(ALL_COMPANIES)
+                ? `Todas las empresas seleccionadas (${companies?.length || 0})`
+                : `${selectedOrgIds.size} empresa(s) seleccionada(s)`
+              }
             </p>
           </div>
 
