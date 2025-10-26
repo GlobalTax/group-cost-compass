@@ -3,6 +3,8 @@ import Papa from "papaparse";
 interface ParsedA3NomCost {
   employee_code: string;
   employee_name: string;
+  company_nif: string;
+  company_name: string;
   porcentaje_imputacion: number;
   bruto: number;
   sal_neto: number;
@@ -23,6 +25,14 @@ interface ParsedA3NomCost {
   bonificacion: number | null;
 }
 
+interface CompanySummary {
+  nif: string;
+  name: string;
+  employees: number;
+  totalBruto: number;
+  totalCoste: number;
+}
+
 interface ValidationError {
   row: number;
   field: string;
@@ -37,6 +47,8 @@ export interface A3NomParseResult {
     totalEmployees: number;
     totalBruto: number;
     totalCoste: number;
+    companiesDetected: number;
+    companiesSummary: CompanySummary[];
   };
 }
 
@@ -129,6 +141,10 @@ export const parseA3NomCostsFile = async (
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
     let rowNumber = 0;
+    let currentCompany: { code: string; name: string; nif: string } | null = null;
+    
+    // Regex para detectar empresa: "Empresa: [código]-[nombre] NIF: [nif]"
+    const companyRegex = /Empresa:\s*(\d+)-(.+?)\s+NIF:\s*([A-Z0-9]+)/i;
 
     Papa.parse(file, {
       delimiter: "\t", // A3Nom usa tabs
@@ -157,7 +173,18 @@ export const parseA3NomCostsFile = async (
             field: "header",
             message: "No se encontró la fila de encabezados. Verifica que el archivo tenga formato A3Nom.",
           });
-          resolve({ data: [], errors, warnings, summary: { totalEmployees: 0, totalBruto: 0, totalCoste: 0 } });
+          resolve({ 
+            data: [], 
+            errors, 
+            warnings, 
+            summary: { 
+              totalEmployees: 0, 
+              totalBruto: 0, 
+              totalCoste: 0,
+              companiesDetected: 0,
+              companiesSummary: []
+            } 
+          });
           return;
         }
 
@@ -170,6 +197,19 @@ export const parseA3NomCostsFile = async (
         for (let i = headerRowIndex + 1; i < rows.length; i++) {
           rowNumber = i + 1;
           const row = rows[i];
+          
+          // Detectar línea de empresa
+          const rowText = Object.values(row).join(" ");
+          const companyMatch = rowText.match(companyRegex);
+          
+          if (companyMatch) {
+            currentCompany = {
+              code: companyMatch[1].trim(),
+              name: companyMatch[2].trim(),
+              nif: companyMatch[3].trim()
+            };
+            continue;
+          }
           
           if (!isValidEmployeeRow(row)) {
             continue; // Saltar totales, encabezados intermedios, filas vacías
@@ -188,10 +228,19 @@ export const parseA3NomCostsFile = async (
             continue;
           }
 
+          if (!currentCompany) {
+            warnings.push(
+              `Fila ${rowNumber}: ${employeeName} no tiene empresa asignada (no se detectó línea de empresa)`
+            );
+            continue;
+          }
+
           try {
             const cost: ParsedA3NomCost = {
               employee_code: employeeCode,
               employee_name: employeeName,
+              company_nif: currentCompany.nif,
+              company_name: currentCompany.name,
               porcentaje_imputacion: parseNumber(rowValues[2] as string | number) || 100,
               bruto: parseNumber(rowValues[3] as string | number) || 0,
               sal_neto: parseNumber(rowValues[4] as string | number) || 0,
@@ -233,6 +282,15 @@ export const parseA3NomCostsFile = async (
           }
         }
 
+        // Validar que se detectó al menos una empresa
+        if (parsedData.length > 0 && !parsedData.some(d => d.company_nif)) {
+          errors.push({
+            row: 0,
+            field: "company",
+            message: "No se detectó ninguna empresa en el archivo. Verifica el formato.",
+          });
+        }
+
         // Consolidar duplicados
         const consolidated = consolidateDuplicates(parsedData);
 
@@ -242,11 +300,33 @@ export const parseA3NomCostsFile = async (
           );
         }
 
-        // Calcular resumen
+        // Calcular resumen por empresa
+        const companiesMap = new Map<string, CompanySummary>();
+        for (const cost of consolidated) {
+          if (!companiesMap.has(cost.company_nif)) {
+            companiesMap.set(cost.company_nif, {
+              nif: cost.company_nif,
+              name: cost.company_name,
+              employees: 0,
+              totalBruto: 0,
+              totalCoste: 0
+            });
+          }
+          const summary = companiesMap.get(cost.company_nif)!;
+          summary.employees++;
+          summary.totalBruto += cost.bruto;
+          summary.totalCoste += cost.coste_empresa;
+        }
+
+        const companiesSummary = Array.from(companiesMap.values());
+
+        // Calcular resumen general
         const summary = {
           totalEmployees: consolidated.length,
           totalBruto: consolidated.reduce((sum, c) => sum + c.bruto, 0),
           totalCoste: consolidated.reduce((sum, c) => sum + c.coste_empresa, 0),
+          companiesDetected: companiesSummary.length,
+          companiesSummary
         };
 
         resolve({
@@ -262,7 +342,18 @@ export const parseA3NomCostsFile = async (
           field: "file",
           message: `Error leyendo archivo: ${error.message}`,
         });
-        resolve({ data: [], errors, warnings, summary: { totalEmployees: 0, totalBruto: 0, totalCoste: 0 } });
+        resolve({ 
+          data: [], 
+          errors, 
+          warnings, 
+          summary: { 
+            totalEmployees: 0, 
+            totalBruto: 0, 
+            totalCoste: 0,
+            companiesDetected: 0,
+            companiesSummary: []
+          } 
+        });
       },
     });
   });

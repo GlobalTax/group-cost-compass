@@ -56,30 +56,80 @@ export const A3NomCostsUpload = () => {
     setImportProgress({ current: 0, total: validation.data.length });
 
     try {
-      // 1. Obtener mapping de employee_code a employee_id
+      // 1. Obtener catálogo de empresas
+      const { data: companies, error: companiesError } = await supabase
+        .from("companies")
+        .select("id, name, nif");
+
+      if (companiesError) throw companiesError;
+
+      if (!companies || companies.length === 0) {
+        toast.error("No se pudieron cargar las empresas del catálogo");
+        return;
+      }
+
+      // Crear mapa NIF → company info
+      const companyMap = new Map(
+        companies.map(c => [c.nif, { id: c.id, name: c.name }])
+      );
+
+      // 2. Validar que todas las empresas del archivo existan en el catálogo
+      const missingCompanies = new Set<string>();
+      for (const cost of validation.data) {
+        if (!companyMap.has(cost.company_nif)) {
+          missingCompanies.add(`${cost.company_name} (${cost.company_nif})`);
+        }
+      }
+
+      if (missingCompanies.size > 0) {
+        toast.error(
+          `Empresas no encontradas en el catálogo: ${Array.from(missingCompanies).join(", ")}`
+        );
+        setImporting(false);
+        return;
+      }
+
+      // 3. Obtener mapping de employee_code a employee_id
       const employeeCodes = validation.data.map(d => d.employee_code);
       const { data: employees, error: employeeError } = await supabase
         .from("hr_employees")
-        .select("id, employee_code, full_name")
+        .select("id, employee_code, full_name, company_id")
         .in("employee_code", employeeCodes);
 
       if (employeeError) throw employeeError;
 
       const employeeMap = new Map(
-        employees?.map(e => [e.employee_code, e.id]) || []
+        employees?.map(e => [e.employee_code, { id: e.id, companyId: e.company_id }]) || []
       );
 
-      // 2. Preparar registros de costes
+      // 4. Preparar registros de costes con validaciones
       const costsToInsert = validation.data
         .filter(d => {
           const hasEmployee = employeeMap.has(d.employee_code);
+          const hasCompany = companyMap.has(d.company_nif);
+          
           if (!hasEmployee) {
-            toast.warning(`Empleado ${d.employee_name} (${d.employee_code}) no encontrado en el sistema`);
+            toast.warning(
+              `Empleado ${d.employee_name} (${d.employee_code}) de ${d.company_name} no encontrado en el sistema`
+            );
           }
-          return hasEmployee;
+          
+          // Validar que la empresa del archivo coincida con la del empleado en BD
+          if (hasEmployee && hasCompany) {
+            const employeeInfo = employeeMap.get(d.employee_code)!;
+            const fileCompanyId = companyMap.get(d.company_nif)!.id;
+            
+            if (employeeInfo.companyId !== fileCompanyId) {
+              toast.warning(
+                `⚠️ ${d.employee_name}: En archivo aparece en ${d.company_name}, pero en BD está en otra empresa. Posible transferencia reciente.`
+              );
+            }
+          }
+          
+          return hasEmployee && hasCompany;
         })
         .map(d => ({
-          employee_id: employeeMap.get(d.employee_code)!,
+          employee_id: employeeMap.get(d.employee_code)!.id,
           period: `${period}-01`,
           bruto: d.bruto,
           coste_empresa: d.coste_empresa,
@@ -105,7 +155,7 @@ export const A3NomCostsUpload = () => {
         throw new Error("No hay datos válidos para importar");
       }
 
-      // 3. Verificar si ya existen costes para este período
+      // 5. Verificar si ya existen costes para este período
       const { data: existing } = await supabase
         .from("hr_employee_costs")
         .select("id")
@@ -131,7 +181,7 @@ export const A3NomCostsUpload = () => {
           .in("employee_id", costsToInsert.map(c => c.employee_id));
       }
 
-      // 4. Importar en lotes
+      // 6. Importar en lotes
       const BATCH_SIZE = 50;
       for (let i = 0; i < costsToInsert.length; i += BATCH_SIZE) {
         const batch = costsToInsert.slice(i, i + BATCH_SIZE);
@@ -139,7 +189,10 @@ export const A3NomCostsUpload = () => {
         setImportProgress({ current: Math.min(i + BATCH_SIZE, costsToInsert.length), total: costsToInsert.length });
       }
 
-      toast.success(`✅ Importación completada: ${costsToInsert.length} registros`);
+      const companiesCount = validation.summary.companiesDetected;
+      toast.success(
+        `✅ Importación completada: ${costsToInsert.length} registros de ${companiesCount} empresa${companiesCount > 1 ? 's' : ''}`
+      );
       
       // Reset
       setFile(null);
@@ -159,8 +212,8 @@ export const A3NomCostsUpload = () => {
       <Alert>
         <InfoIcon className="h-4 w-4" />
         <AlertDescription>
-          <strong>Importación A3Nom:</strong> Sube el archivo Excel exportado desde A3Nom con formato de nóminas.
-          El sistema detectará automáticamente empleados duplicados y consolidará sus líneas.
+          <strong>Importación A3Nom Multi-Empresa:</strong> Sube el archivo Excel exportado desde A3Nom con formato de nóminas.
+          El sistema detectará automáticamente las empresas por su NIF, consolidará empleados duplicados, y validará que todo exista en el catálogo.
         </AlertDescription>
       </Alert>
 
@@ -208,28 +261,8 @@ export const A3NomCostsUpload = () => {
           </CardHeader>
           <CardContent>
             <ValidationResults
-              errors={validation.errors}
-              warnings={validation.warnings}
-              successCount={validation.data.length}
+              result={validation}
             />
-
-            <div className="mt-4 p-4 bg-muted rounded-lg space-y-2">
-              <h4 className="font-semibold">Resumen:</h4>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Total Empleados</p>
-                  <p className="text-lg font-bold">{validation.summary.totalEmployees}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Total Bruto</p>
-                  <p className="text-lg font-bold">{validation.summary.totalBruto.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Total Coste Empresa</p>
-                  <p className="text-lg font-bold">{validation.summary.totalCoste.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</p>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
       )}
