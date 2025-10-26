@@ -53,6 +53,7 @@ export const EmployeeDialog = ({
     defaultValues: employee
       ? {
           full_name: employee.full_name,
+          employee_code: employee.employee_code || "",
           dni: employee.dni || "",
           company_id: employee.company_id,
           hire_date: employee.hire_date || "",
@@ -66,6 +67,7 @@ export const EmployeeDialog = ({
         }
       : {
           full_name: "",
+          employee_code: "",
           dni: "",
           company_id: "",
           hire_date: "",
@@ -82,6 +84,7 @@ export const EmployeeDialog = ({
   const onSubmit = async (data: EmployeeFormData) => {
     const payload = {
       full_name: data.full_name,
+      employee_code: data.employee_code || null,
       dni: data.dni || null,
       company_id: data.company_id || null,
       hire_date: data.hire_date || null,
@@ -133,7 +136,7 @@ export const EmployeeDialog = ({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="dni"
@@ -143,6 +146,23 @@ export const EmployeeDialog = ({
                     <FormControl>
                       <Input placeholder="12345678A" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="employee_code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Código Empleado</FormLabel>
+                    <FormControl>
+                      <Input placeholder="000001" {...field} />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Código de A3Nom
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

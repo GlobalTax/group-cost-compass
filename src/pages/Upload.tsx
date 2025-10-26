@@ -3,9 +3,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileDropzone } from "@/components/upload/FileDropzone";
 import { ValidationResults } from "@/components/upload/ValidationResults";
 import { ImportProgress } from "@/components/upload/ImportProgress";
+import { A3NomCostsUpload } from "@/components/upload/A3NomCostsUpload";
 import { parseEmployeesFile, type ParsedEmployee } from "@/lib/parsers/employeeParser";
 import { parseCostsFile, type ParsedCost } from "@/lib/parsers/costsParser";
 import { useCompanies } from "@/hooks/useCompanies";
@@ -154,16 +156,24 @@ const Upload = () => {
         </p>
       </div>
 
-      {/* Info Alert */}
-      <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-900">
-        <AlertCircle className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
-          <strong>Formato requerido:</strong> Los archivos deben seguir el formato estándar de exportación de A3Nom.
-        </AlertDescription>
-      </Alert>
+      {/* Tabs for different import methods */}
+      <Tabs defaultValue="csv" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="csv">CSV Simple</TabsTrigger>
+          <TabsTrigger value="a3nom">A3Nom Excel</TabsTrigger>
+        </TabsList>
 
-      {/* Upload Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* CSV Import Tab */}
+        <TabsContent value="csv" className="space-y-6">
+          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-900">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
+              <strong>Formato CSV simple:</strong> Archivos CSV básicos con columnas estándar.
+            </AlertDescription>
+          </Alert>
+
+          {/* Upload Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Employees Upload */}
         <Card className="apollo-card p-6">
           <div className="space-y-6">
@@ -243,10 +253,10 @@ const Upload = () => {
             </div>
           </div>
         </Card>
-      </div>
+          </div>
 
-      {/* Process Button */}
-      <Card className="apollo-card p-6">
+          {/* Process Button */}
+          <Card className="apollo-card p-6">
         {isProcessing && importStatus !== "idle" ? (
           <ImportProgress
             current={importProgress.current}
@@ -273,7 +283,14 @@ const Upload = () => {
             </Button>
           </div>
         )}
-      </Card>
+          </Card>
+        </TabsContent>
+
+        {/* A3Nom Import Tab */}
+        <TabsContent value="a3nom">
+          <A3NomCostsUpload />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -4851,31 +4851,79 @@ export type Database = {
       }
       hr_employee_costs: {
         Row: {
+          anticipos: number | null
+          bonificacion: number | null
           bruto: number | null
           coste_empresa: number | null
           created_at: string | null
+          dto_especial: number | null
+          dto_preaviso: number | null
+          dtos_varios: number | null
+          embargos: number | null
           employee_id: string | null
+          enf_acc: number | null
           id: string
+          indemnizacion: number | null
+          irpf_dinero: number | null
+          irpf_especie: number | null
           org_id: string | null
           period: string
+          porcentaje_imputacion: number | null
+          prestamos: number | null
+          sal_neto: number | null
+          ss_empresa: number | null
+          ss_trabajador: number | null
+          total_tc1: number | null
         }
         Insert: {
+          anticipos?: number | null
+          bonificacion?: number | null
           bruto?: number | null
           coste_empresa?: number | null
           created_at?: string | null
+          dto_especial?: number | null
+          dto_preaviso?: number | null
+          dtos_varios?: number | null
+          embargos?: number | null
           employee_id?: string | null
+          enf_acc?: number | null
           id?: string
+          indemnizacion?: number | null
+          irpf_dinero?: number | null
+          irpf_especie?: number | null
           org_id?: string | null
           period: string
+          porcentaje_imputacion?: number | null
+          prestamos?: number | null
+          sal_neto?: number | null
+          ss_empresa?: number | null
+          ss_trabajador?: number | null
+          total_tc1?: number | null
         }
         Update: {
+          anticipos?: number | null
+          bonificacion?: number | null
           bruto?: number | null
           coste_empresa?: number | null
           created_at?: string | null
+          dto_especial?: number | null
+          dto_preaviso?: number | null
+          dtos_varios?: number | null
+          embargos?: number | null
           employee_id?: string | null
+          enf_acc?: number | null
           id?: string
+          indemnizacion?: number | null
+          irpf_dinero?: number | null
+          irpf_especie?: number | null
           org_id?: string | null
           period?: string
+          porcentaje_imputacion?: number | null
+          prestamos?: number | null
+          sal_neto?: number | null
+          ss_empresa?: number | null
+          ss_trabajador?: number | null
+          total_tc1?: number | null
         }
         Relationships: [
           {
