@@ -14,6 +14,7 @@ import Companies from "./pages/Companies";
 import Upload from "./pages/Upload";
 import Transfers from "./pages/Transfers";
 import Costs from "./pages/Costs";
+import Audit from "./pages/Audit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
                   <Route path="/upload" element={<Upload />} />
                   <Route path="/transfers" element={<Transfers />} />
                   <Route path="/costs" element={<Costs />} />
+                  <Route path="/audit" element={<Audit />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
