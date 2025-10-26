@@ -42,8 +42,8 @@ const getDaysBadgeColor = (days?: number) => {
   if (!days) return "bg-muted text-muted-foreground";
   if (days <= 7) return "bg-success-light text-success";
   if (days <= 30) return "bg-warning-light text-warning-foreground";
-  if (days <= 90) return "bg-orange-100 text-orange-800";
-  if (days <= 180) return "bg-blue-100 text-blue-800";
+  if (days <= 90) return "bg-warning-light text-warning-foreground";
+  if (days <= 180) return "bg-primary-light text-primary";
   return "bg-muted text-muted-foreground";
 };
 

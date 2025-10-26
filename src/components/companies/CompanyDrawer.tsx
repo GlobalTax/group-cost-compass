@@ -153,8 +153,8 @@ export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerPr
               <div className="grid grid-cols-2 gap-4">
                 <Card className="p-4 border border-border">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-50">
-                      <Users className="w-5 h-5 text-blue-600" />
+                    <div className="p-2 rounded-lg bg-primary-light">
+                      <Users className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Empleados</p>
@@ -165,8 +165,8 @@ export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerPr
 
                 <Card className="p-4 border border-border">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-green-50">
-                      <TrendingUp className="w-5 h-5 text-green-600" />
+                    <div className="p-2 rounded-lg bg-success-light">
+                      <TrendingUp className="w-5 h-5 text-success" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">% Subida</p>
@@ -179,8 +179,8 @@ export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerPr
 
                 <Card className="p-4 border border-border">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-50">
-                      <Euro className="w-5 h-5 text-purple-600" />
+                    <div className="p-2 rounded-lg bg-purple-light">
+                      <Euro className="w-5 h-5 text-purple" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Bruto Anual</p>
@@ -193,8 +193,8 @@ export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerPr
 
                 <Card className="p-4 border border-border">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-orange-50">
-                      <Euro className="w-5 h-5 text-orange-600" />
+                    <div className="p-2 rounded-lg bg-warning-light">
+                      <Euro className="w-5 h-5 text-warning-foreground" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Coste Anual</p>

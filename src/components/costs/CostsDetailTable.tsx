@@ -35,7 +35,7 @@ export const CostsDetailTable = ({ employees, isLoading }: CostsDetailTableProps
   const getVariationBadge = (variation: number) => {
     if (variation > 0) {
       return (
-        <Badge variant="default" className="bg-green-500 text-white hover:bg-green-600">
+        <Badge variant="success">
           <TrendingUp className="w-3 h-3 mr-1" />
           +{variation.toFixed(1)}%
         </Badge>

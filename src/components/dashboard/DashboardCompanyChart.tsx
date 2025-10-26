@@ -126,7 +126,8 @@ export const DashboardCompanyChart = ({
               <Bar
                 yAxisId="cost"
                 dataKey="Coste Empresa"
-                fill="hsl(217 91% 75%)"
+                fill="hsl(var(--primary))"
+                opacity={0.75}
                 radius={[8, 8, 0, 0]}
                 maxBarSize={40}
                 onClick={handleBarClick}

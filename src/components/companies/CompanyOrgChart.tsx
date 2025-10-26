@@ -15,12 +15,10 @@ interface CompanyOrgChartProps {
 
 export const CompanyOrgChart = ({ companies, onCompanyClick }: CompanyOrgChartProps) => {
   const colors = [
-    "bg-blue-500",
-    "bg-purple-500",
-    "bg-green-500",
-    "bg-orange-500",
-    "bg-pink-500",
-    "bg-indigo-500",
+    "bg-primary",
+    "bg-purple",
+    "bg-success",
+    "bg-warning",
   ];
 
   return (
@@ -40,7 +38,7 @@ export const CompanyOrgChart = ({ companies, onCompanyClick }: CompanyOrgChartPr
           {/* Central Hub */}
           <div className="flex justify-center mb-12">
             <div className="relative">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
+              <div className="w-32 h-32 rounded-full bg-primary flex items-center justify-center shadow-lg">
                 <div className="text-center text-white">
                   <Building2 className="w-8 h-8 mx-auto mb-2" />
                   <p className="text-xs font-bold">GRUPO</p>

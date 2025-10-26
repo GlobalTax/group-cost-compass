@@ -25,11 +25,11 @@ export const DashboardHeatmap = ({ data }: DashboardHeatmapProps) => {
   };
 
   const getColorClass = (intensity: number) => {
-    if (intensity < 0.2) return "bg-blue-100 text-blue-800";
-    if (intensity < 0.4) return "bg-blue-200 text-blue-900";
-    if (intensity < 0.6) return "bg-blue-300 text-blue-900";
-    if (intensity < 0.8) return "bg-blue-400 text-blue-950";
-    return "bg-blue-500 text-white";
+    if (intensity < 0.2) return "bg-primary/10 text-primary";
+    if (intensity < 0.4) return "bg-primary/30 text-primary";
+    if (intensity < 0.6) return "bg-primary/50 text-foreground";
+    if (intensity < 0.8) return "bg-primary/70 text-foreground";
+    return "bg-primary text-primary-foreground";
   };
 
   // Map data by month number
@@ -82,11 +82,11 @@ export const DashboardHeatmap = ({ data }: DashboardHeatmapProps) => {
         </div>
         <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="w-4 h-4 rounded bg-blue-100 border border-border" />
+            <div className="w-4 h-4 rounded bg-primary/10 border border-border" />
             <span>Bajo</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="w-4 h-4 rounded bg-blue-500 border border-border" />
+            <div className="w-4 h-4 rounded bg-primary border border-border" />
             <span>Alto</span>
           </div>
         </div>

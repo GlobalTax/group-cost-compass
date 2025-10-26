@@ -77,7 +77,7 @@ export const CostsChart = ({ data }: CostsChartProps) => {
           <Bar 
             yAxisId="left"
             dataKey="coste" 
-            fill="#10b981" 
+            fill="hsl(var(--success))" 
             name="Coste Empresa"
             stackId="a"
           />
@@ -85,10 +85,10 @@ export const CostsChart = ({ data }: CostsChartProps) => {
             yAxisId="right"
             type="monotone" 
             dataKey="employees" 
-            stroke="#f59e0b" 
+            stroke="hsl(var(--warning))" 
             strokeWidth={2}
             name="Empleados"
-            dot={{ fill: "#f59e0b", r: 4 }}
+            dot={{ fill: "hsl(var(--warning))", r: 4 }}
           />
         </ComposedChart>
       </ResponsiveContainer>

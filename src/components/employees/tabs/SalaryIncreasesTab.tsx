@@ -73,14 +73,14 @@ export const SalaryIncreasesTab = ({ costs }: SalaryIncreasesTabProps) => {
                     <div className="flex items-center gap-1 mt-1">
                       {item.changePercent > 0 ? (
                         <>
-                          <TrendingUp className="w-4 h-4 text-green-600" />
+                          <TrendingUp className="w-4 h-4 text-success" />
                           <Badge variant="success" className="text-xs">
                             +{item.changePercent.toFixed(1)}%
                           </Badge>
                         </>
                       ) : item.changePercent < 0 ? (
                         <>
-                          <TrendingDown className="w-4 h-4 text-red-600" />
+                          <TrendingDown className="w-4 h-4 text-destructive" />
                           <Badge variant="destructive" className="text-xs">
                             {item.changePercent.toFixed(1)}%
                           </Badge>
