@@ -1,3 +1,4 @@
+import { memo, useMemo, useCallback } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface CostChartProps {
@@ -28,23 +29,52 @@ const yearlyData = [
   { year: "2025", bruto: 1340000, coste: 1690000 },
 ];
 
-export const CostChart = ({ type, data }: CostChartProps) => {
-  const chartData = data.length > 0 ? data.map(d => ({
-    name: d.period.substring(5, 7), // MM
-    bruto: d.bruto,
-    coste: d.coste,
-  })) : (type === "monthly" ? monthlyData : yearlyData);
+// Move formatCurrency outside component
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+export const CostChart = memo(({ type, data }: CostChartProps) => {
+  // Memoize chart data transformation
+  const chartData = useMemo(() => {
+    return data.length > 0 ? data.map(d => ({
+      name: d.period.substring(5, 7), // MM
+      bruto: d.bruto,
+      coste: d.coste,
+    })) : (type === "monthly" ? monthlyData : yearlyData);
+  }, [data, type]);
   
   const xKey = type === "monthly" ? "month" : "year";
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("es-ES", {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  // Memoize style objects
+  const tooltipStyle = useMemo(() => ({
+    backgroundColor: "hsl(var(--card))",
+    border: "1px solid hsl(var(--border))",
+    borderRadius: "8px",
+    boxShadow: "var(--shadow-card)",
+  }), []);
+
+  const labelStyle = useMemo(() => ({ 
+    fontWeight: 600, 
+    marginBottom: 8 
+  }), []);
+
+  const legendStyle = useMemo(() => ({ paddingTop: 20 }), []);
+
+  // Memoize formatters
+  const tooltipFormatter = useCallback((value: number) => formatCurrency(value), []);
+  
+  const legendFormatter = useCallback(
+    (value: string) => value === "bruto" ? "Bruto" : "Coste Empresa",
+    []
+  );
+
+  const yAxisFormatter = useCallback((value: number) => `${value / 1000}k`, []);
 
   return (
     <div className="w-full h-[400px]">
@@ -62,24 +92,17 @@ export const CostChart = ({ type, data }: CostChartProps) => {
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
               tickLine={false}
-              tickFormatter={(value) => `${value / 1000}k`}
+              tickFormatter={yAxisFormatter}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                boxShadow: "var(--shadow-card)",
-              }}
-              formatter={(value: number) => formatCurrency(value)}
-              labelStyle={{ fontWeight: 600, marginBottom: 8 }}
+              contentStyle={tooltipStyle}
+              formatter={tooltipFormatter}
+              labelStyle={labelStyle}
             />
             <Legend
-              wrapperStyle={{ paddingTop: 20 }}
+              wrapperStyle={legendStyle}
               iconType="circle"
-              formatter={(value) =>
-                value === "bruto" ? "Bruto" : "Coste Empresa"
-              }
+              formatter={legendFormatter}
             />
             <Bar
               dataKey="bruto"
@@ -107,24 +130,17 @@ export const CostChart = ({ type, data }: CostChartProps) => {
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
               tickLine={false}
-              tickFormatter={(value) => `${value / 1000}k`}
+              tickFormatter={yAxisFormatter}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                boxShadow: "var(--shadow-card)",
-              }}
-              formatter={(value: number) => formatCurrency(value)}
-              labelStyle={{ fontWeight: 600, marginBottom: 8 }}
+              contentStyle={tooltipStyle}
+              formatter={tooltipFormatter}
+              labelStyle={labelStyle}
             />
             <Legend
-              wrapperStyle={{ paddingTop: 20 }}
+              wrapperStyle={legendStyle}
               iconType="circle"
-              formatter={(value) =>
-                value === "bruto" ? "Bruto" : "Coste Empresa"
-              }
+              formatter={legendFormatter}
             />
             <Line
               type="monotone"
@@ -147,4 +163,6 @@ export const CostChart = ({ type, data }: CostChartProps) => {
       </ResponsiveContainer>
     </div>
   );
-};
+});
+
+CostChart.displayName = "CostChart";

@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCompanies } from "@/hooks/useCompanies";
 import { Calendar, Building2 } from "lucide-react";
@@ -9,7 +10,7 @@ interface DashboardFiltersProps {
   onCompanyChange: (companyId: string) => void;
 }
 
-export const DashboardFilters = ({
+export const DashboardFilters = memo(({
   year,
   companyId,
   onYearChange,
@@ -17,8 +18,11 @@ export const DashboardFilters = ({
 }: DashboardFiltersProps) => {
   const { data: companies } = useCompanies();
 
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  // Memoize years array
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, i) => currentYear - i);
+  }, []);
 
   return (
     <div className="flex items-center gap-4 flex-wrap">
@@ -56,4 +60,6 @@ export const DashboardFilters = ({
       </div>
     </div>
   );
-};
+});
+
+DashboardFilters.displayName = "DashboardFilters";

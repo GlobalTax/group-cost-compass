@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -32,14 +33,14 @@ interface DashboardCompaniesTableProps {
   data: CompanyData[];
 }
 
-export const DashboardCompaniesTable = ({
+export const DashboardCompaniesTable = memo(({
   data,
 }: DashboardCompaniesTableProps) => {
   const navigate = useNavigate();
 
-  const handleRowClick = (companyId: string) => {
+  const handleRowClick = useCallback((companyId: string) => {
     navigate(`/companies/${companyId}`);
-  };
+  }, [navigate]);
 
   return (
     <Card className="p-6 border border-border backdrop-blur-sm bg-card/50">
@@ -133,4 +134,6 @@ export const DashboardCompaniesTable = ({
       </div>
     </Card>
   );
-};
+});
+
+DashboardCompaniesTable.displayName = "DashboardCompaniesTable";

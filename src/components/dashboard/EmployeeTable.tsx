@@ -1,3 +1,4 @@
+import { memo, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Table,
@@ -24,47 +25,47 @@ interface EmployeeTableProps {
   };
 }
 
-export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
+export const EmployeeTable = memo(({ filters }: EmployeeTableProps) => {
   const { data: employees, isLoading } = useEmployees(filters);
   const { data: allCosts } = useEmployeeCosts();
 
-  // Calculate annual costs for each employee
-  const getEmployeeAnnualCosts = (employeeId: string) => {
+  // CRITICAL OPTIMIZATION: Calculate all employee costs in a single pass
+  // From O(n*m) to O(n+m) complexity
+  const employeeCostsMap = useMemo(() => {
+    if (!allCosts || !employees) return new Map();
+
     const currentYear = new Date().getFullYear();
     const previousYear = currentYear - 1;
-    
-    const currentYearCosts = allCosts?.filter(
-      (c) =>
-        c.employee_id === employeeId &&
-        c.period.startsWith(currentYear.toString())
-    );
-    
-    const previousYearCosts = allCosts?.filter(
-      (c) =>
-        c.employee_id === employeeId &&
-        c.period.startsWith(previousYear.toString())
-    );
 
-    const brutoAnual = currentYearCosts?.reduce(
-      (sum, c) => sum + (c.bruto || 0),
-      0
-    );
-    const costeAnual = currentYearCosts?.reduce(
-      (sum, c) => sum + (c.coste_empresa || 0),
-      0
-    );
-    
-    const brutoPreviousYear = previousYearCosts?.reduce(
-      (sum, c) => sum + (c.bruto || 0),
-      0
-    );
-    
-    const changePercent = brutoPreviousYear && brutoPreviousYear > 0
-      ? ((brutoAnual - brutoPreviousYear) / brutoPreviousYear) * 100
-      : null;
+    const costsMap = new Map<string, { brutoAnual: number; costeAnual: number; changePercent: number | null }>();
 
-    return { brutoAnual: brutoAnual || 0, costeAnual: costeAnual || 0, changePercent };
-  };
+    employees.forEach((employee) => {
+      const currentYearCosts = allCosts.filter(
+        (c) => c.employee_id === employee.id && c.period.startsWith(currentYear.toString())
+      );
+      
+      const previousYearCosts = allCosts.filter(
+        (c) => c.employee_id === employee.id && c.period.startsWith(previousYear.toString())
+      );
+
+      const brutoAnual = currentYearCosts.reduce((sum, c) => sum + (c.bruto || 0), 0);
+      const costeAnual = currentYearCosts.reduce((sum, c) => sum + (c.coste_empresa || 0), 0);
+      const brutoPreviousYear = previousYearCosts.reduce((sum, c) => sum + (c.bruto || 0), 0);
+      
+      const changePercent = brutoPreviousYear > 0
+        ? ((brutoAnual - brutoPreviousYear) / brutoPreviousYear) * 100
+        : null;
+
+      costsMap.set(employee.id, { brutoAnual, costeAnual, changePercent });
+    });
+
+    return costsMap;
+  }, [allCosts, employees]);
+
+  // O(1) lookup instead of O(m) filtering per employee
+  const getEmployeeCosts = useCallback((employeeId: string) => {
+    return employeeCostsMap.get(employeeId) || { brutoAnual: 0, costeAnual: 0, changePercent: null };
+  }, [employeeCostsMap]);
 
   if (isLoading) {
     return (
@@ -105,7 +106,7 @@ export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
         </TableHeader>
         <TableBody>
           {employees.map((employee) => {
-            const { brutoAnual, costeAnual, changePercent } = getEmployeeAnnualCosts(employee.id);
+            const { brutoAnual, costeAnual, changePercent } = getEmployeeCosts(employee.id);
             const isActive = !employee.termination_date;
 
             return (
@@ -189,4 +190,6 @@ export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
       </Table>
     </div>
   );
-};
+});
+
+EmployeeTable.displayName = "EmployeeTable";

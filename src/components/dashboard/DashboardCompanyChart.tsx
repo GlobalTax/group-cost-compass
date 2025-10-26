@@ -1,3 +1,4 @@
+import { memo, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import {
   ComposedChart,
@@ -25,48 +26,53 @@ interface DashboardCompanyChartProps {
   onCompanyClick?: (companyId: string) => void;
 }
 
-export const DashboardCompanyChart = ({
+// Move CustomTooltip outside component to avoid recreation
+const CustomTooltip = memo(({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card border border-border rounded-lg shadow-lg p-4">
+        <p className="font-semibold text-foreground mb-2">
+          {payload[0].payload.fullName}
+        </p>
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">
+            Bruto: <span className="font-medium text-primary">{formatCurrency(payload[0].value)}</span>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Coste: <span className="font-medium text-primary-glow">{formatCurrency(payload[1].value)}</span>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Empleados: <span className="font-medium text-foreground">{payload[2].value}</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+});
+CustomTooltip.displayName = "CustomTooltip";
+
+export const DashboardCompanyChart = memo(({
   data,
   onCompanyClick,
 }: DashboardCompanyChartProps) => {
-  const chartData = data.map((d) => ({
-    name: d.name.length > 15 ? d.name.substring(0, 15) + "..." : d.name,
-    fullName: d.name,
-    id: d.id,
-    Bruto: d.bruto,
-    "Coste Empresa": d.coste,
-    Empleados: d.employees,
-  }));
+  // Memoize chart data transformation
+  const chartData = useMemo(() => {
+    return data.map((d) => ({
+      name: d.name.length > 15 ? d.name.substring(0, 15) + "..." : d.name,
+      fullName: d.name,
+      id: d.id,
+      Bruto: d.bruto,
+      "Coste Empresa": d.coste,
+      Empleados: d.employees,
+    }));
+  }, [data]);
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card border border-border rounded-lg shadow-lg p-4">
-          <p className="font-semibold text-foreground mb-2">
-            {payload[0].payload.fullName}
-          </p>
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">
-              Bruto: <span className="font-medium text-primary">{formatCurrency(payload[0].value)}</span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Coste: <span className="font-medium text-primary-glow">{formatCurrency(payload[1].value)}</span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Empleados: <span className="font-medium text-foreground">{payload[2].value}</span>
-            </p>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const handleBarClick = (data: any) => {
+  const handleBarClick = useCallback((data: any) => {
     if (onCompanyClick && data?.id) {
       onCompanyClick(data.id);
     }
-  };
+  }, [onCompanyClick]);
 
   return (
     <Card className="p-6 border border-border backdrop-blur-sm bg-card/50">
@@ -148,4 +154,6 @@ export const DashboardCompanyChart = ({
       </div>
     </Card>
   );
-};
+});
+
+DashboardCompanyChart.displayName = "DashboardCompanyChart";

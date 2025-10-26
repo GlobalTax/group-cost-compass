@@ -1,3 +1,4 @@
+import { memo, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -12,32 +13,39 @@ interface DashboardHeatmapProps {
   data: HeatmapData[];
 }
 
-export const DashboardHeatmap = ({ data }: DashboardHeatmapProps) => {
+export const DashboardHeatmap = memo(({ data }: DashboardHeatmapProps) => {
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
-  // Normalize data to get color intensity
-  const maxCost = Math.max(...data.map((d) => d.avgCostPerEmployee), 1);
-  const minCost = Math.min(...data.map((d) => d.avgCostPerEmployee), 0);
+  // Memoize costly calculations
+  const { maxCost, minCost } = useMemo(() => {
+    const costs = data.map((d) => d.avgCostPerEmployee);
+    return {
+      maxCost: Math.max(...costs, 1),
+      minCost: Math.min(...costs, 0),
+    };
+  }, [data]);
 
-  const getIntensity = (value: number) => {
+  const getIntensity = useCallback((value: number) => {
     if (maxCost === minCost) return 0.5;
     return (value - minCost) / (maxCost - minCost);
-  };
+  }, [maxCost, minCost]);
 
-  const getColorClass = (intensity: number) => {
+  const getColorClass = useCallback((intensity: number) => {
     if (intensity < 0.2) return "bg-primary/10 text-primary";
     if (intensity < 0.4) return "bg-primary/30 text-primary";
     if (intensity < 0.6) return "bg-primary/50 text-foreground";
     if (intensity < 0.8) return "bg-primary/70 text-foreground";
     return "bg-primary text-primary-foreground";
-  };
+  }, []);
 
-  // Map data by month number
-  const dataByMonth = data.reduce((acc, d) => {
-    const monthNum = parseInt(d.month.substring(5, 7));
-    acc[monthNum] = d;
-    return acc;
-  }, {} as Record<number, HeatmapData>);
+  // Map data by month number - memoized
+  const dataByMonth = useMemo(() => {
+    return data.reduce((acc, d) => {
+      const monthNum = parseInt(d.month.substring(5, 7));
+      acc[monthNum] = d;
+      return acc;
+    }, {} as Record<number, HeatmapData>);
+  }, [data]);
 
   return (
     <Card className="p-6 border border-border backdrop-blur-sm bg-card/50">
@@ -93,4 +101,6 @@ export const DashboardHeatmap = ({ data }: DashboardHeatmapProps) => {
       </div>
     </Card>
   );
-};
+});
+
+DashboardHeatmap.displayName = "DashboardHeatmap";

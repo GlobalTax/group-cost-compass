@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import { TrendingUp, Users, DollarSign, ArrowUpCircle } from "lucide-react";
@@ -10,13 +11,14 @@ interface DashboardKPIsProps {
   salaryIncreasePercent: number;
 }
 
-export const DashboardKPIs = ({
+export const DashboardKPIs = memo(({
   costeTotal,
   activeEmployees,
   avgCostPerEmployee,
   salaryIncreasePercent,
 }: DashboardKPIsProps) => {
-  const kpis = [
+  // Memoize KPI array to avoid recalculations
+  const kpis = useMemo(() => [
     {
       title: "Coste Total Anual",
       value: formatCurrency(costeTotal),
@@ -46,7 +48,7 @@ export const DashboardKPIs = ({
       iconColor: "text-warning-foreground",
       change: salaryIncreasePercent > 0 ? "positive" : salaryIncreasePercent < 0 ? "negative" : "neutral",
     },
-  ];
+  ], [costeTotal, activeEmployees, avgCostPerEmployee, salaryIncreasePercent]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -78,4 +80,6 @@ export const DashboardKPIs = ({
       })}
     </div>
   );
-};
+});
+
+DashboardKPIs.displayName = "DashboardKPIs";
