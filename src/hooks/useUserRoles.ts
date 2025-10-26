@@ -27,12 +27,22 @@ export const useUsersWithRoles = () => {
   return useQuery({
     queryKey: ['users-with-roles'],
     queryFn: async () => {
-      // 1. Obtener todos los usuarios de auth (sin importar si tienen roles o no)
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+      // 1. Llamar a la edge function para obtener usuarios (requiere service_role)
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (authError) throw authError;
+      if (!session) {
+        throw new Error('No autenticado');
+      }
+
+      const { data: usersResponse, error: usersError } = await supabase.functions.invoke('list-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (usersError) throw usersError;
       
-      const authUsers = authData?.users || [];
+      const authUsers = usersResponse?.users || [];
 
       // 2. Obtener todos los roles
       const { data: roles, error: rolesError } = await supabase
@@ -41,8 +51,8 @@ export const useUsersWithRoles = () => {
 
       if (rolesError) throw rolesError;
 
-      // 3. Combinar datos - INCLUIR TODOS LOS USUARIOS, tengan o no roles
-      const usersWithRoles: UserWithRoles[] = authUsers.map(user => {
+      // 3. Combinar datos - INCLUIR TODOS LOS USUARIOS
+      const usersWithRoles: UserWithRoles[] = authUsers.map((user: any) => {
         const userRoles = roles
           ?.filter(r => r.user_id === user.id)
           .map(r => r.role as AppRole) || [];
@@ -55,7 +65,7 @@ export const useUsersWithRoles = () => {
         };
       });
 
-      // Ordenar: usuarios sin roles primero, luego por fecha de creación
+      // Ordenar: usuarios sin roles primero
       return usersWithRoles.sort((a, b) => {
         if (a.roles.length === 0 && b.roles.length > 0) return -1;
         if (a.roles.length > 0 && b.roles.length === 0) return 1;
@@ -147,8 +157,29 @@ export const useRolesAudit = () => {
 
       if (error) throw error;
 
-      const { data: usersData } = await supabase.auth.admin.listUsers();
-      const users = usersData?.users || [];
+      // Obtener emails de usuarios usando la edge function
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        return data.map((log): RoleAuditLog => ({
+          id: log.id,
+          user_id: log.user_id,
+          role: log.role as AppRole,
+          action: log.action as 'assigned' | 'revoked',
+          performed_by: log.performed_by || '',
+          created_at: log.created_at,
+          user_email: undefined,
+          performer_email: undefined,
+        }));
+      }
+
+      const { data: usersResponse } = await supabase.functions.invoke('list-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const users = usersResponse?.users || [];
 
       const enrichedData: RoleAuditLog[] = data.map((log) => ({
         id: log.id,
@@ -157,8 +188,8 @@ export const useRolesAudit = () => {
         action: log.action as 'assigned' | 'revoked',
         performed_by: log.performed_by || '',
         created_at: log.created_at,
-        user_email: users.find((u) => u.id === log.user_id)?.email,
-        performer_email: users.find((u) => u.id === log.performed_by)?.email,
+        user_email: users.find((u: any) => u.id === log.user_id)?.email,
+        performer_email: users.find((u: any) => u.id === log.performed_by)?.email,
       }));
 
       return enrichedData;
@@ -171,10 +202,22 @@ export const useRoleStats = () => {
   return useQuery({
     queryKey: ['role-stats'],
     queryFn: async () => {
-      const { data: usersData } = await supabase.auth.admin.listUsers();
+      // Usar la edge function para obtener usuarios
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No autenticado');
+      }
+
+      const { data: usersResponse } = await supabase.functions.invoke('list-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
       const { data: roles } = await supabase.from('user_roles').select('user_id, role');
 
-      const totalUsers = usersData?.users?.length || 0;
+      const totalUsers = usersResponse?.users?.length || 0;
       const usersWithRoles = new Set(roles?.map((r) => r.user_id) || []).size;
       const usersWithoutRoles = totalUsers - usersWithRoles;
 
