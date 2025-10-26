@@ -98,7 +98,61 @@ employees_insert AS (
     -- 000008: LORENTE NAVARRO, SAMUEL (Alta directiva)
     ('000008', 'Lorente Navarro Samuel', '12987654D', '08/10543210-08', 'B09652017',
      '2024-01-01'::date, NULL, '2024-01-01'::date,
-     's.lorente@obn.es', NULL, false)
+     's.lorente@obn.es', NULL, false),
+    
+    -- ===== TRASLADOS A NAVARRO LEGAL Y TRIBUTARIO =====
+    -- 000001B: VIRTO SANZ, ALBA (Traslado desde SPV - nuevo contrato)
+    ('000001', 'Virto Sanz Alba', '46767505H', '08/10733266-88', 'B67261552',
+     '2025-01-01'::date, NULL, '2023-09-26'::date,
+     'a.virto@obn.es', '656541471', true),
+    
+    -- 000002B: SANZ HERNÁNDEZ, SARA (Traslado desde SPV - nuevo contrato)
+    ('000002', 'Sanz Hernández Sara', '02263862H', '28/12044934-93', 'B67261552',
+     '2025-01-01'::date, NULL, '2023-11-29'::date,
+     's.sanz@obn.es', '690368320', true),
+    
+    -- ===== NAVARRO LEGAL Y TRIBUTARIO =====
+    -- 000009: BELLONCH BOTER, CLARA (Reincorporada)
+    ('000009', 'Bellonch Boter Clara', '47918469Q', '00/00000009-00', 'B67261552',
+     '2025-09-16'::date, NULL, '2024-09-16'::date,
+     'c.bellonch@obn.es', NULL, true),
+    
+    -- ===== BEGLOBAL WORLDWIDE, S.L. =====
+    -- 000010: TICO PUIGVERT, MARC
+    ('000010', 'Tico Puigvert Marc', '54810381R', '00/00000010-00', 'B09835315',
+     '2024-09-02'::date, NULL, '2024-09-02'::date,
+     'm.tico@beglobal.es', NULL, false),
+    
+    -- 000011: VALLS VIÑALS, PAU
+    ('000011', 'Valls Viñals Pau', '00000011P', '00/00000011-00', 'B09835315',
+     '2024-09-02'::date, NULL, '2024-09-02'::date,
+     'p.valls@beglobal.es', NULL, false),
+    
+    -- ===== NAVARRO EMPRESARIAL, S.L. =====
+    -- 000012: RODRÍGUEZ GONZÁLEZ, DIEGO
+    ('000012', 'Rodríguez González Diego', '54246635P', '00/00000012-00', 'B58068800',
+     '2024-09-02'::date, NULL, '2024-09-02'::date,
+     'd.rodriguez@navarro.es', NULL, false),
+    
+    -- 000013: VILLA PALOS, RUBÉN
+    ('000013', 'Villa Palos Rubén', '00000013R', '00/00000013-00', 'B58068800',
+     '2022-04-01'::date, NULL, '2021-12-31'::date,
+     'r.villa@navarro.es', NULL, false),
+    
+    -- 000014: AYLAGAS DE LA FUENTE, JAVIER LUIS
+    ('000014', 'Aylagas de la Fuente Javier Luis', '00000014J', '00/00000014-00', 'B58068800',
+     '2022-05-01'::date, NULL, '2022-05-01'::date,
+     'j.aylagas@navarro.es', NULL, false),
+    
+    -- 000015: SAN JUAN PÉREZ, NEREA
+    ('000015', 'San Juan Pérez Nerea', '00000015N', '00/00000015-00', 'B58068800',
+     '2024-01-01'::date, NULL, '2024-01-01'::date,
+     'n.sanjuan@navarro.es', NULL, false),
+    
+    -- 000016: ARGÜELLO PLANAS, JOSÉ MARÍA (Veterano desde 1986)
+    ('000016', 'Argüello Planas José María', '00000016A', '00/00000016-00', 'B58068800',
+     '1986-12-01'::date, NULL, '1986-12-01'::date,
+     'j.arguello@navarro.es', NULL, false)
   ) AS t(employee_code, full_name, dni, nss, company_nif, hire_date, termination_date, seniority_date, email, phone, transfer_group)
   RETURNING id, employee_code
 ),
@@ -216,9 +270,40 @@ costs_insert AS (
 )
 
 -- ============================================================================
--- 5. RESUMEN FINAL
+-- 5. INSERTAR TRASLADOS CON ORG_ID
+-- ============================================================================
+
+transfers_insert AS (
+  INSERT INTO hr_transfers (employee_id, from_company, to_company, transfer_date, days_between, reason, org_id)
+  SELECT 
+    e.id,
+    cf.id AS from_company,
+    ct.id AS to_company,
+    transfer_date,
+    COALESCE((transfer_date - prev_termination_date), 1) AS days_between,
+    reason,
+    (SELECT id FROM default_org)
+  FROM (VALUES
+    -- Alba Virto: SPV → Navarro Legal (2025-01-01)
+    ('46767505H', 'B09652017', 'B67261552', '2025-01-01'::date, '2024-12-31'::date, 'Traslado SPV → Navarro Legal'),
+    
+    -- Sara Sanz: SPV → Navarro Legal (2025-01-01)
+    ('02263862H', 'B09652017', 'B67261552', '2025-01-01'::date, '2024-12-31'::date, 'Traslado SPV → Navarro Legal'),
+    
+    -- Clara Bellonch: Navarro Empresarial → Navarro Legal (2025-09-16)
+    ('47918469Q', 'B58068800', 'B67261552', '2025-09-16'::date, NULL, 'Reincorporada Grupo Navarro')
+  ) AS t(dni, from_nif, to_nif, transfer_date, prev_termination_date, reason)
+  JOIN hr_employees e ON e.dni = t.dni
+  JOIN companies cf ON cf.nif = t.from_nif
+  JOIN companies ct ON ct.nif = t.to_nif
+  RETURNING id
+)
+
+-- ============================================================================
+-- 6. RESUMEN FINAL
 -- ============================================================================
 SELECT 
   (SELECT COUNT(*) FROM companies_upsert) as companies_count,
   (SELECT COUNT(*) FROM employees_insert) as employees_count,
-  (SELECT COUNT(*) FROM costs_insert) as costs_count;
+  (SELECT COUNT(*) FROM costs_insert) as costs_count,
+  (SELECT COUNT(*) FROM transfers_insert) as transfers_count;
