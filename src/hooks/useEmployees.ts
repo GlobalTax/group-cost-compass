@@ -34,8 +34,10 @@ export const useEmployees = (filters?: {
         query = query.or(`full_name.ilike.%${filters.searchTerm}%,dni.ilike.%${filters.searchTerm}%`);
       }
 
-      if (filters?.activeOnly) {
+      if (filters?.activeOnly === true) {
         query = query.is("termination_date", null);
+      } else if (filters?.activeOnly === false) {
+        query = query.not("termination_date", "is", null);
       }
 
       const { data, error } = await query;
