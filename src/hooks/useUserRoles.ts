@@ -27,24 +27,40 @@ export const useUsersWithRoles = () => {
   return useQuery({
     queryKey: ['users-with-roles'],
     queryFn: async () => {
-      const { data, error: usersError } = await supabase.auth.admin.listUsers();
+      // 1. Obtener todos los usuarios de auth (sin importar si tienen roles o no)
+      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
       
-      if (usersError) throw usersError;
+      if (authError) throw authError;
+      
+      const authUsers = authData?.users || [];
 
+      // 2. Obtener todos los roles
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
       if (rolesError) throw rolesError;
 
-      const usersWithRoles: UserWithRoles[] = (data?.users || []).map((user) => ({
-        id: user.id,
-        email: user.email!,
-        roles: roles?.filter((r) => r.user_id === user.id).map((r) => r.role as AppRole) || [],
-        created_at: user.created_at,
-      }));
+      // 3. Combinar datos - INCLUIR TODOS LOS USUARIOS, tengan o no roles
+      const usersWithRoles: UserWithRoles[] = authUsers.map(user => {
+        const userRoles = roles
+          ?.filter(r => r.user_id === user.id)
+          .map(r => r.role as AppRole) || [];
 
-      return usersWithRoles;
+        return {
+          id: user.id,
+          email: user.email || '',
+          roles: userRoles,
+          created_at: user.created_at,
+        };
+      });
+
+      // Ordenar: usuarios sin roles primero, luego por fecha de creación
+      return usersWithRoles.sort((a, b) => {
+        if (a.roles.length === 0 && b.roles.length > 0) return -1;
+        if (a.roles.length > 0 && b.roles.length === 0) return 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
     },
     staleTime: 30000,
   });

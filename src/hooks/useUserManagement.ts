@@ -7,7 +7,7 @@ export const useInviteUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ email, role, orgId }: InviteUserInput) => {
+    mutationFn: async ({ email, role }: InviteUserInput) => {
       // 1. Verificar que el email no existe
       const { data: existingData, error: listError } = await supabase.auth.admin.listUsers();
       
@@ -26,11 +26,11 @@ export const useInviteUser = () => {
       if (error) throw error;
       if (!data.user) throw new Error('No se pudo crear el usuario');
 
-      // 3. Asignar rol inicial automáticamente
+      // 3. Asignar rol inicial automáticamente (org_id puede ser null)
       const { error: roleError } = await supabase.from('user_roles').insert({
         user_id: data.user.id,
         role,
-        org_id: orgId || null,
+        org_id: null, // Se puede asignar después si es necesario
       });
 
       if (roleError) {

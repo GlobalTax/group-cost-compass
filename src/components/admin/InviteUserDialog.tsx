@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import {
@@ -38,7 +37,6 @@ interface InviteUserDialogProps {
 }
 
 export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) {
-  const [orgId, setOrgId] = useState<string>('');
   const inviteUser = useInviteUser();
 
   const form = useForm<InviteUserInput>({
@@ -46,18 +44,8 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
     defaultValues: {
       email: '',
       role: 'junior',
-      orgId: undefined,
     },
   });
-
-  // Obtener org_id del primer registro de user_roles (asumimos una org por ahora)
-  useEffect(() => {
-    if (open) {
-      // Aquí podrías cargar las organizaciones disponibles
-      // Por ahora usamos un placeholder
-      setOrgId('');
-    }
-  }, [open]);
 
   const onSubmit = async (data: InviteUserInput) => {
     await inviteUser.mutateAsync(data);
@@ -87,6 +75,7 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
                     <Input
                       placeholder="usuario@ejemplo.com"
                       type="email"
+                      autoComplete="email"
                       {...field}
                     />
                   </FormControl>
