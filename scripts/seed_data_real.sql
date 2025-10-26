@@ -32,9 +32,9 @@ companies_upsert AS (
   FROM (VALUES
     ('SPV CORPORATE ADVISOR, SL', 'B09652017'),
     ('Navarro Empresarial, SL', 'B58068800'),
-    ('Navarro Legal Group, SL', 'B67261552'),
-    ('Beglobal Software SL', 'B86980341'),
-    ('GoLooper SL', 'B88325736')
+    ('Navarro Legal y Tributario, SLP', 'B67261552'),
+    ('Beglobal Worldwide, S.L.', 'B09835315'),
+    ('GoLooper, S.L.', 'B02721918')
   ) AS t(name, nif)
   ON CONFLICT (nif) DO UPDATE SET 
     org_id = EXCLUDED.org_id,
