@@ -91,7 +91,7 @@ export const A3NomCostsUpload = () => {
         return;
       }
 
-      // 3. Obtener mapping de employee_code a employee_id
+      // 3. Obtener empleados existentes y crear mapa con clave compuesta
       const employeeCodes = validation.data.map(d => d.employee_code);
       const { data: employees, error: employeeError } = await supabase
         .from("hr_employees")
@@ -100,14 +100,18 @@ export const A3NomCostsUpload = () => {
 
       if (employeeError) throw employeeError;
 
+      // Mapa con clave compuesta: "companyId:employeeCode" → employeeId
       const employeeMap = new Map(
-        employees?.map(e => [e.employee_code, { id: e.id, companyId: e.company_id }]) || []
+        employees?.map(e => [`${e.company_id}:${e.employee_code}`, e.id]) || []
       );
 
-      // 4. Identificar y crear empleados faltantes
-      const missingEmployees = validation.data.filter(
-        d => !employeeMap.has(d.employee_code)
-      );
+      // 4. Identificar empleados faltantes (por combinación empresa+código)
+      const missingEmployees = validation.data.filter(d => {
+        const companyInfo = companyMap.get(d.company_nif);
+        if (!companyInfo) return false;
+        const compositeKey = `${companyInfo.id}:${d.employee_code}`;
+        return !employeeMap.has(compositeKey);
+      });
 
       if (missingEmployees.length > 0) {
         setImportProgress({
@@ -130,10 +134,11 @@ export const A3NomCostsUpload = () => {
         // Ejecutar creación en batch
         const newEmployees = await createEmployees.mutateAsync(employeesToCreate);
 
-        // Actualizar el mapa con los nuevos empleados
+        // Actualizar el mapa con los nuevos empleados (clave compuesta)
         newEmployees.forEach(emp => {
-          if (emp.employee_code) {
-            employeeMap.set(emp.employee_code, { id: emp.id, companyId: emp.company_id });
+          if (emp.employee_code && emp.company_id) {
+            const compositeKey = `${emp.company_id}:${emp.employee_code}`;
+            employeeMap.set(compositeKey, emp.id);
           }
         });
 
@@ -142,54 +147,55 @@ export const A3NomCostsUpload = () => {
         );
       }
 
-      // 5. Preparar registros de costes con validaciones
+      // 5. Preparar registros de costes con validación estricta de empresa
       const costsToInsert = validation.data
         .filter(d => {
-          const hasEmployee = employeeMap.has(d.employee_code);
-          const hasCompany = companyMap.has(d.company_nif);
+          const companyInfo = companyMap.get(d.company_nif);
+          
+          if (!companyInfo) {
+            toast.error(`Empresa con NIF ${d.company_nif} no encontrada en catálogo`);
+            return false;
+          }
+
+          // Buscar empleado con clave compuesta (empresa+código)
+          const compositeKey = `${companyInfo.id}:${d.employee_code}`;
+          const hasEmployee = employeeMap.has(compositeKey);
           
           if (!hasEmployee) {
-            toast.warning(
-              `Empleado ${d.employee_name} (${d.employee_code}) de ${d.company_name} no encontrado en el sistema`
-            );
+            toast.warning(`Empleado ${d.employee_name} (${d.employee_code}) no encontrado en ${companyInfo.name}`);
+            return false;
           }
           
-          // Validar que la empresa del archivo coincida con la del empleado en BD
-          if (hasEmployee && hasCompany) {
-            const employeeInfo = employeeMap.get(d.employee_code)!;
-            const fileCompanyId = companyMap.get(d.company_nif)!.id;
-            
-            if (employeeInfo.companyId !== fileCompanyId) {
-              toast.warning(
-                `⚠️ ${d.employee_name}: En archivo aparece en ${d.company_name}, pero en BD está en otra empresa. Posible transferencia reciente.`
-              );
-            }
-          }
-          
-          return hasEmployee && hasCompany;
+          return true;
         })
-        .map(d => ({
-          employee_id: employeeMap.get(d.employee_code)!.id,
-          period: `${period}-01`,
-          bruto: d.bruto,
-          coste_empresa: d.coste_empresa,
-          sal_neto: d.sal_neto,
-          total_tc1: d.total_tc1,
-          irpf_dinero: d.irpf_dinero,
-          irpf_especie: d.irpf_especie,
-          ss_trabajador: d.ss_trabajador,
-          ss_empresa: d.ss_empresa,
-          anticipos: d.anticipos,
-          embargos: d.embargos,
-          dto_preaviso: d.dto_preaviso,
-          dtos_varios: d.dtos_varios,
-          prestamos: d.prestamos,
-          dto_especial: d.dto_especial,
-          indemnizacion: d.indemnizacion,
-          enf_acc: d.enf_acc,
-          bonificacion: d.bonificacion,
-          porcentaje_imputacion: d.porcentaje_imputacion,
-        }));
+        .map(d => {
+          const companyInfo = companyMap.get(d.company_nif)!;
+          const compositeKey = `${companyInfo.id}:${d.employee_code}`;
+          const employeeId = employeeMap.get(compositeKey)!;
+          
+          return {
+            employee_id: employeeId,
+            period: `${period}-01`,
+            bruto: d.bruto,
+            coste_empresa: d.coste_empresa,
+            sal_neto: d.sal_neto,
+            total_tc1: d.total_tc1,
+            irpf_dinero: d.irpf_dinero,
+            irpf_especie: d.irpf_especie,
+            ss_trabajador: d.ss_trabajador,
+            ss_empresa: d.ss_empresa,
+            anticipos: d.anticipos,
+            embargos: d.embargos,
+            dto_preaviso: d.dto_preaviso,
+            dtos_varios: d.dtos_varios,
+            prestamos: d.prestamos,
+            dto_especial: d.dto_especial,
+            indemnizacion: d.indemnizacion,
+            enf_acc: d.enf_acc,
+            bonificacion: d.bonificacion,
+            porcentaje_imputacion: d.porcentaje_imputacion,
+          };
+        });
 
       if (costsToInsert.length === 0) {
         throw new Error("No hay datos válidos para importar");
