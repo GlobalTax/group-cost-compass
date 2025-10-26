@@ -12,7 +12,7 @@ export const roleSchema = z.enum([
 export const assignRoleSchema = z.object({
   userId: z.string().uuid('ID de usuario inválido'),
   role: roleSchema,
-  orgId: z.string().uuid('ID de organización inválido'),
+  orgId: z.string().uuid('ID de organización inválido').optional().nullable(),
 });
 
 export const revokeRoleSchema = z.object({

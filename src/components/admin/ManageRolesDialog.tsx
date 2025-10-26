@@ -11,10 +11,18 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAssignRole, useRevokeRole, type UserWithRoles } from '@/hooks/useUserRoles';
+import { useCompanies } from '@/hooks/useCompanies';
 import { allRoles, roleConfig } from '@/lib/roleUtils';
 import type { AppRole } from '@/lib/auth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Building2 } from 'lucide-react';
 
 interface ManageRolesDialogProps {
   user: UserWithRoles | null;
@@ -24,17 +32,15 @@ interface ManageRolesDialogProps {
 
 export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialogProps) {
   const [selectedRoles, setSelectedRoles] = useState<Set<AppRole>>(new Set());
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const assignRole = useAssignRole();
   const revokeRole = useRevokeRole();
-  const [orgId, setOrgId] = useState<string>('');
+  const { data: companies, isLoading: companiesLoading } = useCompanies();
 
   useEffect(() => {
     if (user) {
       setSelectedRoles(new Set(user.roles));
-      // Get org_id from first role or use default
-      fetch('/api/get-org-id') // You'll need to implement this or get from context
-        .then(() => setOrgId('10af28dc-a9b8-4f0a-889e-4732e07df038')) // Default org for now
-        .catch(() => setOrgId('10af28dc-a9b8-4f0a-889e-4732e07df038'));
+      setSelectedOrgId(null); // Reset company selection
     }
   }, [user]);
 
@@ -57,7 +63,11 @@ export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialo
 
     try {
       for (const role of rolesToAssign) {
-        await assignRole.mutateAsync({ userId: user.id, role, orgId });
+        await assignRole.mutateAsync({ 
+          userId: user.id, 
+          role, 
+          orgId: selectedOrgId 
+        });
       }
       for (const role of rolesToRevoke) {
         await revokeRole.mutateAsync({ userId: user.id, role });
@@ -81,6 +91,35 @@ export function ManageRolesDialog({ user, open, onOpenChange }: ManageRolesDialo
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Selector de Empresa */}
+          <div className="space-y-2">
+            <Label htmlFor="company" className="flex items-center gap-2 text-sm font-medium">
+              <Building2 className="h-4 w-4" />
+              Empresa (opcional)
+            </Label>
+            <Select
+              value={selectedOrgId || ''}
+              onValueChange={(value) => setSelectedOrgId(value || null)}
+              disabled={isLoading || companiesLoading}
+            >
+              <SelectTrigger id="company">
+                <SelectValue placeholder="Seleccionar empresa..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Sin empresa asignada</SelectItem>
+                {companies?.map((company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Al asignar nuevos roles, se asociarán a esta empresa
+            </p>
+          </div>
+
+          {/* Lista de Roles */}
           <div className="space-y-3">
             {allRoles.map((role) => {
               const isSelected = selectedRoles.has(role);
