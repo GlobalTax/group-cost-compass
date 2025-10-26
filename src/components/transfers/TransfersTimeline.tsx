@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Building2, ArrowDown, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +33,6 @@ interface Transfer {
 
 interface TransfersTimelineProps {
   transfers: Transfer[];
-  onEmployeeClick: (employeeId: string) => void;
 }
 
 const getDaysBadgeColor = (days?: number) => {
@@ -46,7 +46,6 @@ const getDaysBadgeColor = (days?: number) => {
 
 export const TransfersTimeline = ({
   transfers,
-  onEmployeeClick,
 }: TransfersTimelineProps) => {
   // Group transfers by employee
   const groupedTransfers = transfers.reduce((acc, transfer) => {
@@ -77,18 +76,18 @@ export const TransfersTimeline = ({
     <div className="space-y-6">
       {Object.entries(groupedTransfers).map(
         ([employeeId, { employeeName, transfers: empTransfers }]) => (
-          <Card
+          <Link
             key={employeeId}
-            className="p-6 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => onEmployeeClick(employeeId)}
+            to={`/employees/${employeeId}`}
           >
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              {employeeName}
-              <Badge variant="outline" className="font-normal">
-                {empTransfers.length}{" "}
-                {empTransfers.length === 1 ? "traslado" : "traslados"}
-              </Badge>
-            </h3>
+            <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                {employeeName}
+                <Badge variant="outline" className="font-normal">
+                  {empTransfers.length}{" "}
+                  {empTransfers.length === 1 ? "traslado" : "traslados"}
+                </Badge>
+              </h3>
 
             <div className="space-y-4">
               {empTransfers.map((transfer, index) => (
@@ -153,7 +152,8 @@ export const TransfersTimeline = ({
                 </div>
               ))}
             </div>
-          </Card>
+            </Card>
+          </Link>
         )
       )}
     </div>

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -34,7 +35,6 @@ interface Transfer {
 interface TransfersTableProps {
   transfers: Transfer[];
   isLoading?: boolean;
-  onEmployeeClick: (employeeId: string) => void;
   onExport: () => void;
 }
 
@@ -50,7 +50,6 @@ const getDaysBadgeColor = (days?: number) => {
 export const TransfersTable = ({
   transfers,
   isLoading,
-  onEmployeeClick,
   onExport,
 }: TransfersTableProps) => {
   if (isLoading) {
@@ -93,39 +92,41 @@ export const TransfersTable = ({
         </TableHeader>
         <TableBody>
           {transfers.map((transfer) => (
-            <TableRow
+            <Link
               key={transfer.id}
-              className="cursor-pointer"
-              onClick={() => onEmployeeClick(transfer.hr_employees.id)}
+              to={`/employees/${transfer.hr_employees.id}`}
+              className="contents"
             >
-              <TableCell className="font-medium">
-                {transfer.hr_employees.full_name}
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline">{transfer.from_company.name}</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge className="bg-primary">
-                  {transfer.to_company.name}
-                </Badge>
-              </TableCell>
-              <TableCell>{formatDate(transfer.transfer_date)}</TableCell>
-              <TableCell>
-                {transfer.daysBetween !== undefined ? (
-                  <Badge
-                    variant="outline"
-                    className={getDaysBadgeColor(transfer.daysBetween)}
-                  >
-                    {transfer.daysBetween} días
+              <TableRow className="cursor-pointer hover:bg-muted/50">
+                <TableCell className="font-medium">
+                  {transfer.hr_employees.full_name}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline">{transfer.from_company.name}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge className="bg-primary">
+                    {transfer.to_company.name}
                   </Badge>
-                ) : (
-                  <span className="text-muted-foreground">N/A</span>
-                )}
-              </TableCell>
-              <TableCell className="max-w-xs truncate">
-                {transfer.reason || "—"}
-              </TableCell>
-            </TableRow>
+                </TableCell>
+                <TableCell>{formatDate(transfer.transfer_date)}</TableCell>
+                <TableCell>
+                  {transfer.daysBetween !== undefined ? (
+                    <Badge
+                      variant="outline"
+                      className={getDaysBadgeColor(transfer.daysBetween)}
+                    >
+                      {transfer.daysBetween} días
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">N/A</span>
+                  )}
+                </TableCell>
+                <TableCell className="max-w-xs truncate">
+                  {transfer.reason || "—"}
+                </TableCell>
+              </TableRow>
+            </Link>
           ))}
         </TableBody>
       </Table>

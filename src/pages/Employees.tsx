@@ -6,13 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
 import { EmployeeDialog } from "@/components/employees/EmployeeDialog";
-import { EmployeeDrawer } from "@/components/employees/EmployeeDrawer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useCompanies } from "@/hooks/useCompanies";
 
 const Employees = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -28,11 +26,6 @@ const Employees = () => {
   return (
     <>
       <EmployeeDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
-      <EmployeeDrawer
-        employeeId={selectedEmployeeId}
-        open={!!selectedEmployeeId}
-        onOpenChange={(open) => !open && setSelectedEmployeeId(null)}
-      />
       
       <div className="p-8 space-y-6">
         <PageHeader
@@ -88,10 +81,7 @@ const Employees = () => {
         <div>
           <h2 className="text-lg font-semibold mb-4 text-foreground">Plantilla</h2>
           <Card className="p-6 border-gray-200">
-            <EmployeeTable 
-              filters={filters} 
-              onEmployeeClick={(id) => setSelectedEmployeeId(id)}
-            />
+            <EmployeeTable filters={filters} />
           </Card>
         </div>
       </div>

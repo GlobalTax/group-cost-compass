@@ -16,7 +16,6 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { TransfersTimeline } from "@/components/transfers/TransfersTimeline";
 import { TransfersTable } from "@/components/transfers/TransfersTable";
 import { CreateTransferDialog } from "@/components/transfers/CreateTransferDialog";
-import { EmployeeDrawer } from "@/components/employees/EmployeeDrawer";
 import { exportTransfersToCSV } from "@/lib/exporters/transfersExporter";
 import { Search, List, Table as TableIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,9 +27,6 @@ const Transfers = () => {
 
   const [employeeFilter, setEmployeeFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(
-    null
-  );
 
   // Get unique employees from transfers
   const uniqueEmployees = useMemo(() => {
@@ -155,27 +151,16 @@ const Transfers = () => {
           <TabsContent value="timeline">
             <TransfersTimeline
               transfers={filteredTransfers}
-              onEmployeeClick={setSelectedEmployeeId}
             />
           </TabsContent>
 
           <TabsContent value="table">
             <TransfersTable
               transfers={filteredTransfers}
-              onEmployeeClick={setSelectedEmployeeId}
               onExport={handleExportCSV}
             />
           </TabsContent>
         </Tabs>
-      )}
-
-      {/* Employee Drawer */}
-      {selectedEmployeeId && (
-        <EmployeeDrawer
-          employeeId={selectedEmployeeId}
-          open={!!selectedEmployeeId}
-          onOpenChange={(open) => !open && setSelectedEmployeeId(null)}
-        />
       )}
     </div>
   );

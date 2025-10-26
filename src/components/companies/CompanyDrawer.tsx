@@ -15,8 +15,6 @@ import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import { Users, Euro, TrendingUp, ArrowRightLeft, Building2 } from "lucide-react";
 import { EmployeeTable } from "@/components/dashboard/EmployeeTable";
 import { TransfersTimeline } from "@/components/transfers/TransfersTimeline";
-import { useState } from "react";
-import { EmployeeDrawer } from "@/components/employees/EmployeeDrawer";
 
 interface CompanyDrawerProps {
   companyId: string | null;
@@ -25,8 +23,6 @@ interface CompanyDrawerProps {
 }
 
 export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerProps) => {
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
-
   const { data: company, isLoading } = useQuery({
     queryKey: ["company-detail", companyId],
     enabled: !!companyId,
@@ -123,13 +119,8 @@ export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerPr
     },
   });
 
-  const handleEmployeeClick = (employeeId: string) => {
-    setSelectedEmployeeId(employeeId);
-  };
-
   return (
-    <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader className="mb-6">
             <SheetTitle className="flex items-center gap-3">
@@ -236,7 +227,6 @@ export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerPr
                 <TabsContent value="employees" className="space-y-4">
                   <EmployeeTable
                     filters={{ companyId: companyId || undefined }}
-                    onEmployeeClick={handleEmployeeClick}
                   />
                 </TabsContent>
 
@@ -244,7 +234,6 @@ export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerPr
                   {company?.transfers && company.transfers.length > 0 ? (
                     <TransfersTimeline
                       transfers={company.transfers}
-                      onEmployeeClick={handleEmployeeClick}
                     />
                   ) : (
                     <Card className="p-8 text-center border-dashed">
@@ -260,13 +249,5 @@ export const CompanyDrawer = ({ companyId, open, onOpenChange }: CompanyDrawerPr
           )}
         </SheetContent>
       </Sheet>
-
-      {/* Employee Drawer */}
-      <EmployeeDrawer
-        employeeId={selectedEmployeeId}
-        open={!!selectedEmployeeId}
-        onOpenChange={(open) => !open && setSelectedEmployeeId(null)}
-      />
-    </>
   );
 };

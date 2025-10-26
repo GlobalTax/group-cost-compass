@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -21,10 +22,9 @@ interface EmployeeTableProps {
     searchTerm?: string;
     activeOnly?: boolean;
   };
-  onEmployeeClick?: (employeeId: string) => void;
 }
 
-export const EmployeeTable = ({ filters, onEmployeeClick }: EmployeeTableProps) => {
+export const EmployeeTable = ({ filters }: EmployeeTableProps) => {
   const { data: employees, isLoading } = useEmployees(filters);
   const { data: allCosts } = useEmployeeCosts();
 
@@ -109,79 +109,80 @@ export const EmployeeTable = ({ filters, onEmployeeClick }: EmployeeTableProps) 
             const isActive = !employee.termination_date;
 
             return (
-              <TableRow
+              <Link 
                 key={employee.id}
-                className="group cursor-pointer"
-                onClick={() => onEmployeeClick?.(employee.id)}
+                to={`/employees/${employee.id}`}
+                className="contents"
               >
-                <TableCell className="font-medium">{employee.full_name}</TableCell>
-                <TableCell>
-                  <span className="text-sm text-foreground">
-                    {employee.companies?.name || "—"}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm">{formatDate(employee.hire_date)}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-foreground">
-                    {employee.termination_date
-                      ? formatDate(employee.termination_date)
-                      : "—"}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {brutoAnual > 0 ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="cursor-help">
-                          {formatCurrency(brutoAnual)}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {changePercent !== null ? (
-                          <p className="text-xs">
-                            Cambio vs. año anterior: {changePercent > 0 ? "+" : ""}
-                            {changePercent.toFixed(1)}%
-                          </p>
-                        ) : (
-                          <p className="text-xs">Sin datos del año anterior</p>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    "—"
-                  )}
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {costeAnual > 0 ? formatCurrency(costeAnual) : "—"}
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Badge
-                      variant={isActive ? "default" : "secondary"}
-                      className={isActive ? "bg-success" : ""}
-                    >
-                      {isActive ? "Activo" : "Inactivo"}
-                    </Badge>
-                    {employee.transfer_group && (
-                      <Badge variant="outline" className="border-primary text-primary">
-                        Traslado
-                      </Badge>
+                <TableRow className="group cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">{employee.full_name}</TableCell>
+                  <TableCell>
+                    <span className="text-sm text-foreground">
+                      {employee.companies?.name || "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm">{formatDate(employee.hire_date)}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-foreground">
+                      {employee.termination_date
+                        ? formatDate(employee.termination_date)
+                        : "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {brutoAnual > 0 ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help">
+                            {formatCurrency(brutoAnual)}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {changePercent !== null ? (
+                            <p className="text-xs">
+                              Cambio vs. año anterior: {changePercent > 0 ? "+" : ""}
+                              {changePercent.toFixed(1)}%
+                            </p>
+                          ) : (
+                            <p className="text-xs">Sin datos del año anterior</p>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      "—"
                     )}
-                  </div>
-                </TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => onEmployeeClick?.(employee.id)}
-                  >
-                    <ArrowUpRight className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {costeAnual > 0 ? formatCurrency(costeAnual) : "—"}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Badge
+                        variant={isActive ? "default" : "secondary"}
+                        className={isActive ? "bg-success" : ""}
+                      >
+                        {isActive ? "Activo" : "Inactivo"}
+                      </Badge>
+                      {employee.transfer_group && (
+                        <Badge variant="outline" className="border-primary text-primary">
+                          Traslado
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </Link>
             );
           })}
         </TableBody>
