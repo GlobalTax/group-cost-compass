@@ -4904,7 +4904,9 @@ export type Database = {
       hr_employees: {
         Row: {
           company_id: string | null
+          contract_type: string | null
           created_at: string | null
+          department: string | null
           dni: string | null
           email: string | null
           employee_code: string | null
@@ -4915,6 +4917,7 @@ export type Database = {
           nss: string | null
           org_id: string | null
           phone: string | null
+          position: string | null
           seniority_date: string | null
           termination_date: string | null
           transfer_group: boolean | null
@@ -4922,7 +4925,9 @@ export type Database = {
         }
         Insert: {
           company_id?: string | null
+          contract_type?: string | null
           created_at?: string | null
+          department?: string | null
           dni?: string | null
           email?: string | null
           employee_code?: string | null
@@ -4933,6 +4938,7 @@ export type Database = {
           nss?: string | null
           org_id?: string | null
           phone?: string | null
+          position?: string | null
           seniority_date?: string | null
           termination_date?: string | null
           transfer_group?: boolean | null
@@ -4940,7 +4946,9 @@ export type Database = {
         }
         Update: {
           company_id?: string | null
+          contract_type?: string | null
           created_at?: string | null
+          department?: string | null
           dni?: string | null
           email?: string | null
           employee_code?: string | null
@@ -4951,6 +4959,7 @@ export type Database = {
           nss?: string | null
           org_id?: string | null
           phone?: string | null
+          position?: string | null
           seniority_date?: string | null
           termination_date?: string | null
           transfer_group?: boolean | null

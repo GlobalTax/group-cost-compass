@@ -60,6 +60,9 @@ export const EmployeeDialog = ({
           seniority_date: employee.seniority_date || "",
           transfer_group: employee.transfer_group || false,
           notes: employee.notes || "",
+          department: employee.department || "",
+          position: employee.position || "",
+          contract_type: employee.contract_type || "",
         }
       : {
           full_name: "",
@@ -70,6 +73,9 @@ export const EmployeeDialog = ({
           seniority_date: "",
           transfer_group: false,
           notes: "",
+          department: "",
+          position: "",
+          contract_type: "Laboral",
         },
   });
 
@@ -83,6 +89,9 @@ export const EmployeeDialog = ({
       seniority_date: data.seniority_date || null,
       transfer_group: data.transfer_group || false,
       notes: data.notes || null,
+      department: data.department || null,
+      position: data.position || null,
+      contract_type: data.contract_type || null,
     };
 
     if (employee) {
@@ -163,6 +172,50 @@ export const EmployeeDialog = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Departamento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Recursos Humanos" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Puesto</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Analista" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contract_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Contrato</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Laboral" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

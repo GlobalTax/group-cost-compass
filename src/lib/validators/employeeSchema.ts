@@ -9,6 +9,9 @@ export const employeeSchema = z.object({
   seniority_date: z.string().optional(),
   transfer_group: z.boolean().optional(),
   notes: z.string().optional(),
+  department: z.string().optional(),
+  position: z.string().optional(),
+  contract_type: z.string().optional(),
 });
 
 export type EmployeeFormData = z.infer<typeof employeeSchema>;

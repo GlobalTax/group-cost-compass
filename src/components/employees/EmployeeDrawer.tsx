@@ -9,14 +9,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Building2 } from "lucide-react";
+import { X, Building2, Briefcase, FileText } from "lucide-react";
 import { useEmployee } from "@/hooks/useEmployees";
 import { useEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { useTransfers } from "@/hooks/useTransfers";
+import { useEmployeeFinancials } from "@/hooks/useEmployeeFinancials";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PersonalDataTab } from "./tabs/PersonalDataTab";
+import { AvatarInitials } from "@/components/ui/avatar-initials";
+import { KPICard } from "@/components/dashboard/KPICard";
+import { GeneralInfoTab } from "./tabs/GeneralInfoTab";
 import { CostsTab } from "./tabs/CostsTab";
-import { SalaryIncreasesTab } from "./tabs/SalaryIncreasesTab";
 import { TransfersTab } from "./tabs/TransfersTab";
 
 interface EmployeeDrawerProps {
@@ -29,6 +31,8 @@ export const EmployeeDrawer = ({ employeeId, open, onOpenChange }: EmployeeDrawe
   const { data: employee, isLoading: isLoadingEmployee } = useEmployee(employeeId || "");
   const { data: costs, isLoading: isLoadingCosts } = useEmployeeCosts(employeeId || undefined);
   const { data: transfers, isLoading: isLoadingTransfers } = useTransfers(employeeId || undefined);
+  
+  const financials = useEmployeeFinancials(costs);
 
   // Reset scroll when opening
   useEffect(() => {
@@ -55,25 +59,42 @@ export const EmployeeDrawer = ({ employeeId, open, onOpenChange }: EmployeeDrawe
               {isLoadingEmployee ? (
                 <Skeleton className="h-8 w-64" />
               ) : employee ? (
-                <>
-                  <div className="flex items-center gap-3 mb-2">
-                    <DrawerTitle className="text-2xl font-bold">
-                      {employee.full_name}
-                    </DrawerTitle>
-                    <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-success" : ""}>
-                      {isActive ? "Activo" : "Inactivo"}
-                    </Badge>
-                    {employee.transfer_group && (
-                      <Badge variant="outline" className="border-primary text-primary">
-                        Traslado
+                <div className="flex items-start gap-4">
+                  <AvatarInitials name={employee.full_name} className="h-16 w-16" />
+                  <div className="flex-1 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <DrawerTitle className="text-2xl font-bold">
+                        {employee.full_name}
+                      </DrawerTitle>
+                      <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-success" : ""}>
+                        {isActive ? "Activo" : "Inactivo"}
                       </Badge>
-                    )}
+                      {employee.transfer_group && (
+                        <Badge variant="outline" className="border-primary text-primary">
+                          Traslado
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Código:</span>
+                        <span className="font-medium">{employee.employee_code || "—"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{employee.companies?.name || "—"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{employee.department || "—"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{employee.contract_type || "—"}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-foreground">
-                    <Building2 className="w-4 h-4" />
-                    <span>{employee.companies?.name || "—"}</span>
-                  </div>
-                </>
+                </div>
               ) : null}
             </div>
             <DrawerClose asChild>
@@ -91,30 +112,56 @@ export const EmployeeDrawer = ({ employeeId, open, onOpenChange }: EmployeeDrawe
               <Skeleton className="h-64 w-full" />
             </div>
           ) : employee ? (
-            <Tabs defaultValue="personal" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="personal">Datos</TabsTrigger>
-                <TabsTrigger value="costs">Costes</TabsTrigger>
-                <TabsTrigger value="increases">Subidas</TabsTrigger>
-                <TabsTrigger value="transfers">Traslados</TabsTrigger>
-              </TabsList>
+            <div className="space-y-6">
+              {/* KPI Cards */}
+              <div className="grid grid-cols-2 gap-4">
+                <KPICard
+                  title="Salario Base Anual"
+                  value={financials.annualBaseSalary}
+                  format="currency"
+                  className="p-4"
+                />
+                <KPICard
+                  title="Coste Mensual"
+                  value={financials.monthlyCost}
+                  format="currency"
+                  className="p-4"
+                />
+                <KPICard
+                  title="Último Bruto"
+                  value={financials.lastGross}
+                  format="currency"
+                  className="p-4"
+                />
+                <KPICard
+                  title="Último Neto"
+                  value={financials.lastNet}
+                  format="currency"
+                  className="p-4"
+                />
+              </div>
 
-              <TabsContent value="personal" className="space-y-4">
-                <PersonalDataTab employee={employee} />
-              </TabsContent>
+              {/* Tabs */}
+              <Tabs defaultValue="general" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="general">General</TabsTrigger>
+                  <TabsTrigger value="costs">Nóminas</TabsTrigger>
+                  <TabsTrigger value="transfers">Traslados</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="costs" className="space-y-4">
-                <CostsTab costs={costs || []} isLoading={isLoadingCosts} />
-              </TabsContent>
+                <TabsContent value="general" className="space-y-4">
+                  <GeneralInfoTab employee={employee} financials={financials} />
+                </TabsContent>
 
-              <TabsContent value="increases" className="space-y-4">
-                <SalaryIncreasesTab costs={costs || []} />
-              </TabsContent>
+                <TabsContent value="costs" className="space-y-4">
+                  <CostsTab costs={costs || []} isLoading={isLoadingCosts} />
+                </TabsContent>
 
-              <TabsContent value="transfers" className="space-y-4">
-                <TransfersTab transfers={transfers || []} isLoading={isLoadingTransfers} />
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="transfers" className="space-y-4">
+                  <TransfersTab transfers={transfers || []} isLoading={isLoadingTransfers} />
+                </TabsContent>
+              </Tabs>
+            </div>
           ) : (
             <p className="text-center text-foreground py-8">Empleado no encontrado</p>
           )}
