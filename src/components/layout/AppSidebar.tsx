@@ -1,5 +1,5 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut } from "lucide-react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -10,9 +10,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const navigationItems = [
   {
@@ -43,12 +47,24 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const isActive = (url: string) => {
     if (url === "/dashboard") {
       return location.pathname === "/" || location.pathname === "/dashboard";
     }
     return location.pathname.startsWith(url);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Sesión cerrada correctamente');
+      navigate('/login');
+    } catch (error) {
+      toast.error('Error al cerrar sesión');
+    }
   };
 
   return (
@@ -112,6 +128,23 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
+      {/* Logout Footer */}
+      {user && (
+        <SidebarFooter className="border-t border-border p-2">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-3 text-foreground hover:text-foreground hover:bg-muted",
+              collapsed && "justify-center"
+            )}
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span className="text-sm">Cerrar Sesión</span>}
+          </Button>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }

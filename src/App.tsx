@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Menu } from "lucide-react";
+import { AuthProvider, withAuth } from "@/lib/auth";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
@@ -15,9 +16,20 @@ import Upload from "./pages/Upload";
 import Transfers from "./pages/Transfers";
 import Costs from "./pages/Costs";
 import Audit from "./pages/Audit";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Protected routes
+const ProtectedDashboard = withAuth(['admin', 'finance', 'super_admin'])(Dashboard);
+const ProtectedCosts = withAuth(['admin', 'finance', 'super_admin'])(Costs);
+const ProtectedAudit = withAuth(['admin', 'super_admin'])(Audit);
+const ProtectedEmployees = withAuth(['admin', 'manager', 'super_admin'])(Employees);
+const ProtectedEmployeeDetail = withAuth(['admin', 'manager', 'super_admin'])(EmployeeDetail);
+const ProtectedCompanies = withAuth(['admin', 'finance', 'super_admin'])(Companies);
+const ProtectedUpload = withAuth(['admin', 'super_admin'])(Upload);
+const ProtectedTransfers = withAuth(['admin', 'manager', 'super_admin'])(Transfers);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -25,36 +37,39 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <SidebarProvider defaultOpen>
-          <div className="min-h-screen flex w-full bg-background">
-            <AppSidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Top Bar */}
-              <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-6">
-                <SidebarTrigger>
-                  <Menu className="h-5 w-5" />
-                </SidebarTrigger>
-              </header>
+        <AuthProvider>
+          <SidebarProvider defaultOpen>
+            <div className="min-h-screen flex w-full bg-background">
+              <AppSidebar />
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Top Bar */}
+                <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-6">
+                  <SidebarTrigger>
+                    <Menu className="h-5 w-5" />
+                  </SidebarTrigger>
+                </header>
 
-              {/* Main Content */}
-              <main className="flex-1 overflow-auto">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/employees" element={<Employees />} />
-                  <Route path="/employees/:id" element={<EmployeeDetail />} />
-                  <Route path="/companies" element={<Companies />} />
-                  <Route path="/upload" element={<Upload />} />
-                  <Route path="/transfers" element={<Transfers />} />
-                  <Route path="/costs" element={<Costs />} />
-                  <Route path="/audit" element={<Audit />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
+                {/* Main Content */}
+                <main className="flex-1 overflow-auto">
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/" element={<Index />} />
+                    <Route path="/dashboard" element={<ProtectedDashboard />} />
+                    <Route path="/employees" element={<ProtectedEmployees />} />
+                    <Route path="/employees/:id" element={<ProtectedEmployeeDetail />} />
+                    <Route path="/companies" element={<ProtectedCompanies />} />
+                    <Route path="/upload" element={<ProtectedUpload />} />
+                    <Route path="/transfers" element={<ProtectedTransfers />} />
+                    <Route path="/costs" element={<ProtectedCosts />} />
+                    <Route path="/audit" element={<ProtectedAudit />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
             </div>
-          </div>
-        </SidebarProvider>
+          </SidebarProvider>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
