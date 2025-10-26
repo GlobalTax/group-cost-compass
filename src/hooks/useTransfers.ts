@@ -126,6 +126,7 @@ export const useCreateTransfer = () => {
       from_company: string;
       to_company: string;
       transfer_date: string;
+      days_between?: number;
       reason?: string;
     }) => {
       const { data: transfer, error } = await supabase

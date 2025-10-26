@@ -4871,6 +4871,13 @@ export type Database = {
             referencedRelation: "hr_employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "hr_employee_costs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
         ]
       }
       hr_employees: {
@@ -4878,10 +4885,14 @@ export type Database = {
           company_id: string | null
           created_at: string | null
           dni: string | null
+          email: string | null
+          employee_code: string | null
           full_name: string
           hire_date: string | null
           id: string
           notes: string | null
+          nss: string | null
+          phone: string | null
           seniority_date: string | null
           termination_date: string | null
           transfer_group: boolean | null
@@ -4891,10 +4902,14 @@ export type Database = {
           company_id?: string | null
           created_at?: string | null
           dni?: string | null
+          email?: string | null
+          employee_code?: string | null
           full_name: string
           hire_date?: string | null
           id?: string
           notes?: string | null
+          nss?: string | null
+          phone?: string | null
           seniority_date?: string | null
           termination_date?: string | null
           transfer_group?: boolean | null
@@ -4904,10 +4919,14 @@ export type Database = {
           company_id?: string | null
           created_at?: string | null
           dni?: string | null
+          email?: string | null
+          employee_code?: string | null
           full_name?: string
           hire_date?: string | null
           id?: string
           notes?: string | null
+          nss?: string | null
+          phone?: string | null
           seniority_date?: string | null
           termination_date?: string | null
           transfer_group?: boolean | null
@@ -4928,35 +4947,48 @@ export type Database = {
             referencedRelation: "vw_costs_by_company_year"
             referencedColumns: ["company_id"]
           },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["company_id"]
+          },
         ]
       }
       hr_transfers: {
         Row: {
           created_at: string | null
+          days_between: number | null
           employee_id: string | null
           from_company: string | null
           id: string
           reason: string | null
           to_company: string | null
           transfer_date: string
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          days_between?: number | null
           employee_id?: string | null
           from_company?: string | null
           id?: string
           reason?: string | null
           to_company?: string | null
           transfer_date: string
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          days_between?: number | null
           employee_id?: string | null
           from_company?: string | null
           id?: string
           reason?: string | null
           to_company?: string | null
           transfer_date?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -4967,6 +4999,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "hr_transfers_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
             foreignKeyName: "hr_transfers_from_company_fkey"
             columns: ["from_company"]
             isOneToOne: false
@@ -4981,6 +5020,13 @@ export type Database = {
             referencedColumns: ["company_id"]
           },
           {
+            foreignKeyName: "hr_transfers_from_company_fkey"
+            columns: ["from_company"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["company_id"]
+          },
+          {
             foreignKeyName: "hr_transfers_to_company_fkey"
             columns: ["to_company"]
             isOneToOne: false
@@ -4992,6 +5038,13 @@ export type Database = {
             columns: ["to_company"]
             isOneToOne: false
             referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_to_company_fkey"
+            columns: ["to_company"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
             referencedColumns: ["company_id"]
           },
         ]
@@ -9746,8 +9799,34 @@ export type Database = {
           company: string | null
           company_id: string | null
           coste_total: number | null
-          num_employees: number | null
+          employee_count: number | null
           year: number | null
+        }
+        Relationships: []
+      }
+      vw_employee_annual: {
+        Row: {
+          bruto_anual: number | null
+          company: string | null
+          company_id: string | null
+          coste_anual: number | null
+          employee_code: string | null
+          employee_id: string | null
+          full_name: string | null
+          months_worked: number | null
+          year: number | null
+        }
+        Relationships: []
+      }
+      vw_transfers_summary: {
+        Row: {
+          days_between: number | null
+          dni: string | null
+          employee_name: string | null
+          from_company: string | null
+          reason: string | null
+          to_company: string | null
+          transfer_date: string | null
         }
         Relationships: []
       }

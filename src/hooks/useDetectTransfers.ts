@@ -77,6 +77,7 @@ export const useDetectTransfers = () => {
                   from_company: prevEmployee.company_id,
                   to_company: currentEmployee.company_id,
                   transfer_date: currentEmployee.hire_date,
+                  days_between: Math.round(daysBetween),
                   reason: `Traslado automático detectado (${Math.round(daysBetween)} días entre contratos)`,
                 });
 
