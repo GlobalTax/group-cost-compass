@@ -37,6 +37,14 @@ export const A3NomCostsUpload = () => {
     setProcessing(true);
     try {
       const result = await parseA3NomCostsFile(selectedFile);
+      console.groupCollapsed("[A3Nom][Parse] Resultado del archivo");
+      console.log("Período seleccionado:", period);
+      console.log("Empleados detectados:", result.data.length);
+      console.log("Resumen:", result.summary);
+      console.log("Primeras 5 filas:", result.data.slice(0, 5));
+      console.log("Errores:", result.errors);
+      console.log("Warnings:", result.warnings);
+      console.groupEnd();
       setValidation(result);
       
       if (result.errors.length > 0) {
@@ -57,6 +65,10 @@ export const A3NomCostsUpload = () => {
     setImporting(true);
     setImportProgress({ current: 0, total: validation.data.length });
 
+    console.group("[A3Nom][Import] Inicio");
+    console.log("Total registros del archivo:", validation.data.length);
+    console.log("Período:", period);
+
     try {
       // 1. Obtener catálogo de empresas (incluyendo org_id)
       const { data: companies, error: companiesError } = await supabase
@@ -64,6 +76,8 @@ export const A3NomCostsUpload = () => {
         .select("id, name, nif, org_id");
 
       if (companiesError) throw companiesError;
+
+      console.log("[A3Nom][Import] Empresas catálogo:", companies?.length, companies?.slice(0, 5));
 
       if (!companies || companies.length === 0) {
         toast.error("No se pudieron cargar las empresas del catálogo");
@@ -83,6 +97,7 @@ export const A3NomCostsUpload = () => {
         }
       }
 
+      console.log("[A3Nom][Import] Empresas faltantes:", missingCompanies.size, Array.from(missingCompanies));
       if (missingCompanies.size > 0) {
         toast.error(
           `Empresas no encontradas en el catálogo: ${Array.from(missingCompanies).join(", ")}`
@@ -99,11 +114,14 @@ export const A3NomCostsUpload = () => {
         .in("employee_code", employeeCodes);
 
       if (employeeError) throw employeeError;
+      console.log("[A3Nom][Import] Códigos empleados en archivo:", employeeCodes.length);
+      console.log("[A3Nom][Import] Empleados existentes en BD:", employees?.length);
 
       // Mapa con clave compuesta: "companyId:employeeCode" → employeeId
       const employeeMap = new Map(
         employees?.map(e => [`${e.company_id}:${e.employee_code}`, e.id]) || []
       );
+      console.log("[A3Nom][Import] Tamaño employeeMap:", employeeMap.size);
 
       // 4. Identificar empleados faltantes (por combinación empresa+código)
       const missingEmployees = validation.data.filter(d => {
@@ -112,6 +130,7 @@ export const A3NomCostsUpload = () => {
         const compositeKey = `${companyInfo.id}:${d.employee_code}`;
         return !employeeMap.has(compositeKey);
       });
+      console.warn("[A3Nom][Import] Empleados faltantes (empresa+código):", missingEmployees.length, missingEmployees.slice(0, 10).map(e => ({ code: e.employee_code, name: e.employee_name, company_nif: e.company_nif })));
 
       if (missingEmployees.length > 0) {
         setImportProgress({
@@ -131,6 +150,8 @@ export const A3NomCostsUpload = () => {
             notes: `Creado automáticamente desde importación A3Nom ${period}`,
           };
         });
+        console.log("[A3Nom][Import] Empleados a crear:", employeesToCreate.length);
+        console.log("[A3Nom][Import] Ejemplo empleadosToCreate:", employeesToCreate.slice(0, 5));
 
         // Ejecutar creación en batch con manejo de errores RLS
         try {
@@ -149,6 +170,7 @@ export const A3NomCostsUpload = () => {
           );
         } catch (error) {
           const errorMessage = (error as Error).message;
+          console.error("[A3Nom][Import] Error creando empleados:", error);
           if (errorMessage.includes("row-level security") || errorMessage.includes("RLS")) {
             toast.error("Error RLS: No se pudieron crear empleados. Verifica que org_id esté configurado correctamente.");
           } else {
@@ -208,6 +230,8 @@ export const A3NomCostsUpload = () => {
             porcentaje_imputacion: d.porcentaje_imputacion,
           };
         });
+      console.log("[A3Nom][Import] Costes a insertar:", costsToInsert.length, "filtrados:", validation.data.length - costsToInsert.length);
+      console.log("[A3Nom][Import] Ejemplo costes:", costsToInsert.slice(0, 3));
 
       if (costsToInsert.length === 0) {
         throw new Error("No hay datos válidos para importar");
@@ -243,6 +267,7 @@ export const A3NomCostsUpload = () => {
       const BATCH_SIZE = 50;
       for (let i = 0; i < costsToInsert.length; i += BATCH_SIZE) {
         const batch = costsToInsert.slice(i, i + BATCH_SIZE);
+        console.log(`[A3Nom][Import] Insertando batch ${i} - ${Math.min(i + BATCH_SIZE, costsToInsert.length)} de ${costsToInsert.length}`);
         await bulkCreateCosts.mutateAsync(batch);
         setImportProgress({ current: Math.min(i + BATCH_SIZE, costsToInsert.length), total: costsToInsert.length });
       }
@@ -251,12 +276,15 @@ export const A3NomCostsUpload = () => {
       toast.success(
         `✅ Importación completada: ${costsToInsert.length} registros de ${companiesCount} empresa${companiesCount > 1 ? 's' : ''}`
       );
+      console.groupEnd();
       
       // Reset
       setFile(null);
       setValidation(null);
       setPeriod("");
     } catch (error) {
+      console.error("[A3Nom][Import] Error general:", error);
+      console.groupEnd();
       toast.error(`Error en importación: ${(error as Error).message}`);
     } finally {
       setImporting(false);
