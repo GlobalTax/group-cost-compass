@@ -9,6 +9,7 @@ import { ValidationResults } from "./ValidationResults";
 import { ImportProgress } from "./ImportProgress";
 import { parseA3NomCostsFile, type A3NomParseResult } from "@/lib/parsers/a3nomCostsParser";
 import { useBulkCreateEmployeeCosts } from "@/hooks/useEmployeeCosts";
+import { useBulkCreateEmployees } from "@/hooks/useBulkCreateEmployees";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { InfoIcon, Upload } from "lucide-react";
@@ -22,6 +23,7 @@ export const A3NomCostsUpload = () => {
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
 
   const bulkCreateCosts = useBulkCreateEmployeeCosts();
+  const createEmployees = useBulkCreateEmployees();
 
   const handleFileSelect = async (selectedFile: File) => {
     setFile(selectedFile);
@@ -102,7 +104,45 @@ export const A3NomCostsUpload = () => {
         employees?.map(e => [e.employee_code, { id: e.id, companyId: e.company_id }]) || []
       );
 
-      // 4. Preparar registros de costes con validaciones
+      // 4. Identificar y crear empleados faltantes
+      const missingEmployees = validation.data.filter(
+        d => !employeeMap.has(d.employee_code)
+      );
+
+      if (missingEmployees.length > 0) {
+        setImportProgress({
+          current: 0,
+          total: missingEmployees.length
+        });
+
+        const employeesToCreate = missingEmployees.map(d => {
+          const companyInfo = companyMap.get(d.company_nif)!;
+          
+          return {
+            employee_code: d.employee_code,
+            full_name: d.employee_name,
+            company_id: companyInfo.id,
+            hire_date: `${period}-01`,
+            notes: `Creado automáticamente desde importación A3Nom ${period}`,
+          };
+        });
+
+        // Ejecutar creación en batch
+        const newEmployees = await createEmployees.mutateAsync(employeesToCreate);
+
+        // Actualizar el mapa con los nuevos empleados
+        newEmployees.forEach(emp => {
+          if (emp.employee_code) {
+            employeeMap.set(emp.employee_code, { id: emp.id, companyId: emp.company_id });
+          }
+        });
+
+        toast.success(
+          `✅ ${newEmployees.length} empleado(s) nuevo(s): ${newEmployees.slice(0, 3).map(e => e.full_name).join(", ")}${newEmployees.length > 3 ? "..." : ""}`
+        );
+      }
+
+      // 5. Preparar registros de costes con validaciones
       const costsToInsert = validation.data
         .filter(d => {
           const hasEmployee = employeeMap.has(d.employee_code);
@@ -155,7 +195,7 @@ export const A3NomCostsUpload = () => {
         throw new Error("No hay datos válidos para importar");
       }
 
-      // 5. Verificar si ya existen costes para este período
+      // 6. Verificar si ya existen costes para este período
       const { data: existing } = await supabase
         .from("hr_employee_costs")
         .select("id")
@@ -181,7 +221,7 @@ export const A3NomCostsUpload = () => {
           .in("employee_id", costsToInsert.map(c => c.employee_id));
       }
 
-      // 6. Importar en lotes
+      // 7. Importar costes en lotes
       const BATCH_SIZE = 50;
       for (let i = 0; i < costsToInsert.length; i += BATCH_SIZE) {
         const batch = costsToInsert.slice(i, i + BATCH_SIZE);
