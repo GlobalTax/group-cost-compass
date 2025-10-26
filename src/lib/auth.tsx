@@ -28,22 +28,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchUserRoles = async (userId: string): Promise<AppRole[]> => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    
-    if (error) {
-      console.error('Error fetching roles:', error);
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.error('Error fetching roles:', error);
+        console.error('User ID:', userId);
+        return [];
+      }
+      
+      const roles = data?.map(r => r.role as AppRole) || [];
+      console.log('Roles cargados para', userId, ':', roles);
+      return roles;
+    } catch (err) {
+      console.error('Excepción al cargar roles:', err);
       return [];
     }
-    
-    return data?.map(r => r.role as AppRole) || [];
   };
 
   const updateUserFromSession = async (session: Session | null) => {
     if (session?.user) {
+      console.log('Actualizando usuario desde sesión:', session.user.email);
       const roles = await fetchUserRoles(session.user.id);
+      
+      if (roles.length === 0) {
+        console.warn('⚠️ No se encontraron roles para:', session.user.email);
+      }
+      
       setUser({
         id: session.user.id,
         email: session.user.email!,
@@ -120,20 +134,23 @@ export const withAuth = (allowedRoles: AppRole[]) => {
       const navigate = useNavigate();
 
       useEffect(() => {
-        if (!loading) {
-          if (!user) {
-            navigate('/login', { replace: true });
-          } else if (!hasPermission(allowedRoles)) {
-            // Si el usuario no tiene roles, redirigir a setup
-            if (user.roles.length === 0) {
-              toast.error('No tienes roles asignados. Contacta al administrador.');
-              navigate('/setup', { replace: true });
-            } else {
-              toast.error('No tienes permisos para acceder a esta página');
-              navigate('/', { replace: true });
+        const timer = setTimeout(() => {
+          if (!loading) {
+            if (!user) {
+              navigate('/login', { replace: true });
+            } else if (!hasPermission(allowedRoles)) {
+              if (user.roles.length === 0) {
+                toast.error('No tienes roles asignados. Contacta al administrador.');
+                navigate('/setup', { replace: true });
+              } else {
+                toast.error('No tienes permisos para acceder a esta página');
+                navigate('/', { replace: true });
+              }
             }
           }
-        }
+        }, 100);
+
+        return () => clearTimeout(timer);
       }, [user, loading, navigate]);
 
       if (loading) {
