@@ -73,6 +73,58 @@ npm run dev
 
 # Compilar para producción
 npm run build
+
+# Verificación de tipos
+npm run typecheck        # Verificar tipos en toda la app
+npm run typecheck:strict # Verificar tipos en módulos estrictos
+
+# Linting
+npm run lint             # Verificar ESLint en toda la app
+npm run lint:strict      # Verificar ESLint en módulos estrictos (0 warnings)
+```
+
+## 🔒 TypeScript Estricto en Nuevos Módulos
+
+Este proyecto usa **TypeScript estricto incremental** para garantizar calidad de código en módulos críticos.
+
+### Módulos con TS Estricto (obligatorio):
+- `src/lib/supabase/repositories/*` - Repositorios de datos
+- `src/lib/validators/*` - Esquemas Zod y validaciones
+- `src/lib/parsers/*` - Parsers CSV/Excel
+- `src/lib/exporters/*` - Exportadores de datos
+- `src/lib/supabase/types/*` - Tipos derivados de Supabase
+
+### Reglas:
+✅ Tipos de retorno explícitos en funciones exportadas  
+✅ No usar `any` (usar `unknown` + guards si es necesario)  
+✅ No usar `!` (non-null assertion) - usar guards o optional chaining  
+✅ No console.log en código de lib (solo en componentes/pages si es necesario)  
+✅ Usar `??` en lugar de `||` para nullish coalescing  
+✅ Usar `?.` (optional chaining) en lugar de checks manuales
+
+### Código Legacy:
+El resto del código (`src/components/*`, `src/pages/*`, `src/hooks/*`) mantiene configuración permisiva por ahora. Migración gradual según necesidad.
+
+### Ejemplo:
+
+```typescript
+// ❌ ANTES (permisivo)
+export const fetchCosts = async (filters) => {
+  const data = await supabase.from('costs').select();
+  return data;
+};
+
+// ✅ DESPUÉS (estricto)
+export const fetchCosts = async (
+  filters: CostsFilters
+): Promise<CostWithRelations[]> => {
+  const { data, error } = await supabase
+    .from('hr_employee_costs')
+    .select('...');
+  
+  if (error) throw error;
+  return data ?? [];
+};
 ```
 
 ## 🔐 Roles y Permisos

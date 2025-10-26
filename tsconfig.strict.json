@@ -1,0 +1,50 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    /* STRICT MODE (TypeScript puro) */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    /* CHEQUEOS ADICIONALES */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    
+    /* CALIDAD DE CÓDIGO */
+    "forceConsistentCasingInFileNames": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    
+    /* MANTENER COMPATIBILIDAD */
+    "skipLibCheck": true,
+    "allowJs": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    /* Solo módulos nuevos con TS estricto */
+    "src/lib/supabase/repositories/**/*.ts",
+    "src/lib/supabase/types/**/*.ts",
+    "src/lib/validators/**/*.ts",
+    "src/lib/parsers/**/*.ts",
+    "src/lib/exporters/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

@@ -1,0 +1,22 @@
+# Build outputs
+dist
+build
+
+# Dependencies
+node_modules
+
+# Config files
+*.config.js
+*.config.ts
+vite.config.ts
+tailwind.config.ts
+postcss.config.js
+
+# Type definitions
+*.d.ts
+
+# Test files (si quieres reglas más relajadas)
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
