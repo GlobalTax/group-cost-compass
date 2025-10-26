@@ -87,7 +87,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const hasPermission = (allowedRoles: AppRole[]): boolean => {
-    if (!user || user.roles.length === 0) return false;
+    if (!user) return false;
+    
+    // Si no hay roles asignados, denegar acceso
+    if (user.roles.length === 0) {
+      console.warn('Usuario sin roles asignados:', user.email);
+      return false;
+    }
+    
     return user.roles.some(role => allowedRoles.includes(role));
   };
 
@@ -117,11 +124,17 @@ export const withAuth = (allowedRoles: AppRole[]) => {
           if (!user) {
             navigate('/login', { replace: true });
           } else if (!hasPermission(allowedRoles)) {
-            toast.error('No tienes permisos para acceder a esta página');
-            navigate('/', { replace: true });
+            // Si el usuario no tiene roles, redirigir a setup
+            if (user.roles.length === 0) {
+              toast.error('No tienes roles asignados. Contacta al administrador.');
+              navigate('/setup', { replace: true });
+            } else {
+              toast.error('No tienes permisos para acceder a esta página');
+              navigate('/', { replace: true });
+            }
           }
         }
-      }, [user, loading, navigate, hasPermission]);
+      }, [user, loading, navigate]);
 
       if (loading) {
         return (

@@ -17,6 +17,7 @@ import Transfers from "./pages/Transfers";
 import Costs from "./pages/Costs";
 import Audit from "./pages/Audit";
 import Login from "./pages/Login";
+import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
                 <main className="flex-1 overflow-auto">
                   <Routes>
                     <Route path="/login" element={<Login />} />
+                    <Route path="/setup" element={<Setup />} />
                     <Route path="/" element={<Index />} />
                     <Route path="/dashboard" element={<ProtectedDashboard />} />
                     <Route path="/employees" element={<ProtectedEmployees />} />
