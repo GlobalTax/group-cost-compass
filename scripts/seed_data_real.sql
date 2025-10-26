@@ -147,31 +147,31 @@ employees_insert AS (
     -- 000012: RODRÍGUEZ GONZÁLEZ, DIEGO
     ('000012', 'Rodríguez González Diego', '54246635P', '00/00000012-00', 'B58068800',
      '2024-09-02'::date, NULL, '2024-09-02'::date,
-     'd.rodriguez@navarro.es', NULL, false,
+     'd.rodriguez@nrro.es', NULL, false,
      'Finanzas', 'Analista Financiero', 'Laboral'),
     
     -- 000013: VILLA PALOS, RUBÉN
     ('000013', 'Villa Palos Rubén', '00000013R', '00/00000013-00', 'B58068800',
      '2022-04-01'::date, NULL, '2021-12-31'::date,
-     'r.villa@navarro.es', NULL, false,
+     'r.villa@nrro.es', NULL, false,
      'Finanzas', 'Controller', 'Laboral'),
     
     -- 000014: AYLAGAS DE LA FUENTE, JAVIER LUIS
     ('000014', 'Aylagas de la Fuente Javier Luis', '00000014J', '00/00000014-00', 'B58068800',
      '2022-05-01'::date, NULL, '2022-05-01'::date,
-     'j.aylagas@navarro.es', NULL, false,
+     'j.aylagas@nrro.es', NULL, false,
      'Administración', 'Administrativo', 'Laboral'),
     
     -- 000015: SAN JUAN PÉREZ, NEREA
     ('000015', 'San Juan Pérez Nerea', '00000015N', '00/00000015-00', 'B58068800',
      '2024-01-01'::date, NULL, '2024-01-01'::date,
-     'n.sanjuan@navarro.es', NULL, false,
+     'n.sanjuan@nrro.es', NULL, false,
      'Recursos Humanos', 'Técnico RRHH', 'Laboral'),
     
     -- 000016: ARGÜELLO PLANAS, JOSÉ MARÍA (Veterano desde 1986)
     ('000016', 'Argüello Planas José María', '00000016A', '00/00000016-00', 'B58068800',
      '1986-12-01'::date, NULL, '1986-12-01'::date,
-     'j.arguello@navarro.es', NULL, false,
+     'j.arguello@nrro.es', NULL, false,
      'Dirección', 'Socio Fundador', 'Mercantil')
   ) AS t(employee_code, full_name, dni, nss, company_nif, hire_date, termination_date, seniority_date, email, phone, transfer_group, department, position, contract_type)
   RETURNING id, employee_code

@@ -113,9 +113,14 @@ export const useUpdateEmployee = () => {
             nif
           )
         `)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      if (!employee) {
+        throw new Error("Sin permisos para actualizar o el registro no existe (RLS).");
+      }
+      
       return employee;
     },
     onSuccess: (_, variables) => {
