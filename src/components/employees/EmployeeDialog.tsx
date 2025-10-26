@@ -55,6 +55,11 @@ export const EmployeeDialog = ({
           full_name: employee.full_name,
           employee_code: employee.employee_code || "",
           dni: employee.dni || "",
+          nss: employee.nss || "",
+          birth_date: employee.birth_date || "",
+          email: employee.email || "",
+          phone: employee.phone || "",
+          address: employee.address || "",
           company_id: employee.company_id,
           hire_date: employee.hire_date || "",
           termination_date: employee.termination_date || "",
@@ -69,6 +74,11 @@ export const EmployeeDialog = ({
           full_name: "",
           employee_code: "",
           dni: "",
+          nss: "",
+          birth_date: "",
+          email: "",
+          phone: "",
+          address: "",
           company_id: "",
           hire_date: "",
           termination_date: "",
@@ -86,6 +96,11 @@ export const EmployeeDialog = ({
       full_name: data.full_name,
       employee_code: data.employee_code || null,
       dni: data.dni || null,
+      nss: data.nss || null,
+      birth_date: data.birth_date || null,
+      email: data.email || null,
+      phone: data.phone || null,
+      address: data.address || null,
       company_id: data.company_id || null,
       hire_date: data.hire_date || null,
       termination_date: data.termination_date || null,
@@ -170,33 +185,112 @@ export const EmployeeDialog = ({
 
               <FormField
                 control={form.control}
-                name="company_id"
+                name="nss"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Empresa *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={isLoadingCompanies}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar empresa" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {companies?.map((company) => (
-                          <SelectItem key={company.id} value={company.id}>
-                            {company.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>NSS</FormLabel>
+                    <FormControl>
+                      <Input placeholder="12345678901" {...field} />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Nº Seguridad Social
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="email@ejemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Teléfono</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="+34 600 000 000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="birth_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fecha de Nacimiento</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dirección</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Calle, número, ciudad..." 
+                      className="min-h-[60px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="company_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Empresa *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isLoadingCompanies}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar empresa" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies?.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-3 gap-4">
               <FormField

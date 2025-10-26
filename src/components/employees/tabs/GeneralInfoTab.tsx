@@ -1,6 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { EditableSection, FieldDefinition } from "./EditableSection";
+import { useEmployeeUpdate } from "@/hooks/useEmployeeUpdate";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface GeneralInfoTabProps {
   employee: any;
@@ -20,6 +22,8 @@ const InfoField = ({ label, value }: { label: string; value: string | null | und
 );
 
 export const GeneralInfoTab = ({ employee, financials }: GeneralInfoTabProps) => {
+  const { updateFields, isUpdating } = useEmployeeUpdate(employee.id);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("es-ES", {
       style: "currency",
@@ -37,44 +41,51 @@ export const GeneralInfoTab = ({ employee, financials }: GeneralInfoTabProps) =>
     }
   };
 
+  const personalDataFields: FieldDefinition[] = [
+    { name: "dni", label: "DNI/NIE", value: employee.dni, type: "text", placeholder: "12345678A" },
+    { name: "nss", label: "Número de Seguridad Social", value: employee.nss, type: "text", placeholder: "12345678901" },
+    { name: "birth_date", label: "Fecha de Nacimiento", value: employee.birth_date, type: "date" },
+    { name: "phone", label: "Teléfono", value: employee.phone, type: "tel", placeholder: "+34 600 000 000" },
+    { name: "email", label: "Email", value: employee.email, type: "email", placeholder: "email@ejemplo.com" },
+    { name: "address", label: "Dirección", value: employee.address, type: "textarea", placeholder: "Calle, número, ciudad..." },
+  ];
+
+  const organizationalDataFields: FieldDefinition[] = [
+    { name: "department", label: "Departamento", value: employee.department, type: "text", placeholder: "Recursos Humanos" },
+    { name: "position", label: "Puesto", value: employee.position, type: "text", placeholder: "Analista" },
+    { name: "contract_type", label: "Tipo de Contrato", value: employee.contract_type, type: "text", placeholder: "Laboral" },
+    { name: "hire_date", label: "Fecha de Alta", value: employee.hire_date, type: "date" },
+    { name: "termination_date", label: "Fecha de Baja", value: employee.termination_date, type: "date" },
+    { name: "seniority_date", label: "Fecha de Antigüedad", value: employee.seniority_date, type: "date" },
+  ];
+
+  const handleSavePersonalData = async (data: Record<string, any>) => {
+    return await updateFields(data);
+  };
+
+  const handleSaveOrganizationalData = async (data: Record<string, any>) => {
+    return await updateFields(data);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Datos Personales */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Datos Personales</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InfoField label="DNI/NIE" value={employee.dni} />
-            <InfoField label="Número de Seguridad Social" value={employee.nss} />
-            <InfoField label="Fecha de Nacimiento" value={formatDate(employee.birth_date)} />
-            <InfoField label="Teléfono" value={employee.phone} />
-            <InfoField label="Email" value={employee.email} />
-            <InfoField label="Dirección" value={employee.address} />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Datos Personales - Editable */}
+      <EditableSection
+        title="Datos Personales"
+        fields={personalDataFields}
+        onSave={handleSavePersonalData}
+        isLoading={isUpdating}
+      />
 
-      {/* Datos Organizativos */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Datos Organizativos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InfoField label="Empresa" value={employee.companies?.name} />
-            <InfoField label="Departamento" value={employee.department} />
-            <InfoField label="Puesto" value={employee.position} />
-            <InfoField label="Tipo de Contrato" value={employee.contract_type} />
-            <InfoField label="Fecha de Alta" value={formatDate(employee.hire_date)} />
-            <InfoField label="Fecha de Baja" value={formatDate(employee.termination_date)} />
-            <InfoField label="Fecha de Antigüedad" value={formatDate(employee.seniority_date)} />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Datos Organizativos - Editable */}
+      <EditableSection
+        title="Datos Organizativos"
+        fields={organizationalDataFields}
+        onSave={handleSaveOrganizationalData}
+        isLoading={isUpdating}
+      />
 
-      {/* Datos Económicos */}
+      {/* Datos Económicos - Solo lectura */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Datos Económicos</CardTitle>
@@ -92,16 +103,22 @@ export const GeneralInfoTab = ({ employee, financials }: GeneralInfoTabProps) =>
         </CardContent>
       </Card>
 
-      {/* Notas */}
-      {employee.notes && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Notas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{employee.notes}</p>
-          </CardContent>
-        </Card>
+      {/* Notas - Editable */}
+      {(employee.notes || true) && (
+        <EditableSection
+          title="Notas"
+          fields={[
+            { 
+              name: "notes", 
+              label: "Notas adicionales", 
+              value: employee.notes, 
+              type: "textarea",
+              placeholder: "Información adicional sobre el empleado..."
+            }
+          ]}
+          onSave={async (data) => await updateFields(data)}
+          isLoading={isUpdating}
+        />
       )}
     </div>
   );

@@ -4951,6 +4951,8 @@ export type Database = {
       }
       hr_employees: {
         Row: {
+          address: string | null
+          birth_date: string | null
           company_id: string | null
           contract_type: string | null
           created_at: string | null
@@ -4972,6 +4974,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
+          birth_date?: string | null
           company_id?: string | null
           contract_type?: string | null
           created_at?: string | null
@@ -4993,6 +4997,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
+          birth_date?: string | null
           company_id?: string | null
           contract_type?: string | null
           created_at?: string | null
