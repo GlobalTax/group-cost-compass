@@ -54,7 +54,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, hasPermission } = useAuth();
 
   const isActive = (url: string) => {
     if (url === "/dashboard") {
@@ -98,16 +98,22 @@ export function AppSidebar() {
       
       <SidebarContent className="bg-background border-r border-border">
         {/* Navigation Groups */}
-        {navigationItems.map((group) => (
-          <SidebarGroup key={group.section}>
-            {!collapsed && (
-              <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold text-foreground uppercase tracking-wider">
-                {group.section}
-              </SidebarGroupLabel>
-            )}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => {
+        {navigationItems.map((group) => {
+          // Ocultar sección ADMINISTRACIÓN para no-super_admin
+          if (group.section === "ADMINISTRACIÓN" && !hasPermission(['super_admin'])) {
+            return null;
+          }
+          
+          return (
+            <SidebarGroup key={group.section}>
+              {!collapsed && (
+                <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold text-foreground uppercase tracking-wider">
+                  {group.section}
+                </SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.url);
                   
@@ -128,11 +134,12 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       {/* Logout Footer */}

@@ -24,7 +24,8 @@ export const useDashboardGlobal = (filters?: DashboardFilters) => {
         employeesQuery = employeesQuery.eq("company_id", filters.companyId);
       }
 
-      const { data: employees } = await employeesQuery;
+      const { data: employees, error: employeesError } = await employeesQuery;
+      if (employeesError) throw employeesError;
 
       // Get costs for the year
       let costsQuery = supabase
@@ -46,7 +47,8 @@ export const useDashboardGlobal = (filters?: DashboardFilters) => {
         .gte("period", startDate)
         .lte("period", endDate);
 
-      const { data: costsData } = await costsQuery;
+      const { data: costsData, error: costsError } = await costsQuery;
+      if (costsError) throw costsError;
 
       // Filter by company if needed
       const filteredCosts = filters?.companyId
@@ -75,7 +77,8 @@ export const useDashboardGlobal = (filters?: DashboardFilters) => {
         .gte("period", prevStartDate)
         .lte("period", prevEndDate);
 
-      const { data: prevCostsData } = await prevCostsQuery;
+      const { data: prevCostsData, error: prevCostsError } = await prevCostsQuery;
+      if (prevCostsError) throw prevCostsError;
 
       const prevFilteredCosts = filters?.companyId
         ? prevCostsData?.filter(c => c.hr_employees?.company_id === filters.companyId)

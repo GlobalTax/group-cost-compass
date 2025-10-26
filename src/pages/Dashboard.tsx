@@ -15,7 +15,7 @@ const Dashboard = () => {
   const [year, setYear] = useState(currentYear);
   const [companyId, setCompanyId] = useState<string>("all");
 
-  const { data, isLoading } = useDashboardGlobal({
+  const { data, isLoading, isError } = useDashboardGlobal({
     year,
     companyId: companyId === "all" ? undefined : companyId,
   });
@@ -23,6 +23,22 @@ const Dashboard = () => {
   const handleCompanyClick = (id: string) => {
     navigate(`/companies/${id}`);
   };
+
+  if (isError) {
+    return (
+      <div className="p-8">
+        <PageHeader
+          title="Dashboard Global"
+          subtitle="Control centralizado de costes, plantilla y subidas salariales del grupo"
+        />
+        <div className="mt-8 p-6 border border-destructive/50 rounded-lg bg-destructive/5">
+          <p className="text-sm text-destructive">
+            Error al cargar los datos. Por favor, verifica tus permisos o contacta al administrador.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8">
