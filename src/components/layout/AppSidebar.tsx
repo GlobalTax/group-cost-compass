@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -44,7 +44,8 @@ const navigationItems = [
   {
     section: "ADMINISTRACIÓN",
     items: [
-      { title: "Gestión de Roles", url: "/admin/roles", icon: ShieldCheck },
+      { title: "Usuarios", url: "/admin/users", icon: UserCog },
+      { title: "Roles", url: "/admin/roles", icon: ShieldCheck },
     ],
   },
 ];

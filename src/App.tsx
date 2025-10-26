@@ -20,6 +20,7 @@ import Audit from "./pages/Audit";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import AdminRoles from "./pages/AdminRoles";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const ProtectedCompanyDetail = withAuth(['admin', 'finance', 'super_admin'])(Com
 const ProtectedUpload = withAuth(['admin', 'super_admin'])(Upload);
 const ProtectedTransfers = withAuth(['admin', 'manager', 'super_admin'])(Transfers);
 const ProtectedAdminRoles = withAuth(['super_admin'])(AdminRoles);
+const ProtectedAdminUsers = withAuth(['super_admin'])(AdminUsers);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -75,7 +77,8 @@ const App = () => (
                     <Route path="/transfers" element={<ProtectedTransfers />} />
                     <Route path="/costs" element={<ProtectedCosts />} />
                     <Route path="/audit" element={<ProtectedAudit />} />
-                    <Route path="/admin/roles" element={<ProtectedAdminRoles />} />
+              <Route path="/admin/roles" element={<ProtectedAdminRoles />} />
+              <Route path="/admin/users" element={<ProtectedAdminUsers />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
