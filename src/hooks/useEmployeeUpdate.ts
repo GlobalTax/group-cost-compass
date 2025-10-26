@@ -60,9 +60,13 @@ export const useEmployeeUpdate = (employeeId: string) => {
 
       return true;
     } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "No se pudieron guardar los cambios. Intenta de nuevo.";
+      
       toast({
         title: "Error al guardar",
-        description: "No se pudieron guardar los cambios. Intenta de nuevo.",
+        description: errorMessage,
         variant: "destructive",
       });
       return false;

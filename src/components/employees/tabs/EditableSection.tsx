@@ -35,31 +35,51 @@ export const EditableSection = ({
 }: EditableSectionProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [initialData, setInitialData] = useState<Record<string, any>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   const handleEdit = () => {
     // Inicializar formData con valores actuales
-    const initialData: Record<string, any> = {};
+    const initial: Record<string, any> = {};
     fields.forEach(field => {
-      initialData[field.name] = field.value || '';
+      initial[field.name] = field.value || '';
     });
-    setFormData(initialData);
+    setInitialData(initial);
+    setFormData(initial);
     setIsEditing(true);
   };
 
   const handleCancel = () => {
     setFormData({});
+    setInitialData({});
     setIsEditing(false);
   };
 
   const handleSave = async () => {
+    // Enviar solo los campos que cambiaron
+    const changes: Record<string, any> = {};
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== initialData[key]) {
+        changes[key] = formData[key];
+      }
+    });
+
+    // Si no hay cambios, simplemente cerrar edición
+    if (Object.keys(changes).length === 0) {
+      setIsEditing(false);
+      setFormData({});
+      setInitialData({});
+      return;
+    }
+
     setIsSaving(true);
-    const success = await onSave(formData);
+    const success = await onSave(changes);
     setIsSaving(false);
     
     if (success) {
       setIsEditing(false);
       setFormData({});
+      setInitialData({});
     }
   };
 

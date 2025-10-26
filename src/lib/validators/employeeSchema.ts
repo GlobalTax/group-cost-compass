@@ -4,7 +4,7 @@ export const employeeSchema = z.object({
   full_name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
   employee_code: z.string().optional(),
   dni: z.string().optional(),
-  nss: z.string().regex(/^[0-9]{11,12}$/, "NSS inválido (11-12 dígitos)").optional().or(z.literal("")),
+  nss: z.string().regex(/^(?:\d{11,12}|\d{2}\/\d{8}-\d{2})$/, "NSS inválido (formato: 11-12 dígitos o 00/00000000-00)").optional().or(z.literal("")),
   birth_date: z.string().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().optional(),
