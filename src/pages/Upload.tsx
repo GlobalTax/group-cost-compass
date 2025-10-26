@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, AlertCircle, CheckCircle2 } from "lucide-react";
+import { FileSpreadsheet, AlertCircle, CheckCircle2, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileDropzone } from "@/components/upload/FileDropzone";
 import { ValidationResults } from "@/components/upload/ValidationResults";
 import { ImportProgress } from "@/components/upload/ImportProgress";
 import { A3NomCostsUpload } from "@/components/upload/A3NomCostsUpload";
+import { CostsPreviewTable } from "@/components/upload/CostsPreviewTable";
 import { parseEmployeesFile, type ParsedEmployee } from "@/lib/parsers/employeeParser";
 import { parseCostsFile, type ParsedCost } from "@/lib/parsers/costsParser";
+import { parseUploadCostsFile } from "@/lib/parsers/uploadCostsParser";
+import type { UploadValidationResult, UploadCostRow } from "@/lib/validators/uploadSchema";
 import { useCompanies } from "@/hooks/useCompanies";
 import { useEmployees, useCreateEmployee } from "@/hooks/useEmployees";
 import { useBulkCreateEmployeeCosts } from "@/hooks/useEmployeeCosts";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Upload = () => {
@@ -20,6 +24,7 @@ const Upload = () => {
   const [costsFile, setCostsFile] = useState<File | null>(null);
   const [employeesValidation, setEmployeesValidation] = useState<any>(null);
   const [costsValidation, setCostsValidation] = useState<any>(null);
+  const [costsValidationZod, setCostsValidationZod] = useState<UploadValidationResult<UploadCostRow> | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [importStatus, setImportStatus] = useState<"idle" | "processing" | "uploading" | "complete">("idle");
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
@@ -52,8 +57,24 @@ const Upload = () => {
     setImportStatus("processing");
 
     try {
-      const result = await parseCostsFile(file);
-      setCostsValidation(result);
+      if (!companies) {
+        toast.error("Esperando catálogo de empresas...");
+        setIsProcessing(false);
+        setImportStatus("idle");
+        return;
+      }
+
+      const result = await parseUploadCostsFile(file, companies);
+      setCostsValidationZod(result);
+      
+      if (result.errorCount > 0) {
+        toast.error(`${result.errorCount} filas con errores. Revisa el preview.`);
+      } else if (result.warningCount > 0) {
+        toast.warning(`${result.validCount} filas válidas, ${result.warningCount} con avisos.`);
+      } else {
+        toast.success(`✅ ${result.validCount} filas válidas.`);
+      }
+      
       setIsProcessing(false);
       setImportStatus("idle");
     } catch (error) {
@@ -64,7 +85,7 @@ const Upload = () => {
   };
 
   const handleImport = async () => {
-    if (!employeesValidation?.data.length && !costsValidation?.data.length) {
+    if (!employeesValidation?.data.length && !costsValidationZod?.validCount) {
       toast.error("No hay datos válidos para importar");
       return;
     }
@@ -97,37 +118,70 @@ const Upload = () => {
         }
       }
 
-      // Import costs
-      if (costsValidation?.data.length > 0) {
-        setImportProgress({ current: 0, total: costsValidation.data.length });
+      // Import costs con validación Zod
+      if (costsValidationZod?.validCount > 0) {
+        // Obtener solo filas válidas
+        const validRows = costsValidationZod.rows
+          .filter(r => r.data && r.errors.length === 0)
+          .map(r => r.data!);
         
-        const costsToImport = (costsValidation.data as ParsedCost[])
-          .map((cost) => {
-            const employee = existingEmployees?.find((e) => e.dni === cost.dni);
-            if (!employee) return null;
-            
-            return {
-              employee_id: employee.id,
-              period: cost.period,
-              bruto: cost.bruto,
-              coste_empresa: cost.coste_empresa,
-            };
-          })
-          .filter((c) => c !== null);
-
-        if (costsToImport.length > 0) {
-          await bulkCreateCosts.mutateAsync(costsToImport as any);
+        setImportProgress({ current: 0, total: validRows.length });
+        
+        // Mapear NIFs a employee_ids
+        const nifs = validRows.map(r => r.nif);
+        const { data: employees } = await supabase
+          .from("hr_employees")
+          .select("id, dni")
+          .in("dni", nifs);
+        
+        const employeeMap = new Map(employees?.map(e => [e.dni, e.id]) || []);
+        
+        // Preparar costes
+        const costsToImport = validRows
+          .filter(r => employeeMap.has(r.nif))
+          .map(r => ({
+            employee_id: employeeMap.get(r.nif)!,
+            period: `${r.date}-01`, // Normalizar a primer día
+            bruto: r.bruto,
+            coste_empresa: r.coste_empresa,
+          }));
+        
+        if (costsToImport.length === 0) {
+          throw new Error("Ningún empleado encontrado en sistema con los NIFs proporcionados");
         }
+        
+        // Verificar existentes
+        const periodsToCheck = [...new Set(costsToImport.map(c => c.period))];
+        const { data: existing } = await supabase
+          .from("hr_employee_costs")
+          .select("period")
+          .in("period", periodsToCheck)
+          .limit(1);
+        
+        if (existing && existing.length > 0) {
+          const confirm = window.confirm(
+            "Ya existen costes para algunos períodos. ¿Desea sobrescribir?"
+          );
+          if (!confirm) {
+            setIsProcessing(false);
+            setImportStatus("idle");
+            return;
+          }
+        }
+        
+        // Importar
+        await bulkCreateCosts.mutateAsync(costsToImport);
+        
+        toast.success(`✅ ${costsToImport.length} registros importados correctamente`);
       }
 
       setImportStatus("complete");
-      toast.success("Importación completada exitosamente");
       
       setTimeout(() => {
         setEmployeesFile(null);
         setCostsFile(null);
         setEmployeesValidation(null);
-        setCostsValidation(null);
+        setCostsValidationZod(null);
         setImportStatus("idle");
         setImportProgress({ current: 0, total: 0 });
       }, 2000);
@@ -141,9 +195,9 @@ const Upload = () => {
   };
 
   const canImport =
-    (employeesValidation?.data.length > 0 || costsValidation?.data.length > 0) &&
+    (employeesValidation?.data.length > 0 || costsValidationZod?.validCount > 0) &&
     (employeesValidation?.errors.length === 0 || !employeesValidation) &&
-    (costsValidation?.errors.length === 0 || !costsValidation) &&
+    (costsValidationZod?.errorCount === 0 || !costsValidationZod) &&
     !isProcessing;
 
   return (
@@ -234,26 +288,49 @@ const Upload = () => {
               accept=".csv"
             />
 
-            {costsValidation && (
-              <ValidationResults
-                errors={costsValidation.errors}
-                warnings={costsValidation.warnings}
-                successCount={costsValidation.data.length}
-              />
-            )}
-
             <div className="space-y-2 text-xs text-muted-foreground">
               <p className="font-medium">Columnas requeridas:</p>
               <ul className="space-y-1 ml-4">
-                <li>• dni (DNI/NIE del empleado)</li>
-                <li>• periodo (YYYY-MM)</li>
-                <li>• bruto (bruto mensual)</li>
-                <li>• coste_empresa</li>
+                <li>• <strong>employee_id</strong> (opcional)</li>
+                <li>• <strong>nif</strong> (DNI/NIE, formato 12345678A o X1234567A)</li>
+                <li>• <strong>name</strong> (nombre completo)</li>
+                <li>• <strong>company</strong> (nombre de empresa)</li>
+                <li>• <strong>date</strong> (YYYY-MM)</li>
+                <li>• <strong>bruto</strong> (bruto mensual)</li>
+                <li>• <strong>coste_empresa</strong> (coste empresa)</li>
               </ul>
             </div>
           </div>
         </Card>
           </div>
+
+          {/* Preview de costes con validación Zod */}
+          {costsValidationZod && (
+            <>
+              <Card className="apollo-card p-6">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg">Preview de Datos</h3>
+                  <CostsPreviewTable rows={costsValidationZod.rows} pageSize={15} />
+                </div>
+              </Card>
+              
+              {costsValidationZod.companies.size > 0 && (
+                <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-900">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
+                    <strong>Empresas normalizadas:</strong>
+                    <ul className="mt-2 text-xs space-y-1">
+                      {Array.from(costsValidationZod.companies.entries()).map(([orig, norm]) => (
+                        <li key={orig}>
+                          "{orig}" → <strong>{norm}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
+          )}
 
           {/* Process Button */}
           <Card className="apollo-card p-6">
