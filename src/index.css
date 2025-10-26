@@ -1,21 +1,13 @@
 /* Satoshi Variable Font */
 @font-face {
   font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Variable.woff2') format('woff2');
-  font-weight: 300 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Satoshi';
   src: url('/fonts/Satoshi-VariableItalic.woff2') format('woff2');
   font-weight: 300 900;
   font-style: italic;
   font-display: swap;
 }
 
-/* Satoshi Static Fonts (Fallback) */
+/* Satoshi Static Fonts */
 @font-face {
   font-family: 'Satoshi';
   src: url('/fonts/Satoshi-Light.woff2') format('woff2');
@@ -26,7 +18,7 @@
 
 @font-face {
   font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Regular.woff2') format('woff2');
+  src: url('/fonts/Satoshi-Regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -40,7 +32,29 @@
   font-display: swap;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-MediumItalic.woff') format('woff');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
@@ -158,7 +172,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
