@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, AlertCircle, CheckCircle2, Info } from "lucide-react";
+import { FileSpreadsheet, AlertCircle, CheckCircle2, Info, Download } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileDropzone } from "@/components/upload/FileDropzone";
@@ -231,16 +231,24 @@ const Upload = () => {
         {/* Employees Upload */}
         <Card className="apollo-card p-6">
           <div className="space-y-6">
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <FileSpreadsheet className="w-6 h-6 text-primary" />
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <FileSpreadsheet className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">Datos de Empleados</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Importa información de la plantilla
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-lg">Datos de Empleados</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Importa información de la plantilla
-                </p>
-              </div>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/plantillas/plantilla_empleados.csv" download="plantilla_empleados.csv">
+                  <Download className="w-4 h-4 mr-2" />
+                  Descargar plantilla
+                </a>
+              </Button>
             </div>
 
             <FileDropzone
