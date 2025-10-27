@@ -72,26 +72,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Set up auth state listener (NO async para evitar deadlocks)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!session?.user) {
-          setUser(null);
-          setRolesLoaded(false);
-          setLoading(false);
-          return;
-        }
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        // Check existing session
+        const { data: { session } } = await supabase.auth.getSession();
         
-        // Establecer usuario con sesión inmediatamente (sin roles aún)
-        setUser(prev => ({
-          id: session.user.id,
-          email: session.user.email!,
-          roles: prev?.id === session.user.id ? prev.roles : [],
-          session
-        }));
-        
-        // Diferir carga de roles para evitar deadlocks
-        setTimeout(async () => {
+        if (!mounted) return;
+
+        if (session?.user) {
           const roles = await fetchUserRoles(session.user.id);
           setUser({
             id: session.user.id,
@@ -100,41 +90,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             session
           });
           setRolesLoaded(true);
+          console.log('✅ Auth inicializado:', { 
+            user: session.user.email, 
+            roles, 
+            loading: false, 
+            rolesLoaded: true 
+          });
+        } else {
+          setUser(null);
+          setRolesLoaded(false);
+          console.log('✅ Auth inicializado: sin sesión');
+        }
+      } catch (error) {
+        console.error('Error al inicializar auth:', error);
+        setUser(null);
+        setRolesLoaded(false);
+      } finally {
+        if (mounted) {
           setLoading(false);
-        }, 0);
+        }
+      }
+    };
+
+    initAuth();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+
+        console.log('🔄 Auth state change:', event, session?.user?.email);
+
+        if (session?.user) {
+          const roles = await fetchUserRoles(session.user.id);
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            roles,
+            session
+          });
+          setRolesLoaded(true);
+        } else {
+          setUser(null);
+          setRolesLoaded(false);
+        }
+        setLoading(false);
       }
     );
 
-    // Check existing session (también sin async directo)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) {
-        setUser(null);
-        setRolesLoaded(false);
-        setLoading(false);
-        return;
-      }
-      
-      setUser(prev => ({
-        id: session.user.id,
-        email: session.user.email!,
-        roles: prev?.id === session.user.id ? prev.roles : [],
-        session
-      }));
-      
-      setTimeout(async () => {
-        const roles = await fetchUserRoles(session.user.id);
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          roles,
-          session
-        });
-        setRolesLoaded(true);
-        setLoading(false);
-      }, 0);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -186,7 +193,22 @@ export const withAuth = (allowedRoles: AppRole[]) => {
       const navigate = useNavigate();
 
       useEffect(() => {
-        const timer = setTimeout(() => {
+        console.log('🔐 withAuth check:', { 
+          user: user?.email, 
+          loading, 
+          rolesLoaded, 
+          hasPermission: hasPermission(allowedRoles) 
+        });
+
+        // Timeout de seguridad: si después de 5s sigue cargando, ir a login
+        const safetyTimeout = setTimeout(() => {
+          if (loading || !rolesLoaded) {
+            console.warn('⚠️ Auth timeout: redirigiendo a login');
+            navigate('/login', { replace: true });
+          }
+        }, 5000);
+
+        const checkTimer = setTimeout(() => {
           if (!loading && rolesLoaded) {
             if (!user) {
               navigate('/login', { replace: true });
@@ -202,13 +224,19 @@ export const withAuth = (allowedRoles: AppRole[]) => {
           }
         }, 100);
 
-        return () => clearTimeout(timer);
+        return () => {
+          clearTimeout(safetyTimeout);
+          clearTimeout(checkTimer);
+        };
       }, [user, loading, rolesLoaded, navigate]);
 
       if (loading || !rolesLoaded) {
         return (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-muted-foreground">Cargando...</div>
+          <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+            <div className="text-muted-foreground">Verificando autenticación...</div>
+            <div className="text-xs text-muted-foreground">
+              {loading ? 'Cargando sesión...' : 'Cargando permisos...'}
+            </div>
           </div>
         );
       }
