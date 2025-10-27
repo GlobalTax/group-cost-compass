@@ -18,6 +18,7 @@ import { useEmployees, useCreateEmployee } from "@/hooks/useEmployees";
 import { useBulkCreateEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { downloadCSV, generateEmployeeTemplate } from "@/lib/utils";
 
 const Upload = () => {
   const [employeesFile, setEmployeesFile] = useState<File | null>(null);
@@ -243,11 +244,17 @@ const Upload = () => {
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" asChild>
-                <a href="/plantillas/plantilla_empleados.csv" download="plantilla_empleados.csv">
-                  <Download className="w-4 h-4 mr-2" />
-                  Descargar plantilla
-                </a>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  const content = generateEmployeeTemplate();
+                  downloadCSV(content, 'plantilla_empleados.csv');
+                  toast.success('Plantilla descargada correctamente');
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Descargar plantilla
               </Button>
             </div>
 
