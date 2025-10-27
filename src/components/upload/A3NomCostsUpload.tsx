@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileDropzone } from "./FileDropzone";
 import { ValidationResults } from "./ValidationResults";
 import { ImportProgress } from "./ImportProgress";
-import { parseA3NomCostsFile, type A3NomParseResult } from "@/lib/parsers/a3nomCostsParser";
+import { parseA3NomCostsFile, type A3NomParseResult } from "@/lib/parsers/a3nom";
 import { useBulkCreateEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { useBulkCreateEmployees } from "@/hooks/useBulkCreateEmployees";
 import { supabase } from "@/integrations/supabase/client";

@@ -24,7 +24,7 @@ const Dashboard = () => {
     navigate(`/companies/${id}`);
   };
 
-  if (isError) {
+  if (error) {
     return (
       <div className="p-8">
         <PageHeader

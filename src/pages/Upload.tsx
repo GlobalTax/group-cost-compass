@@ -95,89 +95,27 @@ const Upload = () => {
     setImportStatus("uploading");
 
     try {
-      // Import employees first
+      // Usar servicio de importación
+      const { importEmployees, importCosts } = await import("@/services/importService");
+
       if (employeesValidation?.data.length > 0) {
-        setImportProgress({ current: 0, total: employeesValidation.data.length });
-        
-        for (const emp of employeesValidation.data as ParsedEmployee[]) {
-          const company = companies?.find((c) => c.name === emp.company_name);
-          
-          if (company) {
-            await createEmployee.mutateAsync({
-              full_name: emp.full_name,
-              dni: emp.dni || null,
-              company_id: company.id,
-              hire_date: emp.hire_date,
-              termination_date: emp.termination_date || null,
-              seniority_date: emp.seniority_date || null,
-              transfer_group: emp.transfer_group || false,
-              notes: emp.notes || null,
-            });
-            
-            setImportProgress((prev) => ({ ...prev, current: prev.current + 1 }));
-          }
-        }
+        await importEmployees({
+          employees: employeesValidation.data as ParsedEmployee[],
+          companies: companies || [],
+          onProgress: (current, total) => setImportProgress({ current, total }),
+        });
       }
 
-      // Import costs con validación Zod
       if (costsValidationZod?.validCount > 0) {
-        // Obtener solo filas válidas
-        const validRows = costsValidationZod.rows
-          .filter(r => r.data && r.errors.length === 0)
-          .map(r => r.data!);
-        
-        setImportProgress({ current: 0, total: validRows.length });
-        
-        // Mapear NIFs a employee_ids
-        const nifs = validRows.map(r => r.nif);
-        const { data: employees } = await supabase
-          .from("hr_employees")
-          .select("id, dni")
-          .in("dni", nifs);
-        
-        const employeeMap = new Map(employees?.map(e => [e.dni, e.id]) || []);
-        
-        // Preparar costes
-        const costsToImport = validRows
-          .filter(r => employeeMap.has(r.nif))
-          .map(r => ({
-            employee_id: employeeMap.get(r.nif)!,
-            period: `${r.date}-01`, // Normalizar a primer día
-            bruto: r.bruto,
-            coste_empresa: r.coste_empresa,
-          }));
-        
-        if (costsToImport.length === 0) {
-          throw new Error("Ningún empleado encontrado en sistema con los NIFs proporcionados");
-        }
-        
-        // Verificar existentes
-        const periodsToCheck = [...new Set(costsToImport.map(c => c.period))];
-        const { data: existing } = await supabase
-          .from("hr_employee_costs")
-          .select("period")
-          .in("period", periodsToCheck)
-          .limit(1);
-        
-        if (existing && existing.length > 0) {
-          const confirm = window.confirm(
-            "Ya existen costes para algunos períodos. ¿Desea sobrescribir?"
-          );
-          if (!confirm) {
-            setIsProcessing(false);
-            setImportStatus("idle");
-            return;
-          }
-        }
-        
-        // Importar
-        await bulkCreateCosts.mutateAsync(costsToImport);
-        
-        toast.success(`✅ ${costsToImport.length} registros importados correctamente`);
+        const result = await importCosts({
+          validation: costsValidationZod,
+          companies: companies || [],
+          onProgress: (current, total) => setImportProgress({ current, total }),
+        });
+        toast.success(`✅ ${result.imported} registros importados correctamente`);
       }
 
       setImportStatus("complete");
-      
       setTimeout(() => {
         setEmployeesFile(null);
         setCostsFile(null);
@@ -186,7 +124,6 @@ const Upload = () => {
         setImportStatus("idle");
         setImportProgress({ current: 0, total: 0 });
       }, 2000);
-      
     } catch (error: any) {
       toast.error(`Error en la importación: ${error.message}`);
       setImportStatus("idle");

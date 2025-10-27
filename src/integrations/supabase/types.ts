@@ -4953,6 +4953,13 @@ export type Database = {
             referencedColumns: ["employee_id"]
           },
           {
+            foreignKeyName: "hr_employee_costs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
+            referencedColumns: ["employee_id"]
+          },
+          {
             foreignKeyName: "hr_employee_costs_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
@@ -5112,6 +5119,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
             referencedColumns: ["employee_id"]
           },
           {
@@ -10039,6 +10053,38 @@ export type Database = {
           },
         ]
       }
+      vw_dashboard_monthly: {
+        Row: {
+          company_id: string | null
+          employees_count: number | null
+          month: string | null
+          total_bruto: number | null
+          total_coste: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["company_id"]
+          },
+        ]
+      }
       vw_employee_annual: {
         Row: {
           bruto_anual: number | null
@@ -10057,6 +10103,40 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_employee_costs_summary: {
+        Row: {
+          bruto_anual: number | null
+          company_id: string | null
+          coste_anual: number | null
+          employee_id: string | null
+          full_name: string | null
+          meses_registrados: number | null
+          year: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["company_id"]
           },
         ]
       }

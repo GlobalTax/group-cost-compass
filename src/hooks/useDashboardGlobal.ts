@@ -6,7 +6,30 @@ export interface DashboardFilters {
   companyId?: string;
 }
 
+import { useDashboardKPIs } from "./useDashboardKPIs";
+import { useDashboardCompanies } from "./useDashboardCompanies";
+import { useDashboardHeatmap } from "./useDashboardHeatmap";
+
+/**
+ * Hook orquestador del dashboard - Delega en hooks especializados
+ */
 export const useDashboardGlobal = (filters?: DashboardFilters) => {
+  const kpisQuery = useDashboardKPIs(filters);
+  const companiesQuery = useDashboardCompanies(filters);
+  const heatmapQuery = useDashboardHeatmap(filters);
+
+  return {
+    data: {
+      kpis: kpisQuery.data || { costeTotal: 0, activeEmployees: 0, avgCostPerEmployee: 0, salaryIncreasePercent: 0 },
+      companiesData: companiesQuery.data || [],
+      heatmapData: heatmapQuery.data || [],
+    },
+    isLoading: kpisQuery.isLoading || companiesQuery.isLoading || heatmapQuery.isLoading,
+    error: kpisQuery.error || companiesQuery.error || heatmapQuery.error,
+  };
+};
+
+export const useDashboardGlobal_OLD = (filters?: DashboardFilters) => {
   return useQuery({
     queryKey: ["dashboard-global", filters],
     queryFn: async () => {

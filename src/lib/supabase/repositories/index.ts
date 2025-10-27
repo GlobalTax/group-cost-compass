@@ -4,6 +4,15 @@ export * from './companies.repo';
 // Costs
 export * from './costs.repo';
 
+// Employees
+export * from './employees.repo';
+
+// Transfers
+export * from './transfers.repo';
+
+// Audit
+export * from './audit.repo';
+
 // Role Configurations
 export * from './roleConfig.repo';
 
