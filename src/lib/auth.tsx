@@ -16,6 +16,7 @@ export interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
+  rolesLoaded: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   hasPermission: (allowedRoles: AppRole[]) => boolean;
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
 
   const fetchUserRoles = async (userId: string): Promise<AppRole[]> => {
     try {
@@ -75,6 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       (event, session) => {
         if (!session?.user) {
           setUser(null);
+          setRolesLoaded(false);
           setLoading(false);
           return;
         }
@@ -96,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             roles,
             session
           });
+          setRolesLoaded(true);
           setLoading(false);
         }, 0);
       }
@@ -105,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) {
         setUser(null);
+        setRolesLoaded(false);
         setLoading(false);
         return;
       }
@@ -124,6 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           roles,
           session
         });
+        setRolesLoaded(true);
         setLoading(false);
       }, 0);
     });
@@ -143,6 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setUser(null);
+    setRolesLoaded(false);
   };
 
   const hasPermission = (allowedRoles: AppRole[]): boolean => {
@@ -158,7 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut, hasPermission }}>
+    <AuthContext.Provider value={{ user, loading, rolesLoaded, signIn, signOut, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );
@@ -175,12 +182,12 @@ export const useAuth = () => {
 export const withAuth = (allowedRoles: AppRole[]) => {
   return <P extends object>(Component: ComponentType<P>) => {
     return (props: P) => {
-      const { user, loading, hasPermission } = useAuth();
+      const { user, loading, rolesLoaded, hasPermission } = useAuth();
       const navigate = useNavigate();
 
       useEffect(() => {
         const timer = setTimeout(() => {
-          if (!loading) {
+          if (!loading && rolesLoaded) {
             if (!user) {
               navigate('/login', { replace: true });
             } else if (!hasPermission(allowedRoles)) {
@@ -196,9 +203,9 @@ export const withAuth = (allowedRoles: AppRole[]) => {
         }, 100);
 
         return () => clearTimeout(timer);
-      }, [user, loading, navigate]);
+      }, [user, loading, rolesLoaded, navigate]);
 
-      if (loading) {
+      if (loading || !rolesLoaded) {
         return (
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-muted-foreground">Cargando...</div>
