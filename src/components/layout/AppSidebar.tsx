@@ -65,6 +65,11 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { user, signOut, hasPermission } = useAuth();
 
+  // No renderizar sidebar en páginas públicas
+  if (location.pathname === '/login' || location.pathname === '/setup') {
+    return null;
+  }
+
   const isActive = (url: string) => {
     if (url === "/dashboard") {
       return location.pathname === "/" || location.pathname === "/dashboard";

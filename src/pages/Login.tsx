@@ -8,17 +8,17 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const Login = () => {
-  const { signIn, user } = useAuth();
+  const { signIn, user, rolesLoaded } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && rolesLoaded) {
       navigate('/dashboard', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, rolesLoaded, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -26,9 +26,8 @@ const Login = () => {
     try {
       await signIn(email, password);
       toast.success('Sesión iniciada correctamente');
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Credenciales incorrectas');
+    } catch (error: any) {
+      toast.error(error?.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }

@@ -53,92 +53,69 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateUserFromSession = async (session: Session | null) => {
+  const handleSessionChange = (session: Session | null) => {
     if (session?.user) {
-      console.log('Actualizando usuario desde sesión:', session.user.email);
-      const roles = await fetchUserRoles(session.user.id);
-      
-      if (roles.length === 0) {
-        console.warn('⚠️ No se encontraron roles para:', session.user.email);
-      }
-      
+      // Estado inmediato sin roles para desbloquear UI básica
       setUser({
         id: session.user.id,
         email: session.user.email!,
-        roles,
-        session
+        roles: [],
+        session,
       });
+      setRolesLoaded(false);
+      
+      // Deferir carga de roles para no bloquear el callback del listener
+      setTimeout(async () => {
+        const roles = await fetchUserRoles(session.user!.id);
+        setUser({
+          id: session.user!.id,
+          email: session.user!.email!,
+          roles,
+          session,
+        });
+        setRolesLoaded(true);
+        setLoading(false);
+      }, 0);
     } else {
       setUser(null);
+      setRolesLoaded(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     let mounted = true;
+    setLoading(true);
 
-    const initAuth = async () => {
-      try {
-        // Check existing session
-        const { data: { session } } = await supabase.auth.getSession();
-        
+    // 1) Listener primero, sin async ni llamadas a Supabase en el callback
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      console.log('🔄 Auth state change:', event, session?.user?.email);
+      setLoading(true);
+      handleSessionChange(session);
+    });
+
+    // 2) Hidratar sesión existente después del listener
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
         if (!mounted) return;
-
-        if (session?.user) {
-          const roles = await fetchUserRoles(session.user.id);
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            roles,
-            session
-          });
-          setRolesLoaded(true);
-          console.log('✅ Auth inicializado:', { 
-            user: session.user.email, 
-            roles, 
-            loading: false, 
-            rolesLoaded: true 
-          });
-        } else {
+        if (!session) {
+          console.log('✅ Auth inicializado: sin sesión');
           setUser(null);
           setRolesLoaded(false);
-          console.log('✅ Auth inicializado: sin sesión');
+          setLoading(false);
+        } else {
+          console.log('✅ Auth inicializado con sesión:', session.user?.email);
+          setLoading(true);
+          handleSessionChange(session);
         }
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error('Error al inicializar auth:', error);
         setUser(null);
         setRolesLoaded(false);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initAuth();
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-
-        console.log('🔄 Auth state change:', event, session?.user?.email);
-
-        if (session?.user) {
-          const roles = await fetchUserRoles(session.user.id);
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            roles,
-            session
-          });
-          setRolesLoaded(true);
-        } else {
-          setUser(null);
-          setRolesLoaded(false);
-        }
         setLoading(false);
-      }
-    );
+      });
 
     return () => {
       mounted = false;
