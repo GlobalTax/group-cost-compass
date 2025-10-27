@@ -92,6 +92,15 @@ export const EmployeeDialog = ({
   });
 
   const onSubmit = async (data: EmployeeFormData) => {
+    // Obtener org_id de la empresa seleccionada
+    const selectedCompany = companies?.find((c) => c.id === data.company_id);
+    
+    if (!selectedCompany?.org_id && !employee) {
+      console.error("❌ No se pudo determinar org_id para la empresa seleccionada");
+      // El toast lo mostrará el hook automáticamente si hay error
+      return;
+    }
+    
     const payload = {
       full_name: data.full_name,
       employee_code: data.employee_code || null,
@@ -110,6 +119,8 @@ export const EmployeeDialog = ({
       department: data.department || null,
       position: data.position || null,
       contract_type: data.contract_type || null,
+      // Añadir org_id solo para creación (RLS lo requiere)
+      ...(employee ? {} : { org_id: selectedCompany?.org_id }),
     };
 
     if (employee) {

@@ -77,10 +77,22 @@ const parseNumber = (value: string | number): number | null => {
 // Consolidar múltiples líneas del mismo empleado (sumar valores)
 const consolidateDuplicates = (costs: ParsedA3NomCost[]): ParsedA3NomCost[] => {
   const grouped = new Map<string, ParsedA3NomCost>();
+  
+  // Detectar códigos duplicados en diferentes empresas (para auditoría)
+  const codesByCompany = new Map<string, Set<string>>();
 
   for (const cost of costs) {
-    if (grouped.has(cost.employee_code)) {
-      const existing = grouped.get(cost.employee_code)!;
+    // Clave compuesta: empresa + código de empleado
+    const key = `${cost.company_nif}:${cost.employee_code}`;
+    
+    // Registrar códigos por empresa para detectar duplicados cross-company
+    if (!codesByCompany.has(cost.employee_code)) {
+      codesByCompany.set(cost.employee_code, new Set());
+    }
+    codesByCompany.get(cost.employee_code)!.add(cost.company_nif);
+    
+    if (grouped.has(key)) {
+      const existing = grouped.get(key)!;
       
       // Sumar todos los campos numéricos
       existing.bruto += cost.bruto;
@@ -103,7 +115,16 @@ const consolidateDuplicates = (costs: ParsedA3NomCost[]): ParsedA3NomCost[] => {
       existing.enf_acc = (existing.enf_acc || 0) + (cost.enf_acc || 0);
       existing.bonificacion = (existing.bonificacion || 0) + (cost.bonificacion || 0);
     } else {
-      grouped.set(cost.employee_code, { ...cost });
+      grouped.set(key, { ...cost });
+    }
+  }
+  
+  // Log de auditoría: códigos que aparecen en múltiples empresas
+  for (const [code, companies] of codesByCompany.entries()) {
+    if (companies.size > 1) {
+      console.warn(
+        `⚠️ Código de empleado ${code} aparece en ${companies.size} empresas: ${Array.from(companies).join(", ")}`
+      );
     }
   }
 
