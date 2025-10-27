@@ -1,0 +1,6 @@
+nombre,empresa,fecha_alta,dni,fecha_baja,fecha_antiguedad,traslado,notas
+María García López,Navarro Legal y Tributario,01/01/2020,12345678A,,,false,
+Juan Pérez Martínez,Beglobal Worldwide,15/03/2021,87654321B,,,false,
+Ana Rodríguez Sánchez,GoLooper,10/06/2022,11223344C,,,false,
+Carlos Fernández Torres,SPV Corporate Advisor,01/09/2019,55667788D,,,false,Ejemplo con antigüedad
+Laura Martín Ruiz,Navarro Legal y Tributario,20/02/2023,99887766E,,,false,
