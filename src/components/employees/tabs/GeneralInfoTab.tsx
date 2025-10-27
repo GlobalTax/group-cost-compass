@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { Pencil } from "lucide-react";
 import { EditableSection, FieldDefinition } from "./EditableSection";
 import { useEmployeeUpdate } from "@/hooks/useEmployeeUpdate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { EditCostDialog } from "../EditCostDialog";
 
 interface GeneralInfoTabProps {
   employee: any;
@@ -12,6 +16,12 @@ interface GeneralInfoTabProps {
     lastGross: number;
     lastNet: number;
   };
+  latestCost?: {
+    id: string;
+    period: string;
+    bruto: number;
+    coste_empresa: number;
+  } | null;
 }
 
 const InfoField = ({ label, value }: { label: string; value: string | null | undefined }) => (
@@ -21,8 +31,9 @@ const InfoField = ({ label, value }: { label: string; value: string | null | und
   </div>
 );
 
-export const GeneralInfoTab = ({ employee, financials }: GeneralInfoTabProps) => {
+export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfoTabProps) => {
   const { updateFields, isUpdating } = useEmployeeUpdate(employee.id);
+  const [showEditCostDialog, setShowEditCostDialog] = useState(false);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("es-ES", {
@@ -85,10 +96,18 @@ export const GeneralInfoTab = ({ employee, financials }: GeneralInfoTabProps) =>
         isLoading={isUpdating}
       />
 
-      {/* Datos Económicos - Solo lectura */}
+      {/* Datos Económicos - Editable */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-lg">Datos Económicos</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowEditCostDialog(true)}
+          >
+            <Pencil className="w-4 h-4 mr-2" />
+            {latestCost ? "Editar último período" : "Añadir período"}
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -102,6 +121,13 @@ export const GeneralInfoTab = ({ employee, financials }: GeneralInfoTabProps) =>
           </div>
         </CardContent>
       </Card>
+
+      <EditCostDialog
+        open={showEditCostDialog}
+        onOpenChange={setShowEditCostDialog}
+        employeeId={employee.id}
+        cost={latestCost}
+      />
 
       {/* Notas - Editable */}
       {(employee.notes || true) && (

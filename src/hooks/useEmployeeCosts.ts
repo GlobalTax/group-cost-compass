@@ -4,6 +4,7 @@ import {
   fetchCosts, 
   createCost, 
   bulkCreateCosts,
+  updateCost,
   type CostsFilters 
 } from "@/lib/supabase/repositories/costs.repo";
 import type { Database } from "@/integrations/supabase/types";
@@ -84,6 +85,24 @@ export const useBulkCreateEmployeeCosts = () => {
     },
     onError: (error: Error) => {
       toast.error(`Error al importar costes: ${error.message}`);
+    },
+  });
+};
+
+export const useUpdateEmployeeCost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<CostInsert> }) => 
+      updateCost(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employee-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["costs-by-period"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success("Coste actualizado correctamente");
+    },
+    onError: (error: Error) => {
+      toast.error(`Error al actualizar coste: ${error.message}`);
     },
   });
 };

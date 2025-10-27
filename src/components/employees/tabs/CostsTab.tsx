@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Pencil, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -8,8 +10,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { formatCurrency, formatPeriod } from "@/lib/formatters";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { EditCostDialog } from "../EditCostDialog";
 
 interface CostsTabProps {
   costs: Array<{
@@ -18,10 +22,34 @@ interface CostsTabProps {
     bruto: number | null;
     coste_empresa: number | null;
   }>;
+  employeeId: string;
   isLoading?: boolean;
 }
 
-export const CostsTab = ({ costs, isLoading }: CostsTabProps) => {
+export const CostsTab = ({ costs, employeeId, isLoading }: CostsTabProps) => {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedCost, setSelectedCost] = useState<{
+    id: string;
+    period: string;
+    bruto: number;
+    coste_empresa: number;
+  } | null>(null);
+
+  const handleEditCost = (cost: { id: string; period: string; bruto: number | null; coste_empresa: number | null }) => {
+    setSelectedCost({
+      id: cost.id,
+      period: cost.period,
+      bruto: cost.bruto || 0,
+      coste_empresa: cost.coste_empresa || 0,
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleAddCost = () => {
+    setSelectedCost(null);
+    setShowEditDialog(true);
+  };
+
   if (isLoading) {
     return <Skeleton className="h-96 w-full" />;
   }
@@ -99,7 +127,13 @@ export const CostsTab = ({ costs, isLoading }: CostsTabProps) => {
 
       {/* Costs Table */}
       <Card className="p-6">
-        <h4 className="text-sm font-semibold text-foreground mb-4">Detalle Mensual</h4>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-sm font-semibold text-foreground">Detalle Mensual</h4>
+          <Button variant="outline" size="sm" onClick={handleAddCost}>
+            <Plus className="w-4 h-4 mr-2" />
+            Añadir período
+          </Button>
+        </div>
         <div className="rounded-lg border max-h-[400px] overflow-y-auto">
           <Table>
             <TableHeader>
@@ -108,6 +142,7 @@ export const CostsTab = ({ costs, isLoading }: CostsTabProps) => {
                 <TableHead className="font-semibold text-right">Bruto Mensual</TableHead>
                 <TableHead className="font-semibold text-right">Coste Empresa</TableHead>
                 <TableHead className="font-semibold text-right">Ratio</TableHead>
+                <TableHead className="font-semibold text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,6 +162,15 @@ export const CostsTab = ({ costs, isLoading }: CostsTabProps) => {
                     <TableCell className="text-right text-sm text-foreground">
                       {ratio.toFixed(2)}x
                     </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditCost(cost)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -134,6 +178,13 @@ export const CostsTab = ({ costs, isLoading }: CostsTabProps) => {
           </Table>
         </div>
       </Card>
+
+      <EditCostDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        employeeId={employeeId}
+        cost={selectedCost}
+      />
     </div>
   );
 };

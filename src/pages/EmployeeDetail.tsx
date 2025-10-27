@@ -22,6 +22,11 @@ export default function EmployeeDetail() {
   const { data: transfers, isLoading: isLoadingTransfers } = useTransfers(id);
   
   const financials = useEmployeeFinancials(costs);
+  
+  // Get latest cost for editing
+  const latestCost = costs && costs.length > 0 
+    ? [...costs].sort((a, b) => b.period.localeCompare(a.period))[0]
+    : null;
 
   if (isLoadingEmployee) {
     return (
@@ -145,11 +150,11 @@ export default function EmployeeDetail() {
           </TabsList>
 
           <TabsContent value="general" className="space-y-4">
-            <GeneralInfoTab employee={employee} financials={financials} />
+            <GeneralInfoTab employee={employee} financials={financials} latestCost={latestCost} />
           </TabsContent>
 
           <TabsContent value="costs" className="space-y-4">
-            <CostsTab costs={costs || []} isLoading={isLoadingCosts} />
+            <CostsTab costs={costs || []} employeeId={id || ""} isLoading={isLoadingCosts} />
           </TabsContent>
 
           <TabsContent value="transfers" className="space-y-4">

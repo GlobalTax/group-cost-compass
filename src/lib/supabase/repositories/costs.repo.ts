@@ -163,6 +163,21 @@ export const bulkCreateCosts = async (costs: CostInsert[]) => {
   return data;
 };
 
+/**
+ * Update a cost record
+ */
+export const updateCost = async (costId: string, updates: Partial<CostInsert>) => {
+  const { data, error } = await supabase
+    .from('hr_employee_costs')
+    .update(updates)
+    .eq('id', costId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 // ============================================
 // 4. TRANSFORMATIONS (lógica de negocio)
 // ============================================
