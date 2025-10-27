@@ -7,6 +7,7 @@ import { useEmployeeUpdate } from "@/hooks/useEmployeeUpdate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EditCostDialog } from "../EditCostDialog";
+import { formatCurrency } from "@/lib/formatters";
 
 interface GeneralInfoTabProps {
   employee: any;
@@ -34,14 +35,6 @@ const InfoField = ({ label, value }: { label: string; value: string | null | und
 export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfoTabProps) => {
   const { updateFields, isUpdating } = useEmployeeUpdate(employee.id);
   const [showEditCostDialog, setShowEditCostDialog] = useState(false);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("es-ES", {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 2,
-    }).format(value);
-  };
 
   const formatDate = (date: string | null) => {
     if (!date) return "—";

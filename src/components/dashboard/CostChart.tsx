@@ -1,5 +1,6 @@
 import { memo, useMemo, useCallback } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { formatCurrency } from "@/lib/formatters";
 
 interface CostChartProps {
   type: "monthly" | "yearly";
@@ -28,16 +29,6 @@ const yearlyData = [
   { year: "2024", bruto: 1234000, coste: 1560000 },
   { year: "2025", bruto: 1340000, coste: 1690000 },
 ];
-
-// Move formatCurrency outside component
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-};
 
 export const CostChart = memo(({ type, data }: CostChartProps) => {
   // Memoize chart data transformation

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,9 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Menu } from "lucide-react";
 import { AuthProvider, withAuth } from "@/lib/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Core pages - eager loading
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
@@ -19,12 +23,22 @@ import Costs from "./pages/Costs";
 import Audit from "./pages/Audit";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
-import AdminRoles from "./pages/AdminRoles";
-import AdminUsers from "./pages/AdminUsers";
-import AdminCompanies from "./pages/AdminCompanies";
-import AdminRolesConfig from "./pages/AdminRolesConfig";
-import AdminSettings from "./pages/AdminSettings";
 import NotFound from "./pages/NotFound";
+
+// Admin pages - lazy loading (code splitting)
+const AdminRoles = lazy(() => import("./pages/AdminRoles"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AdminCompanies = lazy(() => import("./pages/AdminCompanies"));
+const AdminRolesConfig = lazy(() => import("./pages/AdminRolesConfig"));
+const AdminSettings = lazy(() => import("./pages/AdminSettings"));
+
+// Loading fallback
+const PageLoader = () => (
+  <div className="p-6 space-y-4">
+    <Skeleton className="h-8 w-64" />
+    <Skeleton className="h-64 w-full" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -83,11 +97,31 @@ const App = () => (
                     <Route path="/transfers" element={<ProtectedTransfers />} />
                     <Route path="/costs" element={<ProtectedCosts />} />
                     <Route path="/audit" element={<ProtectedAudit />} />
-                <Route path="/admin/roles" element={<ProtectedAdminRoles />} />
-                <Route path="/admin/users" element={<ProtectedAdminUsers />} />
-                <Route path="/admin/companies" element={<ProtectedAdminCompanies />} />
-                <Route path="/admin/roles-config" element={<ProtectedAdminRolesConfig />} />
-                <Route path="/admin/settings" element={<ProtectedAdminSettings />} />
+                <Route path="/admin/roles" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ProtectedAdminRoles />
+                  </Suspense>
+                } />
+                <Route path="/admin/users" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ProtectedAdminUsers />
+                  </Suspense>
+                } />
+                <Route path="/admin/companies" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ProtectedAdminCompanies />
+                  </Suspense>
+                } />
+                <Route path="/admin/roles-config" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ProtectedAdminRolesConfig />
+                  </Suspense>
+                } />
+                <Route path="/admin/settings" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ProtectedAdminSettings />
+                  </Suspense>
+                } />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
