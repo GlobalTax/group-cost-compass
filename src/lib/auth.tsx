@@ -34,19 +34,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
       
       if (error) {
-        console.error('Error fetching roles:', error);
+        console.error('❌ Error fetching roles:', error.message, error.code);
         console.error('User ID:', userId);
+        toast.error('Error al cargar roles. Contacta al administrador.');
         return [];
       }
       
       const roles = data?.map(r => r.role as AppRole) || [];
-      console.log('Roles cargados para', userId, ':', roles);
+      console.log('✅ Roles cargados para', userId, ':', roles);
       return roles;
     } catch (err) {
-      console.error('Excepción al cargar roles:', err);
+      console.error('❌ Excepción al cargar roles:', err);
+      toast.error('Error de conexión al cargar roles.');
       return [];
     }
   };
@@ -200,14 +202,6 @@ export const withAuth = (allowedRoles: AppRole[]) => {
           hasPermission: hasPermission(allowedRoles) 
         });
 
-        // Timeout de seguridad: si después de 5s sigue cargando, ir a login
-        const safetyTimeout = setTimeout(() => {
-          if (loading || !rolesLoaded) {
-            console.warn('⚠️ Auth timeout: redirigiendo a login');
-            navigate('/login', { replace: true });
-          }
-        }, 5000);
-
         const checkTimer = setTimeout(() => {
           if (!loading && rolesLoaded) {
             if (!user) {
@@ -225,7 +219,6 @@ export const withAuth = (allowedRoles: AppRole[]) => {
         }, 100);
 
         return () => {
-          clearTimeout(safetyTimeout);
           clearTimeout(checkTimer);
         };
       }, [user, loading, rolesLoaded, navigate]);
