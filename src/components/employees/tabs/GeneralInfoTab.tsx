@@ -1,12 +1,8 @@
-import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil } from "lucide-react";
 import { EditableSection, FieldDefinition } from "./EditableSection";
 import { useEmployeeUpdate } from "@/hooks/useEmployeeUpdate";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { EditCostDialog } from "../EditCostDialog";
+import { useUpdateEmployeeCost } from "@/hooks/useEmployeeCosts";
 import { formatCurrency } from "@/lib/formatters";
 
 interface GeneralInfoTabProps {
@@ -34,7 +30,7 @@ const InfoField = ({ label, value }: { label: string; value: string | null | und
 
 export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfoTabProps) => {
   const { updateFields, isUpdating } = useEmployeeUpdate(employee.id);
-  const [showEditCostDialog, setShowEditCostDialog] = useState(false);
+  const { mutateAsync: updateCost, isPending: isUpdatingCost } = useUpdateEmployeeCost();
 
   const formatDate = (date: string | null) => {
     if (!date) return "—";
@@ -63,12 +59,47 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
     { name: "seniority_date", label: "Fecha de Antigüedad", value: employee.seniority_date, type: "date" },
   ];
 
+  const economicDataFields: FieldDefinition[] = [
+    { 
+      name: "period", 
+      label: "Período (último registrado)", 
+      value: latestCost?.period || "—", 
+      type: "text", 
+      disabled: true 
+    },
+    { 
+      name: "bruto", 
+      label: "Bruto Mensual", 
+      value: latestCost?.bruto?.toString() || "0", 
+      type: "number", 
+      placeholder: "3500" 
+    },
+    { 
+      name: "coste_empresa", 
+      label: "Coste Empresa", 
+      value: latestCost?.coste_empresa?.toString() || "0", 
+      type: "number", 
+      placeholder: "4200" 
+    },
+  ];
+
   const handleSavePersonalData = async (data: Record<string, any>) => {
     return await updateFields(data);
   };
 
   const handleSaveOrganizationalData = async (data: Record<string, any>) => {
     return await updateFields(data);
+  };
+
+  const handleSaveEconomicData = async (data: Record<string, any>) => {
+    if (!latestCost?.id) return false;
+    
+    const updates: any = {};
+    if (data.bruto) updates.bruto = parseFloat(data.bruto);
+    if (data.coste_empresa) updates.coste_empresa = parseFloat(data.coste_empresa);
+    
+    await updateCost({ id: latestCost.id, updates });
+    return true;
   };
 
   return (
@@ -90,36 +121,11 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
       />
 
       {/* Datos Económicos - Editable */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg">Datos Económicos</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowEditCostDialog(true)}
-          >
-            <Pencil className="w-4 h-4 mr-2" />
-            {latestCost ? "Editar último período" : "Añadir período"}
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InfoField label="Salario Base Anual" value={formatCurrency(financials.annualBaseSalary)} />
-            <InfoField label="Coste Mensual" value={formatCurrency(financials.monthlyCost)} />
-            <InfoField label="Último Bruto Mensual" value={formatCurrency(financials.lastGross)} />
-            <InfoField 
-              label="Último Neto Mensual" 
-              value={financials.lastNet > 0 ? formatCurrency(financials.lastNet) : "—"} 
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <EditCostDialog
-        open={showEditCostDialog}
-        onOpenChange={setShowEditCostDialog}
-        employeeId={employee.id}
-        cost={latestCost}
+      <EditableSection
+        title="Datos Económicos"
+        fields={economicDataFields}
+        onSave={handleSaveEconomicData}
+        isLoading={isUpdatingCost}
       />
 
       {/* Notas - Editable */}

@@ -12,7 +12,7 @@ export interface FieldDefinition {
   name: string;
   label: string;
   value: any;
-  type: 'text' | 'email' | 'tel' | 'date' | 'textarea' | 'select';
+  type: 'text' | 'email' | 'tel' | 'date' | 'textarea' | 'select' | 'number';
   options?: { value: string; label: string }[];
   placeholder?: string;
   disabled?: boolean;
