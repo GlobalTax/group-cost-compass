@@ -15,7 +15,7 @@ const Dashboard = () => {
   const [year, setYear] = useState(currentYear);
   const [companyId, setCompanyId] = useState<string>("all");
 
-  const { data, isLoading, isError } = useDashboardGlobal({
+  const { data, isLoading, error } = useDashboardGlobal({
     year,
     companyId: companyId === "all" ? undefined : companyId,
   });
