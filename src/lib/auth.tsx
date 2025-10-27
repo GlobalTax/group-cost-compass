@@ -53,68 +53,87 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const handleSessionChange = (session: Session | null) => {
-    if (session?.user) {
-      // Estado inmediato sin roles para desbloquear UI básica
-      setUser({
-        id: session.user.id,
-        email: session.user.email!,
-        roles: [],
-        session,
-      });
-      setRolesLoaded(false);
+  useEffect(() => {
+    let mounted = true;
+    let isLoadingRoles = false;
+
+    const loadUserWithRoles = async (session: Session | null) => {
+      if (!session?.user || isLoadingRoles) {
+        if (!session) {
+          setUser(null);
+          setRolesLoaded(true);
+          setLoading(false);
+        }
+        return;
+      }
+
+      isLoadingRoles = true;
       
-      // Deferir carga de roles para no bloquear el callback del listener
-      setTimeout(async () => {
-        const roles = await fetchUserRoles(session.user!.id);
+      try {
+        const roles = await fetchUserRoles(session.user.id);
+        
+        if (!mounted) return;
+
         setUser({
-          id: session.user!.id,
-          email: session.user!.email!,
+          id: session.user.id,
+          email: session.user.email!,
           roles,
           session,
         });
         setRolesLoaded(true);
-        setLoading(false);
-      }, 0);
-    } else {
-      setUser(null);
-      setRolesLoaded(false);
-      setLoading(false);
-    }
-  };
+        console.log('✅ Roles cargados:', { email: session.user.email, roles });
+      } catch (error) {
+        console.error('Error al cargar roles:', error);
+        if (!mounted) return;
+        
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          roles: [],
+          session,
+        });
+        setRolesLoaded(true);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          isLoadingRoles = false;
+        }
+      }
+    };
 
-  useEffect(() => {
-    let mounted = true;
     setLoading(true);
 
-    // 1) Listener primero, sin async ni llamadas a Supabase en el callback
+    // 1) Registrar listener PRIMERO (sin async en el callback)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       console.log('🔄 Auth state change:', event, session?.user?.email);
-      setLoading(true);
-      handleSessionChange(session);
+      
+      // Solo procesar eventos específicos para evitar loops
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setRolesLoaded(true);
+        setLoading(false);
+      } else if (event === 'SIGNED_IN' && session) {
+        // Cargar roles cuando el usuario hace login
+        setLoading(true);
+        setTimeout(() => loadUserWithRoles(session), 0);
+      }
     });
 
-    // 2) Hidratar sesión existente después del listener
+    // 2) Cargar sesión inicial
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         if (!mounted) return;
-        if (!session) {
-          console.log('✅ Auth inicializado: sin sesión');
-          setUser(null);
-          setRolesLoaded(false);
-          setLoading(false);
-        } else {
-          console.log('✅ Auth inicializado con sesión:', session.user?.email);
-          setLoading(true);
-          handleSessionChange(session);
-        }
+        console.log('✅ Sesión inicial:', session?.user?.email || 'sin sesión');
+        loadUserWithRoles(session);
       })
       .catch((error) => {
         console.error('Error al inicializar auth:', error);
-        setUser(null);
-        setRolesLoaded(false);
-        setLoading(false);
+        if (mounted) {
+          setUser(null);
+          setRolesLoaded(true);
+          setLoading(false);
+        }
       });
 
     return () => {
