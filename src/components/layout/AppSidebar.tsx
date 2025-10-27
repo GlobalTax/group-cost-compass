@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -46,6 +46,14 @@ const navigationItems = [
     items: [
       { title: "Usuarios", url: "/admin/users", icon: UserCog },
       { title: "Roles", url: "/admin/roles", icon: ShieldCheck },
+    ],
+  },
+  {
+    section: "CONFIGURACIÓN",
+    items: [
+      { title: "Empresas", url: "/admin/companies", icon: Building2 },
+      { title: "Roles Config", url: "/admin/roles-config", icon: Shield },
+      { title: "Sistema", url: "/admin/settings", icon: Settings },
     ],
   },
 ];
@@ -100,8 +108,8 @@ export function AppSidebar() {
       <SidebarContent className="bg-background border-r border-border">
         {/* Navigation Groups */}
         {navigationItems.map((group) => {
-          // Ocultar sección ADMINISTRACIÓN para no-super_admin
-          if (group.section === "ADMINISTRACIÓN" && !hasPermission(['super_admin'])) {
+          // Ocultar sección ADMINISTRACIÓN y CONFIGURACIÓN para no-super_admin
+          if ((group.section === "ADMINISTRACIÓN" || group.section === "CONFIGURACIÓN") && !hasPermission(['super_admin'])) {
             return null;
           }
           

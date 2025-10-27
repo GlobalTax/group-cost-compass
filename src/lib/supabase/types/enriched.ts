@@ -5,6 +5,8 @@ export type Company = Database['public']['Tables']['companies']['Row'];
 export type Employee = Database['public']['Tables']['hr_employees']['Row'];
 export type EmployeeCost = Database['public']['Tables']['hr_employee_costs']['Row'];
 export type Transfer = Database['public']['Tables']['hr_transfers']['Row'];
+export type RoleConfiguration = Database['public']['Tables']['role_configurations']['Row'];
+export type SystemSetting = Database['public']['Tables']['system_settings']['Row'];
 
 // Enriched types (con relaciones)
 export interface EmployeeWithCompany extends Employee {

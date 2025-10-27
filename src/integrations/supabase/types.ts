@@ -1368,26 +1368,38 @@ export type Database = {
       }
       companies: {
         Row: {
+          address: string | null
           created_at: string | null
+          founded_date: string | null
           id: string
+          is_active: boolean | null
           name: string
           nif: string | null
+          notes: string | null
           org_id: string
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string | null
+          founded_date?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
           nif?: string | null
+          notes?: string | null
           org_id: string
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string | null
+          founded_date?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
           nif?: string | null
+          notes?: string | null
           org_id?: string
           updated_at?: string | null
         }
@@ -7823,6 +7835,39 @@ export type Database = {
         }
         Relationships: []
       }
+      role_configurations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          permissions: Json | null
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          permissions?: Json | null
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          permissions?: Json | null
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       room_reservations: {
         Row: {
           approved_by: string | null
@@ -8529,6 +8574,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_settings: {
+        Row: {
+          description: string | null
+          id: string
+          org_id: string
+          setting_category: string | null
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          org_id: string
+          setting_category?: string | null
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          org_id?: string
+          setting_category?: string | null
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       task_assignments: {
         Row: {
