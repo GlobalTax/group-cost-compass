@@ -59,11 +59,20 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
     { name: "seniority_date", label: "Fecha de Antigüedad", value: employee.seniority_date, type: "date" },
   ];
 
+  const brutoAnual = latestCost?.bruto ? latestCost.bruto * 12 : 0;
+
   const economicDataFields: FieldDefinition[] = [
     { 
       name: "period", 
       label: "Período (último registrado)", 
       value: latestCost?.period || "—", 
+      type: "text", 
+      disabled: true 
+    },
+    { 
+      name: "bruto_anual", 
+      label: "Bruto Anual", 
+      value: formatCurrency(brutoAnual), 
       type: "text", 
       disabled: true 
     },
