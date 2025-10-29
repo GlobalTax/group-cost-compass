@@ -18,3 +18,6 @@ export * from './roleConfig.repo';
 
 // System Settings
 export * from './systemSettings.repo';
+
+// Budget
+export * from './budget.repo';

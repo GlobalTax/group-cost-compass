@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -37,6 +37,7 @@ const navigationItems = [
   {
     section: "HERRAMIENTAS",
     items: [
+      { title: "Presupuestos", url: "/budget", icon: Calculator },
       { title: "Importar", url: "/upload", icon: FileUp },
       { title: "Auditoría", url: "/audit", icon: Shield },
     ],

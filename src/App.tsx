@@ -21,6 +21,7 @@ import Upload from "./pages/Upload";
 import Transfers from "./pages/Transfers";
 import Costs from "./pages/Costs";
 import Audit from "./pages/Audit";
+import Budget from "./pages/Budget";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
@@ -47,6 +48,7 @@ const queryClient = new QueryClient();
 const ProtectedDashboard = withAuth(['admin', 'finance', 'super_admin'])(Dashboard);
 const ProtectedCosts = withAuth(['admin', 'finance', 'super_admin'])(Costs);
 const ProtectedAudit = withAuth(['admin', 'super_admin'])(Audit);
+const ProtectedBudget = withAuth(['admin', 'finance', 'super_admin'])(Budget);
 const ProtectedEmployees = withAuth(['admin', 'manager', 'super_admin'])(Employees);
 const ProtectedEmployeeDetail = withAuth(['admin', 'manager', 'super_admin'])(EmployeeDetail);
 const ProtectedCompanies = withAuth(['admin', 'finance', 'super_admin'])(Companies);
@@ -98,6 +100,7 @@ const App = () => (
               <Route path="/upload" element={<ProtectedUpload />} />
                     <Route path="/transfers" element={<ProtectedTransfers />} />
                     <Route path="/costs" element={<ProtectedCosts />} />
+                    <Route path="/budget" element={<ProtectedBudget />} />
                     <Route path="/audit" element={<ProtectedAudit />} />
                 <Route path="/admin/roles" element={
                   <Suspense fallback={<PageLoader />}>
