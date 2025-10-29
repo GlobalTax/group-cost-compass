@@ -121,22 +121,22 @@ export default function EmployeeDetail() {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
-            title="Salario Base Anual"
+            title="Salario Bruto Anual"
             value={financials.annualBaseSalary}
             format="currency"
           />
           <KPICard
-            title="Coste Mensual"
-            value={financials.monthlyCost}
+            title="Coste Total Anual"
+            value={financials.annualTotalCost}
             format="currency"
           />
           <KPICard
-            title="Último Bruto"
+            title="Último Bruto Mensual"
             value={financials.lastGross}
             format="currency"
           />
           <KPICard
-            title="Último Neto"
+            title="Último Neto Mensual"
             value={financials.lastNet}
             format="currency"
           />
