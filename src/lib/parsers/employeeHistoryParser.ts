@@ -484,29 +484,32 @@ async function parseExcel(file: File): Promise<ParsedHistory> {
   // Separar cabeceras y datos
   const [headerRow = [], ...dataRows] = matrix;
   
-  // Normalizar cabeceras
-  const normalizedHeaders = headerRow
-    .map(h => normalizeHeader(String(h ?? '')))
-    .filter(Boolean);
+  // Normalizar cabeceras manteniendo índices originales (no filtrar vacíos)
+  const normalizedHeaders = headerRow.map(h => {
+    const normalized = normalizeHeader(String(h ?? ''));
+    return normalized || null; // Mantener null para headers vacíos
+  });
   
   console.log('📊 Headers (XLSX):', headerRow, '→', normalizedHeaders);
   
-  // Validar columnas requeridas
+  // Validar columnas requeridas (excluir null del set)
   const requiredColumns = ['nombre', 'dni', 'empresa', 'fechaAlta', 'ingresosAnuales'];
-  const missingColumns = requiredColumns.filter(col => !normalizedHeaders.includes(col));
+  const headerSet = new Set(normalizedHeaders.filter(Boolean));
+  const missingColumns = requiredColumns.filter(col => !headerSet.has(col));
   
   if (missingColumns.length > 0) {
-    console.error('📋 Columnas disponibles:', normalizedHeaders);
+    console.error('📋 Columnas disponibles:', Array.from(headerSet));
     console.error('❌ Columnas faltantes:', missingColumns);
     throw new Error(
       `Faltan columnas requeridas: ${missingColumns.join(', ')}.\n` +
-      `Columnas encontradas: ${normalizedHeaders.join(', ')}`
+      `Columnas encontradas: ${Array.from(headerSet).join(', ')}`
     );
   }
   
-  // Logging temporal: muestra de fechas raw
-  const fechaAltaIdx = normalizedHeaders.indexOf('fechaAlta');
+  // Logging temporal: muestra de fechas raw con índice correcto
+  const fechaAltaIdx = normalizedHeaders.findIndex(h => h === 'fechaAlta');
   if (fechaAltaIdx >= 0) {
+    console.log('📑 idx(fechaAlta)=', fechaAltaIdx);
     console.log('📅 Muestra de fechas raw (Excel):', {
       fila2: dataRows[0]?.[fechaAltaIdx],
       fila3: dataRows[1]?.[fechaAltaIdx],
@@ -515,20 +518,23 @@ async function parseExcel(file: File): Promise<ParsedHistory> {
     });
   }
   
-  // Mapear filas a objetos, pre-parseando fechas
+  // Mapear filas a objetos preservando índices originales
   const rowsObjects = dataRows.map(row => {
     const obj: any = {};
-    normalizedHeaders.forEach((key, i) => {
+    for (let i = 0; i < normalizedHeaders.length; i++) {
+      const key = normalizedHeaders[i];
       const value = row[i];
+      
+      if (!key) continue; // Saltar headers vacíos
       
       // Para columnas de fecha, aplicar parseExcelDate y guardar valor raw para debug
       if (['fechaAlta', 'fechaBaja', 'antiguedad'].includes(key)) {
-        obj[`_raw${key.charAt(0).toUpperCase() + key.slice(1)}`] = value; // _rawFechaAlta
+        obj[`_raw${key.charAt(0).toUpperCase() + key.slice(1)}`] = value;
         obj[key] = parseExcelDate(value);
       } else {
         obj[key] = value;
       }
-    });
+    }
     return obj;
   });
   
