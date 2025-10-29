@@ -22,6 +22,7 @@ import Transfers from "./pages/Transfers";
 import Costs from "./pages/Costs";
 import Audit from "./pages/Audit";
 import Budget from "./pages/Budget";
+import BudgetDetail from "./pages/BudgetDetail";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
@@ -49,6 +50,7 @@ const ProtectedDashboard = withAuth(['admin', 'finance', 'super_admin'])(Dashboa
 const ProtectedCosts = withAuth(['admin', 'finance', 'super_admin'])(Costs);
 const ProtectedAudit = withAuth(['admin', 'super_admin'])(Audit);
 const ProtectedBudget = withAuth(['admin', 'finance', 'super_admin'])(Budget);
+const ProtectedBudgetDetail = withAuth(['admin', 'finance', 'super_admin'])(BudgetDetail);
 const ProtectedEmployees = withAuth(['admin', 'manager', 'super_admin'])(Employees);
 const ProtectedEmployeeDetail = withAuth(['admin', 'manager', 'super_admin'])(EmployeeDetail);
 const ProtectedCompanies = withAuth(['admin', 'finance', 'super_admin'])(Companies);
@@ -101,6 +103,7 @@ const App = () => (
                     <Route path="/transfers" element={<ProtectedTransfers />} />
                     <Route path="/costs" element={<ProtectedCosts />} />
                     <Route path="/budget" element={<ProtectedBudget />} />
+                    <Route path="/budget/:id" element={<ProtectedBudgetDetail />} />
                     <Route path="/audit" element={<ProtectedAudit />} />
                 <Route path="/admin/roles" element={
                   <Suspense fallback={<PageLoader />}>
