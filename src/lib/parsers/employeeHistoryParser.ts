@@ -124,6 +124,26 @@ function normalizeDNI(dni: string): string {
 }
 
 /**
+ * Convierte un serial de Excel (número) a YYYY-MM-DD
+ * Excel almacena fechas como días desde 1900-01-01 (con bug de año bisiesto 1900)
+ */
+function parseExcelDate(value: any): string | null {
+  // Si es número serial de Excel (> 1000 para evitar confusión con años)
+  if (typeof value === 'number' && value > 1000) {
+    // Fórmula: fecha = (serial - 25569) * 86400000 (Excel epoch vs Unix epoch)
+    const date = new Date((value - 25569) * 86400 * 1000);
+    if (isNaN(date.getTime())) return null;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
+  // Si es Date object o string, usar parseDate
+  return parseDate(value);
+}
+
+/**
  * Convierte fecha DD/MM/YYYY a YYYY-MM-DD
  * Soporta múltiples formatos: DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, Date objects
  */
@@ -236,6 +256,7 @@ function parseIncome(incomeStr: string): number {
 
 /**
  * Valida una fila del Excel (ahora con cabeceras normalizadas)
+ * IMPORTANTE: Las fechas ya deben venir pre-parseadas en formato YYYY-MM-DD
  */
 function validateRow(row: any, rowNumber: number): { employee: ParsedEmployee | null; errors: ValidationError[] } {
   const errors: ValidationError[] = [];
@@ -285,19 +306,19 @@ function validateRow(row: any, rowNumber: number): { employee: ParsedEmployee | 
     });
   }
   
-  // Validar fechas
-  const hireDate = parseDate(row.fechaAlta);
+  // Validar fechas (ya pre-parseadas desde Excel/CSV)
+  const hireDate = row.fechaAlta;
   if (!hireDate) {
     errors.push({
       row: rowNumber,
       field: 'fechaAlta',
-      message: 'Fecha de alta inválida o requerida',
+      message: `Fecha de alta inválida o requerida (valor raw: ${JSON.stringify(row._rawFechaAlta)})`,
       severity: 'error',
     });
   }
   
-  const terminationDate = parseDate(row.fechaBaja);
-  const seniorityDate = parseDate(row.antiguedad);
+  const terminationDate = row.fechaBaja || null;
+  const seniorityDate = row.antiguedad || null;
   
   // Advertencias
   const annualIncome = parseIncome(row.ingresosAnuales);
@@ -437,11 +458,11 @@ async function parseExcel(file: File): Promise<ParsedHistory> {
   const ws = wb.Sheets[wb.SheetNames[0]];
   
   // Obtener datos como matriz (primera fila = cabeceras)
+  // raw: true para obtener valores originales (seriales numéricos para fechas)
   const matrix = XLSX.utils.sheet_to_json(ws, {
     header: 1,
     defval: '',
-    raw: false,
-    dateNF: 'dd/mm/yyyy'
+    raw: true,
   }) as any[][];
   
   if (matrix.length === 0) {
@@ -471,11 +492,30 @@ async function parseExcel(file: File): Promise<ParsedHistory> {
     );
   }
   
-  // Mapear filas a objetos
+  // Logging temporal: muestra de fechas raw
+  const fechaAltaIdx = normalizedHeaders.indexOf('fechaAlta');
+  if (fechaAltaIdx >= 0) {
+    console.log('📅 Muestra de fechas raw (Excel):', {
+      fila2: dataRows[0]?.[fechaAltaIdx],
+      fila3: dataRows[1]?.[fechaAltaIdx],
+      fila4: dataRows[2]?.[fechaAltaIdx],
+      tipos: dataRows.slice(0, 3).map(r => typeof r[fechaAltaIdx])
+    });
+  }
+  
+  // Mapear filas a objetos, pre-parseando fechas
   const rowsObjects = dataRows.map(row => {
     const obj: any = {};
     normalizedHeaders.forEach((key, i) => {
-      if (key) obj[key] = row[i];
+      const value = row[i];
+      
+      // Para columnas de fecha, aplicar parseExcelDate y guardar valor raw para debug
+      if (['fechaAlta', 'fechaBaja', 'antiguedad'].includes(key)) {
+        obj[`_raw${key.charAt(0).toUpperCase() + key.slice(1)}`] = value; // _rawFechaAlta
+        obj[key] = parseExcelDate(value);
+      } else {
+        obj[key] = value;
+      }
     });
     return obj;
   });
@@ -515,7 +555,19 @@ async function parseCSV(file: File): Promise<ParsedHistory> {
           ));
         }
         
-        resolve(buildParsedHistory(results.data));
+        // Pre-parsear fechas en CSV (PapaParse devuelve strings)
+        const rowsWithParsedDates = results.data.map((row: any) => {
+          const newRow = { ...row };
+          ['fechaAlta', 'fechaBaja', 'antiguedad'].forEach(key => {
+            if (row[key]) {
+              newRow[`_raw${key.charAt(0).toUpperCase() + key.slice(1)}`] = row[key];
+              newRow[key] = parseDate(row[key]);
+            }
+          });
+          return newRow;
+        });
+        
+        resolve(buildParsedHistory(rowsWithParsedDates));
       },
       error: (error) => {
         reject(new Error(`Error al parsear CSV: ${error.message}`));
