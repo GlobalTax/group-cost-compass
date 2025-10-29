@@ -125,11 +125,12 @@ function normalizeDNI(dni: string): string {
 
 /**
  * Convierte fecha DD/MM/YYYY a YYYY-MM-DD
- * Soporta también objetos Date (Excel raw dates)
+ * Soporta múltiples formatos: DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, Date objects
  */
 function parseDate(dateStr: string | Date): string | null {
   // Si es un objeto Date, formatear directamente
   if (dateStr instanceof Date) {
+    if (isNaN(dateStr.getTime())) return null;
     const year = dateStr.getFullYear();
     const month = String(dateStr.getMonth() + 1).padStart(2, '0');
     const day = String(dateStr.getDate()).padStart(2, '0');
@@ -140,11 +141,66 @@ function parseDate(dateStr: string | Date): string | null {
     return null;
   }
   
-  const parts = String(dateStr).split('/');
-  if (parts.length !== 3) return null;
+  const str = String(dateStr).trim();
   
-  const [day, month, year] = parts;
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  // Detectar separador (/ o -)
+  const separator = str.includes('/') ? '/' : '-';
+  const parts = str.split(separator);
+  
+  if (parts.length !== 3) {
+    console.warn(`Formato de fecha no reconocido: "${str}"`);
+    return null;
+  }
+  
+  const [part1, part2, part3] = parts.map(p => parseInt(p, 10));
+  
+  // Detectar formato basado en el rango de valores
+  let year: number, month: number, day: number;
+  
+  // Si part1 > 31, es YYYY-MM-DD
+  if (part1 > 31) {
+    year = part1;
+    month = part2;
+    day = part3;
+  }
+  // Si part3 > 31, es DD/MM/YYYY o DD-MM-YYYY
+  else if (part3 > 31) {
+    day = part1;
+    month = part2;
+    year = part3;
+  }
+  // Si part3 <= 31 pero es un año de 2 dígitos (< 100)
+  else if (part3 < 100) {
+    day = part1;
+    month = part2;
+    year = part3 + 2000; // Asumimos 20XX
+  }
+  // Ambiguo: asumir DD/MM/YYYY (formato europeo por defecto)
+  else {
+    day = part1;
+    month = part2;
+    year = part3;
+  }
+  
+  // Validar rangos
+  if (month < 1 || month > 12) {
+    console.error(`Mes inválido: ${month} en fecha "${str}"`);
+    return null;
+  }
+  
+  if (day < 1 || day > 31) {
+    console.error(`Día inválido: ${day} en fecha "${str}"`);
+    return null;
+  }
+  
+  if (year < 1900 || year > 2100) {
+    console.error(`Año inválido: ${year} en fecha "${str}"`);
+    return null;
+  }
+  
+  const result = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  console.log(`📅 Fecha parseada: "${str}" → "${result}"`);
+  return result;
 }
 
 /**

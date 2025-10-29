@@ -109,7 +109,7 @@ export const HistoryPreviewTable = memo(({ history }: HistoryPreviewTableProps) 
               
               return (
                 <TableRow 
-                  key={`${emp.dni}-${emp.company_id}-${emp.hire_date}`}
+                  key={`${emp.dni}-${emp.company_id}-${emp.hire_date}-${emp.rowNumber}`}
                   className={hasError ? 'bg-red-50' : hasWarning ? 'bg-yellow-50' : ''}
                 >
                   <TableCell className="text-xs text-muted-foreground">
