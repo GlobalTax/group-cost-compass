@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { EmployeeTable } from "@/components/dashboard/EmployeeTable";
+import { EmployeeTableOptimized } from "@/components/dashboard/EmployeeTableOptimized";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -106,7 +106,12 @@ const Employees = () => {
         <div>
           <h2 className="text-lg font-semibold mb-4 text-foreground">Plantilla</h2>
           <Card className="p-6 border-gray-200">
-            <EmployeeTable filters={filters} />
+            <EmployeeTableOptimized 
+              filters={{ 
+                companyId: companyFilter !== "all" ? companyFilter : undefined, 
+                year: new Date().getFullYear() 
+              }} 
+            />
           </Card>
         </div>
       </div>
