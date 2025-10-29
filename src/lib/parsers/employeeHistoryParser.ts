@@ -139,8 +139,20 @@ function parseExcelDate(value: any): string | null {
     return `${year}-${month}-${day}`;
   }
   
-  // Si es Date object o string, usar parseDate
-  return parseDate(value);
+  // Si es Date object
+  if (value instanceof Date) {
+    return parseDate(value);
+  }
+
+  // Si es string: si no contiene dígitos, tratar como vacío
+  if (typeof value === 'string') {
+    const s = value.trim();
+    if (!/\d/.test(s)) return null;
+    return parseDate(s);
+  }
+  
+  // Cualquier otro tipo -> null
+  return null;
 }
 
 /**

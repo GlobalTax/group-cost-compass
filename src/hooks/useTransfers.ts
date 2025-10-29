@@ -76,14 +76,14 @@ export const useTransfersWithDetails = (employeeId?: string) => {
             .from("hr_employees")
             .select("termination_date")
             .eq("dni", transfer.hr_employees.dni)
-            .eq("company_id", transfer.from_company)
+            .eq("company_id", transfer.from_company?.id)
             .maybeSingle();
 
           const { data: toEmp } = await supabase
             .from("hr_employees")
             .select("hire_date")
             .eq("dni", transfer.hr_employees.dni)
-            .eq("company_id", transfer.to_company)
+            .eq("company_id", transfer.to_company?.id)
             .maybeSingle();
 
           const daysBetween =
