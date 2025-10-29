@@ -44,17 +44,22 @@ export const useTransfersWithDetails = (employeeId?: string) => {
       let query = supabase
         .from("hr_transfers")
         .select(`
-          *,
+          id,
+          employee_id,
+          transfer_date,
+          reason,
+          from_company,
+          to_company,
           hr_employees!inner (
             id,
             full_name,
             dni
           ),
-          from_company:companies!hr_transfers_from_company_fkey (
+          from_company_data:companies!hr_transfers_from_company_fkey (
             id,
             name
           ),
-          to_company:companies!hr_transfers_to_company_fkey (
+          to_company_data:companies!hr_transfers_to_company_fkey (
             id,
             name
           )
@@ -71,19 +76,39 @@ export const useTransfersWithDetails = (employeeId?: string) => {
       // Enrich with calculations
       const enrichedData = await Promise.all(
         (data || []).map(async (transfer) => {
-          // Calculate days between contracts
+          // Validar que tenemos UUIDs válidos antes de consultar
+          if (
+            typeof transfer.from_company !== 'string' ||
+            typeof transfer.to_company !== 'string'
+          ) {
+            console.warn('⚠️ Transfer con company_id inválido:', transfer);
+            return {
+              ...transfer,
+              daysBetween: undefined,
+              isRecent: false,
+              daysAgo: Math.round(
+                Math.abs(
+                  (new Date().getTime() -
+                    new Date(transfer.transfer_date).getTime()) /
+                    (1000 * 60 * 60 * 24)
+                )
+              ),
+            };
+          }
+
+          // Calculate days between contracts usando los UUIDs crudos
           const { data: fromEmp } = await supabase
             .from("hr_employees")
             .select("termination_date")
             .eq("dni", transfer.hr_employees.dni)
-            .eq("company_id", transfer.from_company?.id)
+            .eq("company_id", transfer.from_company)
             .maybeSingle();
 
           const { data: toEmp } = await supabase
             .from("hr_employees")
             .select("hire_date")
             .eq("dni", transfer.hr_employees.dni)
-            .eq("company_id", transfer.to_company?.id)
+            .eq("company_id", transfer.to_company)
             .maybeSingle();
 
           const daysBetween =

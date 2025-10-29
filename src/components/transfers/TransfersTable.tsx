@@ -21,11 +21,13 @@ interface Transfer {
     id: string;
     full_name: string;
   };
-  from_company: {
+  from_company: string | { id: string; name: string };
+  to_company: string | { id: string; name: string };
+  from_company_data?: {
     id: string;
     name: string;
   };
-  to_company: {
+  to_company_data?: {
     id: string;
     name: string;
   };
@@ -45,6 +47,16 @@ const getDaysBadgeColor = (days?: number) => {
   if (days <= 90) return "bg-warning-light text-warning-foreground";
   if (days <= 180) return "bg-primary-light text-primary";
   return "bg-muted text-muted-foreground";
+};
+
+// Helper para obtener el nombre de la empresa (compatible con ambas estructuras)
+const getCompanyName = (
+  company: string | { id: string; name: string },
+  companyData?: { id: string; name: string }
+): string => {
+  if (companyData) return companyData.name;
+  if (typeof company === 'object') return company.name;
+  return '—';
 };
 
 export const TransfersTable = ({
@@ -102,11 +114,11 @@ export const TransfersTable = ({
                   {transfer.hr_employees.full_name}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">{transfer.from_company.name}</Badge>
+                  <Badge variant="outline">{getCompanyName(transfer.from_company, transfer.from_company_data)}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge className="bg-primary">
-                    {transfer.to_company.name}
+                    {getCompanyName(transfer.to_company, transfer.to_company_data)}
                   </Badge>
                 </TableCell>
                 <TableCell>{formatDate(transfer.transfer_date)}</TableCell>

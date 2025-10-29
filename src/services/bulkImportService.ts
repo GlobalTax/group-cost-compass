@@ -196,9 +196,10 @@ async function detectAndCreateTransfers(groups: EmployeeGroup[]): Promise<number
         // Es un traslado
         const { error } = await supabase.from('hr_transfers').insert({
           employee_id: next.id,
-          from_company_id: current.company_id,
-          to_company_id: next.company_id,
+          from_company: current.company_id,
+          to_company: next.company_id,
           transfer_date: next.hire_date,
+          days_between: daysBetween,
           reason: 'Traslado interempresa detectado automáticamente',
         });
         

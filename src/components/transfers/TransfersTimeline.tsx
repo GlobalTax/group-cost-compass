@@ -18,11 +18,13 @@ interface Transfer {
     id: string;
     full_name: string;
   };
-  from_company: {
+  from_company: string | { id: string; name: string };
+  to_company: string | { id: string; name: string };
+  from_company_data?: {
     id: string;
     name: string;
   };
-  to_company: {
+  to_company_data?: {
     id: string;
     name: string;
   };
@@ -42,6 +44,16 @@ const getDaysBadgeColor = (days?: number) => {
   if (days <= 90) return "bg-warning-light text-warning-foreground";
   if (days <= 180) return "bg-primary-light text-primary";
   return "bg-muted text-muted-foreground";
+};
+
+// Helper para obtener el nombre de la empresa (compatible con ambas estructuras)
+const getCompanyName = (
+  company: string | { id: string; name: string },
+  companyData?: { id: string; name: string }
+): string => {
+  if (companyData) return companyData.name;
+  if (typeof company === 'object') return company.name;
+  return '—';
 };
 
 export const TransfersTimeline = ({
@@ -106,11 +118,11 @@ export const TransfersTimeline = ({
                     <div className="flex-1 pt-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline">
-                          {transfer.from_company.name}
+                          {getCompanyName(transfer.from_company, transfer.from_company_data)}
                         </Badge>
                         <ArrowDown className="w-4 h-4 text-muted-foreground" />
                         <Badge className="bg-primary">
-                          {transfer.to_company.name}
+                          {getCompanyName(transfer.to_company, transfer.to_company_data)}
                         </Badge>
                         {transfer.isRecent && (
                           <TooltipProvider>

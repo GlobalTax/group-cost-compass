@@ -7,15 +7,27 @@ interface Transfer {
   hr_employees: {
     full_name: string;
   };
-  from_company: {
+  from_company: string | { name: string };
+  to_company: string | { name: string };
+  from_company_data?: {
     name: string;
   };
-  to_company: {
+  to_company_data?: {
     name: string;
   };
   daysBetween?: number;
   isRecent?: boolean;
 }
+
+// Helper para obtener el nombre de la empresa (compatible con ambas estructuras)
+const getCompanyName = (
+  company: string | { name: string },
+  companyData?: { name: string }
+): string => {
+  if (companyData) return companyData.name;
+  if (typeof company === 'object') return company.name;
+  return '—';
+};
 
 export const exportTransfersToCSV = (
   transfers: Transfer[],
@@ -33,8 +45,8 @@ export const exportTransfersToCSV = (
     ],
     ...transfers.map((t) => [
       t.hr_employees.full_name,
-      t.from_company?.name || "—",
-      t.to_company?.name || "—",
+      getCompanyName(t.from_company, t.from_company_data),
+      getCompanyName(t.to_company, t.to_company_data),
       formatDate(t.transfer_date),
       t.daysBetween?.toString() || "N/A",
       t.reason || "—",

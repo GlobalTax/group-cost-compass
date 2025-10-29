@@ -53,8 +53,8 @@ const Transfers = () => {
         transfer.hr_employees.id === employeeFilter;
       const matchesCompany =
         companyFilter === "all" ||
-        transfer.from_company.id === companyFilter ||
-        transfer.to_company.id === companyFilter;
+        transfer.from_company === companyFilter ||
+        transfer.to_company === companyFilter;
       return matchesEmployee && matchesCompany;
     });
   }, [transfers, employeeFilter, companyFilter]);
