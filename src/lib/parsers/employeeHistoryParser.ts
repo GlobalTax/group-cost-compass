@@ -84,7 +84,7 @@ function normalizeHeader(header: string): string {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // quitar acentos
     .replace(/\s+/g, '')              // quitar espacios
-    .replace(/[\/\-()]/g, '');        // quitar /, -, ()
+    .replace(/[\/\-()€]/g, '');       // quitar /, -, (), €
   
   // Mapeo explícito de cabeceras conocidas
   const headerMap: Record<string, string> = {
@@ -330,7 +330,11 @@ export async function parseEmployeeHistory(file: File): Promise<ParsedHistory> {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: 'greedy', // Ignorar filas completamente vacías
-      transformHeader: (header) => normalizeHeader(header), // ✅ Normalizar cabeceras
+      transformHeader: (header) => {
+        const normalized = normalizeHeader(header);
+        console.log(`📊 Header: "${header}" → "${normalized}"`);
+        return normalized;
+      }, // ✅ Normalizar cabeceras con debug
       complete: (results) => {
         // Validar que existan columnas mínimas requeridas
         if (results.data.length === 0) {
@@ -339,13 +343,15 @@ export async function parseEmployeeHistory(file: File): Promise<ParsedHistory> {
         
         const firstRow = results.data[0] as any;
         const requiredColumns = ['nombre', 'dni', 'empresa', 'fechaAlta', 'ingresosAnuales'];
+        const availableColumns = Object.keys(firstRow);
         const missingColumns = requiredColumns.filter(col => !(col in firstRow));
         
         if (missingColumns.length > 0) {
+          console.error('📋 Columnas disponibles:', availableColumns);
+          console.error('❌ Columnas faltantes:', missingColumns);
           return reject(new Error(
-            `Faltan columnas requeridas: ${missingColumns.join(', ')}. ` +
-            `Asegúrate de que el Excel tenga las cabeceras correctas: ` +
-            `Nombre, DNI/NIE, Empresa, Fecha Alta, Ingresos Anuales.`
+            `Faltan columnas requeridas: ${missingColumns.join(', ')}.\n` +
+            `Columnas encontradas: ${availableColumns.join(', ')}`
           ));
         }
         
