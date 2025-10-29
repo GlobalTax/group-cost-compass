@@ -59,8 +59,11 @@ export const EmployeeTableOptimized = memo(({ filters }: EmployeeTableOptimizedP
           <TableRow className="hover:bg-transparent">
             <TableHead className="font-semibold">Nombre</TableHead>
             <TableHead className="font-semibold">Empresa</TableHead>
-            <TableHead className="font-semibold text-right">Bruto Anual</TableHead>
-            <TableHead className="font-semibold text-right">Coste Anual</TableHead>
+            <TableHead className="font-semibold text-right">Salario Anual</TableHead>
+            <TableHead className="font-semibold text-right">Salario Mensual</TableHead>
+            <TableHead className="font-semibold text-right">Bonus Anual</TableHead>
+            <TableHead className="font-semibold text-right">Bonus Pagado</TableHead>
+            <TableHead className="font-semibold text-right">Coste SS</TableHead>
             <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -82,7 +85,16 @@ export const EmployeeTableOptimized = memo(({ filters }: EmployeeTableOptimizedP
                   {employee.bruto_anual > 0 ? formatCurrency(employee.bruto_anual) : "—"}
                 </TableCell>
                 <TableCell className="text-right font-medium">
-                  {employee.coste_anual > 0 ? formatCurrency(employee.coste_anual) : "—"}
+                  {employee.salario_mensual_promedio > 0 ? formatCurrency(employee.salario_mensual_promedio) : "—"}
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {employee.bonus_anual > 0 ? formatCurrency(employee.bonus_anual) : "—"}
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {employee.bonus_pagado > 0 ? formatCurrency(employee.bonus_pagado) : "—"}
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {employee.coste_ss_anual > 0 ? formatCurrency(employee.coste_ss_anual) : "—"}
                 </TableCell>
                 <TableCell>
                   <Button

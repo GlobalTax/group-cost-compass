@@ -10087,13 +10087,19 @@ export type Database = {
       }
       vw_employee_annual: {
         Row: {
+          bonus_anual: number | null
+          bonus_pagado: number | null
           bruto_anual: number | null
           company: string | null
           company_id: string | null
           coste_anual: number | null
+          coste_ss_anual: number | null
+          coste_ss_mensual_promedio: number | null
           employee_id: string | null
           full_name: string | null
           org_id: string | null
+          salario_mensual_promedio: number | null
+          salario_neto_anual: number | null
           year: number | null
         }
         Relationships: [

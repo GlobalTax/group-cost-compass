@@ -6,7 +6,7 @@ interface EmployeeCostsSummaryFilters {
   companyId?: string;
 }
 
-// Estructura real de vw_employee_annual
+// Estructura real de vw_employee_annual (actualizada con campos detallados)
 interface EmployeeAnnualCost {
   employee_id: string;
   full_name: string;
@@ -14,6 +14,12 @@ interface EmployeeAnnualCost {
   company_id: string;
   bruto_anual: number;
   coste_anual: number;
+  salario_neto_anual: number;
+  coste_ss_anual: number;
+  bonus_anual: number;
+  salario_mensual_promedio: number;
+  coste_ss_mensual_promedio: number;
+  bonus_pagado: number;
   year: number;
   org_id: string;
 }
