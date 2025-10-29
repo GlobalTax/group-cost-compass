@@ -242,13 +242,25 @@ function parseDate(dateStr: string | Date): string | null {
  * - "28349.96" (inglés)
  * - "28,349.96" (inglés con separador miles)
  */
-function parseIncome(incomeStr: string): number {
-  if (!incomeStr || incomeStr === '—' || incomeStr.trim() === '') {
+function parseIncome(incomeStr: string | number | null | undefined): number {
+  // Si es null, undefined, vacío o guión
+  if (incomeStr === null || incomeStr === undefined || incomeStr === '—') {
+    return 0;
+  }
+  
+  // Si ya es un número, devolverlo directamente
+  if (typeof incomeStr === 'number') {
+    return incomeStr;
+  }
+  
+  // Convertir a string para procesar
+  const str = String(incomeStr).trim();
+  if (str === '') {
     return 0;
   }
   
   // Eliminar símbolo €, espacios, y otros caracteres no numéricos excepto . y ,
-  let clean = incomeStr.replace(/[€\s]/g, '');
+  let clean = str.replace(/[€\s]/g, '');
   
   // Detectar formato: si tiene punto antes que coma, es formato español (28.349,96)
   // Si tiene coma antes que punto, es formato inglés (28,349.96)
