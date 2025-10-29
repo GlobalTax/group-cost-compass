@@ -4,6 +4,7 @@
  */
 
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 export interface HistoryRow {
   nombre: string;
@@ -100,7 +101,7 @@ function normalizeHeader(header: string): string {
     'tipocontratoactualizado': 'tipoContrato',
   };
   
-  return headerMap[normalized] || header; // Si no está mapeado, devolver original
+  return headerMap[normalized] || normalized; // Si no está mapeado, devolver normalizado
 }
 
 /**
@@ -124,13 +125,22 @@ function normalizeDNI(dni: string): string {
 
 /**
  * Convierte fecha DD/MM/YYYY a YYYY-MM-DD
+ * Soporta también objetos Date (Excel raw dates)
  */
-function parseDate(dateStr: string): string | null {
-  if (!dateStr || dateStr === '—' || dateStr.trim() === '') {
+function parseDate(dateStr: string | Date): string | null {
+  // Si es un objeto Date, formatear directamente
+  if (dateStr instanceof Date) {
+    const year = dateStr.getFullYear();
+    const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+    const day = String(dateStr.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
+  if (!dateStr || dateStr === '—' || String(dateStr).trim() === '') {
     return null;
   }
   
-  const parts = dateStr.split('/');
+  const parts = String(dateStr).split('/');
   if (parts.length !== 3) return null;
   
   const [day, month, year] = parts;
@@ -323,20 +333,114 @@ function detectPotentialTransfers(groups: EmployeeGroup[]): number {
 }
 
 /**
- * Parsea archivo Excel/CSV con histórico de empleados
+ * Construye el resultado ParsedHistory a partir de filas ya parseadas
+ * Reutilizable para CSV y Excel
  */
-export async function parseEmployeeHistory(file: File): Promise<ParsedHistory> {
+function buildParsedHistory(rows: any[]): ParsedHistory {
+  const allEmployees: ParsedEmployee[] = [];
+  const allErrors: ValidationError[] = [];
+  
+  rows.forEach((row: any, index: number) => {
+    const { employee, errors } = validateRow(row, index + 2); // +2 por header
+    
+    if (employee) {
+      allEmployees.push(employee);
+    }
+    
+    allErrors.push(...errors);
+  });
+  
+  const groups = groupByDNI(allEmployees);
+  const potentialTransfers = detectPotentialTransfers(groups);
+  
+  const stats = {
+    totalRows: rows.length,
+    validRows: allEmployees.length,
+    errorRows: allErrors.filter(e => e.severity === 'error').length,
+    warningRows: allErrors.filter(e => e.severity === 'warning').length,
+    uniqueEmployees: groups.length,
+    potentialTransfers,
+  };
+  
+  return {
+    employees: allEmployees,
+    groups,
+    errors: allErrors,
+    stats,
+  };
+}
+
+/**
+ * Parsea archivo Excel (.xlsx/.xls) usando SheetJS
+ */
+async function parseExcel(file: File): Promise<ParsedHistory> {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: 'array' });
+  
+  // Tomar la primera hoja
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  
+  // Obtener datos como matriz (primera fila = cabeceras)
+  const matrix = XLSX.utils.sheet_to_json(ws, {
+    header: 1,
+    defval: '',
+    raw: false,
+    dateNF: 'dd/mm/yyyy'
+  }) as any[][];
+  
+  if (matrix.length === 0) {
+    throw new Error('El archivo Excel está vacío');
+  }
+  
+  // Separar cabeceras y datos
+  const [headerRow = [], ...dataRows] = matrix;
+  
+  // Normalizar cabeceras
+  const normalizedHeaders = headerRow
+    .map(h => normalizeHeader(String(h ?? '')))
+    .filter(Boolean);
+  
+  console.log('📊 Headers (XLSX):', headerRow, '→', normalizedHeaders);
+  
+  // Validar columnas requeridas
+  const requiredColumns = ['nombre', 'dni', 'empresa', 'fechaAlta', 'ingresosAnuales'];
+  const missingColumns = requiredColumns.filter(col => !normalizedHeaders.includes(col));
+  
+  if (missingColumns.length > 0) {
+    console.error('📋 Columnas disponibles:', normalizedHeaders);
+    console.error('❌ Columnas faltantes:', missingColumns);
+    throw new Error(
+      `Faltan columnas requeridas: ${missingColumns.join(', ')}.\n` +
+      `Columnas encontradas: ${normalizedHeaders.join(', ')}`
+    );
+  }
+  
+  // Mapear filas a objetos
+  const rowsObjects = dataRows.map(row => {
+    const obj: any = {};
+    normalizedHeaders.forEach((key, i) => {
+      if (key) obj[key] = row[i];
+    });
+    return obj;
+  });
+  
+  return buildParsedHistory(rowsObjects);
+}
+
+/**
+ * Parsea archivo CSV usando PapaParse
+ */
+async function parseCSV(file: File): Promise<ParsedHistory> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
-      skipEmptyLines: 'greedy', // Ignorar filas completamente vacías
+      skipEmptyLines: 'greedy',
       transformHeader: (header) => {
         const normalized = normalizeHeader(header);
-        console.log(`📊 Header: "${header}" → "${normalized}"`);
+        console.log(`📊 Header (CSV): "${header}" → "${normalized}"`);
         return normalized;
-      }, // ✅ Normalizar cabeceras con debug
+      },
       complete: (results) => {
-        // Validar que existan columnas mínimas requeridas
         if (results.data.length === 0) {
           return reject(new Error('El archivo está vacío o no tiene datos válidos'));
         }
@@ -355,41 +459,30 @@ export async function parseEmployeeHistory(file: File): Promise<ParsedHistory> {
           ));
         }
         
-        const allEmployees: ParsedEmployee[] = [];
-        const allErrors: ValidationError[] = [];
-        
-        results.data.forEach((row: any, index: number) => {
-          const { employee, errors } = validateRow(row, index + 2); // +2 por header
-          
-          if (employee) {
-            allEmployees.push(employee);
-          }
-          
-          allErrors.push(...errors);
-        });
-        
-        const groups = groupByDNI(allEmployees);
-        const potentialTransfers = detectPotentialTransfers(groups);
-        
-        const stats = {
-          totalRows: results.data.length,
-          validRows: allEmployees.length,
-          errorRows: allErrors.filter(e => e.severity === 'error').length,
-          warningRows: allErrors.filter(e => e.severity === 'warning').length,
-          uniqueEmployees: groups.length,
-          potentialTransfers,
-        };
-        
-        resolve({
-          employees: allEmployees,
-          groups,
-          errors: allErrors,
-          stats,
-        });
+        resolve(buildParsedHistory(results.data));
       },
       error: (error) => {
-        reject(new Error(`Error al parsear archivo: ${error.message}`));
+        reject(new Error(`Error al parsear CSV: ${error.message}`));
       },
     });
   });
+}
+
+/**
+ * Parsea archivo Excel/CSV con histórico de empleados
+ * Detecta automáticamente el formato según la extensión
+ */
+export async function parseEmployeeHistory(file: File): Promise<ParsedHistory> {
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  
+  if (ext === 'csv' || file.type === 'text/csv') {
+    return parseCSV(file);
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    return parseExcel(file);
+  } else {
+    throw new Error(
+      `Formato de archivo no soportado: ${ext || file.type}. ` +
+      `Por favor, sube un archivo CSV o Excel (.xlsx, .xls)`
+    );
+  }
 }
