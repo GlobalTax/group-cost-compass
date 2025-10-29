@@ -73,6 +73,37 @@ const COMPANY_MAP: Record<string, string> = {
 };
 
 /**
+ * Normaliza cabeceras del Excel para que sean case-insensitive
+ * Mapea: "Nombre" | "NOMBRE" | "nombre" -> "nombre"
+ *        "Fecha Alta" | "fecha alta" -> "fechaAlta"
+ *        "DNI / NIE" | "dni nie" -> "dni"
+ */
+function normalizeHeader(header: string): string {
+  const normalized = header
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // quitar acentos
+    .replace(/\s+/g, '')              // quitar espacios
+    .replace(/[\/\-()]/g, '');        // quitar /, -, ()
+  
+  // Mapeo explícito de cabeceras conocidas
+  const headerMap: Record<string, string> = {
+    'nombre': 'nombre',
+    'empresa': 'empresa',
+    'dninie': 'dni',
+    'fechaalta': 'fechaAlta',
+    'fechabaja': 'fechaBaja',
+    'antiguedad': 'antiguedad',
+    'ingresosanuales': 'ingresosAnuales',
+    'ingresosanuales€': 'ingresosAnuales',
+    'tipocontrato': 'tipoContrato',
+    'tipocontratoactualizado': 'tipoContrato',
+  };
+  
+  return headerMap[normalized] || header; // Si no está mapeado, devolver original
+}
+
+/**
  * Normaliza nombre: "Apellido, Nombre" -> "Nombre Apellido"
  */
 function normalizeName(name: string): string {
@@ -107,87 +138,107 @@ function parseDate(dateStr: string): string | null {
 }
 
 /**
- * Parsea ingresos anuales: "28.349,96 €" -> 28349.96
+ * Parsea ingresos anuales con múltiples formatos:
+ * - "28.349,96 €" (español con símbolo)
+ * - "28.349,96" (español sin símbolo)
+ * - "28349.96" (inglés)
+ * - "28,349.96" (inglés con separador miles)
  */
 function parseIncome(incomeStr: string): number {
   if (!incomeStr || incomeStr === '—' || incomeStr.trim() === '') {
     return 0;
   }
   
-  // Eliminar símbolo € y espacios
-  const clean = incomeStr.replace(/[€\s]/g, '');
+  // Eliminar símbolo €, espacios, y otros caracteres no numéricos excepto . y ,
+  let clean = incomeStr.replace(/[€\s]/g, '');
   
-  // Reemplazar separador de miles y decimales
-  const normalized = clean.replace(/\./g, '').replace(',', '.');
+  // Detectar formato: si tiene punto antes que coma, es formato español (28.349,96)
+  // Si tiene coma antes que punto, es formato inglés (28,349.96)
+  const lastDot = clean.lastIndexOf('.');
+  const lastComma = clean.lastIndexOf(',');
   
-  return parseFloat(normalized) || 0;
+  if (lastComma > lastDot) {
+    // Formato español: . = miles, , = decimales
+    clean = clean.replace(/\./g, '').replace(',', '.');
+  } else {
+    // Formato inglés o sin separadores: , = miles, . = decimales
+    clean = clean.replace(/,/g, '');
+  }
+  
+  return parseFloat(clean) || 0;
 }
 
 /**
- * Valida una fila del Excel
+ * Valida una fila del Excel (ahora con cabeceras normalizadas)
  */
 function validateRow(row: any, rowNumber: number): { employee: ParsedEmployee | null; errors: ValidationError[] } {
   const errors: ValidationError[] = [];
   
-  // Campos requeridos
-  if (!row.Nombre || row.Nombre.trim() === '') {
+  // Detectar fila completamente vacía
+  const allFieldsEmpty = Object.values(row).every(v => !v || String(v).trim() === '');
+  if (allFieldsEmpty) {
+    return { employee: null, errors: [] }; // Ignorar silenciosamente
+  }
+  
+  // Campos requeridos (ahora usando nombres normalizados)
+  if (!row.nombre || row.nombre.trim() === '') {
     errors.push({
       row: rowNumber,
-      field: 'Nombre',
+      field: 'nombre',
       message: 'Nombre es requerido',
       severity: 'error',
     });
   }
   
-  if (!row['DNI / NIE'] || row['DNI / NIE'].trim() === '') {
+  if (!row.dni || row.dni.trim() === '') {
     errors.push({
       row: rowNumber,
-      field: 'DNI / NIE',
+      field: 'dni',
       message: 'DNI/NIE es requerido',
       severity: 'error',
     });
   }
   
-  if (!row.Empresa || row.Empresa.trim() === '') {
+  if (!row.empresa || row.empresa.trim() === '') {
     errors.push({
       row: rowNumber,
-      field: 'Empresa',
+      field: 'empresa',
       message: 'Empresa es requerida',
       severity: 'error',
     });
   }
   
   // Validar empresa existe en catálogo
-  const companyId = COMPANY_MAP[row.Empresa?.trim()];
-  if (row.Empresa && !companyId) {
+  const companyId = COMPANY_MAP[row.empresa?.trim()];
+  if (row.empresa && !companyId) {
     errors.push({
       row: rowNumber,
-      field: 'Empresa',
-      message: `Empresa no encontrada: ${row.Empresa}`,
+      field: 'empresa',
+      message: `Empresa no encontrada: ${row.empresa}`,
       severity: 'error',
     });
   }
   
   // Validar fechas
-  const hireDate = parseDate(row['Fecha Alta']);
+  const hireDate = parseDate(row.fechaAlta);
   if (!hireDate) {
     errors.push({
       row: rowNumber,
-      field: 'Fecha Alta',
+      field: 'fechaAlta',
       message: 'Fecha de alta inválida o requerida',
       severity: 'error',
     });
   }
   
-  const terminationDate = parseDate(row['Fecha Baja']);
-  const seniorityDate = parseDate(row['Antigüedad']);
+  const terminationDate = parseDate(row.fechaBaja);
+  const seniorityDate = parseDate(row.antiguedad);
   
   // Advertencias
-  const annualIncome = parseIncome(row['Ingresos Anuales (€)']);
+  const annualIncome = parseIncome(row.ingresosAnuales);
   if (annualIncome === 0) {
     errors.push({
       row: rowNumber,
-      field: 'Ingresos Anuales',
+      field: 'ingresosAnuales',
       message: 'Sin datos económicos',
       severity: 'warning',
     });
@@ -203,14 +254,14 @@ function validateRow(row: any, rowNumber: number): { employee: ParsedEmployee | 
   const monthlyCoste = monthlyBruto * 1.35; // Estimación SS (35%)
   
   const employee: ParsedEmployee = {
-    full_name: normalizeName(row.Nombre),
-    dni: normalizeDNI(row['DNI / NIE']),
+    full_name: normalizeName(row.nombre),
+    dni: normalizeDNI(row.dni),
     company_id: companyId!,
-    company_name: row.Empresa?.trim(),
+    company_name: row.empresa?.trim(),
     hire_date: hireDate!,
     termination_date: terminationDate,
     seniority_date: seniorityDate,
-    contract_type: row['Tipo Contrato']?.trim() || null,
+    contract_type: row.tipoContrato?.trim() || null,
     annual_income: annualIncome,
     monthly_bruto: monthlyBruto,
     monthly_coste: monthlyCoste,
@@ -278,8 +329,26 @@ export async function parseEmployeeHistory(file: File): Promise<ParsedHistory> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
-      skipEmptyLines: true,
+      skipEmptyLines: 'greedy', // Ignorar filas completamente vacías
+      transformHeader: (header) => normalizeHeader(header), // ✅ Normalizar cabeceras
       complete: (results) => {
+        // Validar que existan columnas mínimas requeridas
+        if (results.data.length === 0) {
+          return reject(new Error('El archivo está vacío o no tiene datos válidos'));
+        }
+        
+        const firstRow = results.data[0] as any;
+        const requiredColumns = ['nombre', 'dni', 'empresa', 'fechaAlta', 'ingresosAnuales'];
+        const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+        
+        if (missingColumns.length > 0) {
+          return reject(new Error(
+            `Faltan columnas requeridas: ${missingColumns.join(', ')}. ` +
+            `Asegúrate de que el Excel tenga las cabeceras correctas: ` +
+            `Nombre, DNI/NIE, Empresa, Fecha Alta, Ingresos Anuales.`
+          ));
+        }
+        
         const allEmployees: ParsedEmployee[] = [];
         const allErrors: ValidationError[] = [];
         
