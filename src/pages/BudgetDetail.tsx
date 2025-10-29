@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,11 @@ import { BudgetPeriodHeader } from "@/components/budget/BudgetPeriodHeader";
 import { BudgetIncomeTable } from "@/components/budget/BudgetIncomeTable";
 import { BudgetExpensesTable } from "@/components/budget/BudgetExpensesTable";
 import { BudgetPersonnelCostsTable } from "@/components/budget/BudgetPersonnelCostsTable";
+import { BudgetTrendChart } from "@/components/budget/BudgetTrendChart";
+import { BudgetCompositionChart } from "@/components/budget/BudgetCompositionChart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatMonth, getCategoryLabel, getCategoryColor } from "@/lib/formatters";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,6 +77,59 @@ export default function BudgetDetail() {
   const totalActualIncome = incomeList.reduce((sum, item) => sum + (item.actual_amount || 0), 0);
   const totalBudgetedExpenses = expensesList.reduce((sum, item) => sum + (item.budgeted_amount || 0), 0);
   const totalActualExpenses = expensesList.reduce((sum, item) => sum + (item.actual_amount || 0), 0);
+
+  // Datos para gráficos
+  const incomeTrendData = useMemo(() => {
+    if (!incomeList || incomeList.length === 0) return [];
+    
+    return incomeList.map(item => ({
+      period: formatMonth(item.period),
+      budgeted: item.budgeted_amount || 0,
+      actual: item.actual_amount || 0,
+    }));
+  }, [incomeList]);
+
+  const expensesTrendData = useMemo(() => {
+    if (!expensesList || expensesList.length === 0) return [];
+    
+    return expensesList.map(item => ({
+      period: formatMonth(item.period),
+      budgeted: item.budgeted_amount || 0,
+      actual: item.actual_amount || 0,
+    }));
+  }, [expensesList]);
+
+  const incomeComposition = useMemo(() => {
+    if (!incomeList || incomeList.length === 0) return [];
+    
+    const grouped = incomeList.reduce((acc, item) => {
+      const cat = item.category || 'other';
+      acc[cat] = (acc[cat] || 0) + (item.budgeted_amount || 0);
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(grouped).map(([category, amount]): { category: string; amount: number; color: string } => ({
+      category: getCategoryLabel(category, 'income'),
+      amount: amount as number,
+      color: getCategoryColor(category, 'income'),
+    }));
+  }, [incomeList]);
+
+  const expensesComposition = useMemo(() => {
+    if (!expensesList || expensesList.length === 0) return [];
+    
+    const grouped = expensesList.reduce((acc, item) => {
+      const cat = item.category || 'other';
+      acc[cat] = (acc[cat] || 0) + (item.budgeted_amount || 0);
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(grouped).map(([category, amount]): { category: string; amount: number; color: string } => ({
+      category: getCategoryLabel(category, 'expense'),
+      amount: amount as number,
+      color: getCategoryColor(category, 'expense'),
+    }));
+  }, [expensesList]);
 
   return (
     <div className="p-6 space-y-6">
@@ -152,6 +208,7 @@ export default function BudgetDetail() {
           <TabsTrigger value="income">Ingresos ({incomeList.length})</TabsTrigger>
           <TabsTrigger value="expenses">Otros Gastos ({expensesList.length})</TabsTrigger>
           <TabsTrigger value="personnel">Costes de Personal</TabsTrigger>
+          <TabsTrigger value="charts">Gráficos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="income" className="space-y-4">
@@ -167,6 +224,34 @@ export default function BudgetDetail() {
             period={period.period} 
             companyId={period.company_id} 
           />
+        </TabsContent>
+
+        <TabsContent value="charts" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <BudgetTrendChart 
+              data={incomeTrendData} 
+              title="Evolución de Ingresos" 
+              type="income" 
+            />
+            <BudgetTrendChart 
+              data={expensesTrendData} 
+              title="Evolución de Gastos" 
+              type="expenses" 
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <BudgetCompositionChart 
+              data={incomeComposition} 
+              title="Composición de Ingresos" 
+              total={totalBudgetedIncome}
+            />
+            <BudgetCompositionChart 
+              data={expensesComposition} 
+              title="Composición de Gastos" 
+              total={totalBudgetedExpenses}
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

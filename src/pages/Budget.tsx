@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { BudgetKPIs } from "@/components/budget/BudgetKPIs";
 import { BudgetSummaryTable } from "@/components/budget/BudgetSummaryTable";
+import { BudgetComparisonChart } from "@/components/budget/BudgetComparisonChart";
 import { useBudgetSummary } from "@/hooks/useBudgetSummary";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCompanies } from "@/hooks/useCompanies";
+import { formatPeriodShort } from "@/lib/formatters";
 
 export default function Budget() {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ export default function Budget() {
   
   const [year, setYear] = useState(currentYear);
   const [companyId, setCompanyId] = useState<string>("all");
+  const [chartType, setChartType] = useState<'income' | 'expenses' | 'result' | 'all'>('all');
 
   const { data: summaryData, isLoading } = useBudgetSummary({ 
     year, 
@@ -54,6 +57,20 @@ export default function Budget() {
     budgetedResult: 0,
     actualResult: 0,
   };
+
+  const chartData = useMemo(() => {
+    if (!summaryData) return [];
+    
+    return summaryData.map((row) => ({
+      period: formatPeriodShort(row.period),
+      budgetedIncome: row.budgeted_income || 0,
+      actualIncome: row.actual_income || 0,
+      budgetedExpenses: row.total_budgeted_expenses || 0,
+      actualExpenses: row.total_actual_expenses || 0,
+      budgetedResult: row.budgeted_result || 0,
+      actualResult: row.actual_result || 0,
+    }));
+  }, [summaryData]);
 
   return (
     <div className="p-6 space-y-6">
@@ -109,6 +126,24 @@ export default function Budget() {
             budgetedResult={totals.budgetedResult}
             actualResult={totals.actualResult}
           />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Evolución Anual</h2>
+              <Select value={chartType} onValueChange={(v: any) => setChartType(v)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todo</SelectItem>
+                  <SelectItem value="income">Ingresos</SelectItem>
+                  <SelectItem value="expenses">Gastos</SelectItem>
+                  <SelectItem value="result">Resultado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <BudgetComparisonChart data={chartData} type={chartType} />
+          </div>
 
           <BudgetSummaryTable data={summaryData || []} />
         </>
