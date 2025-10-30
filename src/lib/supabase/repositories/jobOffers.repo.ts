@@ -122,15 +122,19 @@ export async function fetchJobOffers(filters?: JobOfferFilters) {
 export async function fetchJobOfferById(id: string) {
   const { data, error } = await supabase
     .from('job_offers')
-    .select(`
-      *,
-      candidate:candidates(id, first_name, last_name, email, phone, linkedin_url)
-    `)
+    .select('*')
     .eq('id', id)
     .single();
 
   if (error) throw error;
-  return data as JobOffer;
+
+  // Obtener conteo de candidatos asociados
+  const { count } = await supabase
+    .from('job_offer_candidates')
+    .select('*', { count: 'exact', head: true })
+    .eq('job_offer_id', id);
+
+  return { ...data, candidates_count: count || 0 } as JobOffer;
 }
 
 export async function createJobOffer(data: Partial<JobOffer>) {
@@ -189,36 +193,8 @@ export async function sendJobOffer(id: string) {
   return data as JobOffer;
 }
 
-export async function acceptJobOffer(id: string) {
-  const { data, error } = await supabase
-    .from('job_offers')
-    .update({
-      status: 'accepted',
-      accepted_at: new Date().toISOString(),
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as JobOffer;
-}
-
-export async function rejectJobOffer(id: string, reason?: string) {
-  const { data, error } = await supabase
-    .from('job_offers')
-    .update({
-      status: 'rejected',
-      rejected_at: new Date().toISOString(),
-      rejection_reason: reason,
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as JobOffer;
-}
+// Note: Accept/Reject actions now happen at job_offer_candidates level
+// Use jobOfferCandidates.repo.ts functions instead
 
 export async function deleteJobOffer(id: string) {
   const { error } = await supabase

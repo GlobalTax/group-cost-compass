@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { useJobOffer, useSendJobOffer, useAcceptJobOffer, useRejectJobOffer, useUploadOfferPDF } from '@/hooks/useJobOffers';
+import { useJobOffer, useSendJobOffer, useUploadOfferPDF } from '@/hooks/useJobOffers';
+import { useJobOfferCandidates } from '@/hooks/useJobOfferCandidates';
+import { JobOfferCandidatesDrawer } from './JobOfferCandidatesDrawer';
 import {
   Drawer,
   DrawerContent,
@@ -51,12 +53,9 @@ const statusConfig = {
 export function JobOfferDetailDrawer({ open, onOpenChange, offerId }: JobOfferDetailDrawerProps) {
   const { data: offer, isLoading } = useJobOffer(offerId);
   const sendOffer = useSendJobOffer();
-  const acceptOffer = useAcceptJobOffer();
-  const rejectOffer = useRejectJobOffer();
   const uploadPDF = useUploadOfferPDF();
-
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
+  
+  const [showCandidatesDrawer, setShowCandidatesDrawer] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleSend = async () => {
@@ -64,24 +63,6 @@ export function JobOfferDetailDrawer({ open, onOpenChange, offerId }: JobOfferDe
       await sendOffer.mutateAsync(offerId);
     } catch (error) {
       console.error('Error sending offer:', error);
-    }
-  };
-
-  const handleAccept = async () => {
-    try {
-      await acceptOffer.mutateAsync(offerId);
-    } catch (error) {
-      console.error('Error accepting offer:', error);
-    }
-  };
-
-  const handleReject = async () => {
-    try {
-      await rejectOffer.mutateAsync({ id: offerId, reason: rejectionReason });
-      setShowRejectDialog(false);
-      setRejectionReason('');
-    } catch (error) {
-      console.error('Error rejecting offer:', error);
     }
   };
 
@@ -130,9 +111,19 @@ export function JobOfferDetailDrawer({ open, onOpenChange, offerId }: JobOfferDe
             {/* Candidatos Asociados */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm">Candidatos</h3>
-              <p className="text-sm text-muted-foreground">
-                {offer.candidates_count || 0} candidato(s) asociado(s)
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {offer.candidates_count || 0} candidato(s) asociado(s)
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowCandidatesDrawer(true)}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Ver Candidatos
+                </Button>
+              </div>
             </div>
 
             {/* Detalles del Puesto */}
@@ -213,48 +204,17 @@ export function JobOfferDetailDrawer({ open, onOpenChange, offerId }: JobOfferDe
                   Enviar Oferta
                 </Button>
               )}
-              {offer.status === 'sent' && (
-                <>
-                  <Button onClick={handleAccept} disabled={acceptOffer.isPending}>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Aceptar
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setShowRejectDialog(true)}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Rechazar
-                  </Button>
-                </>
-              )}
             </div>
           </div>
         </DrawerContent>
       </Drawer>
 
-      <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Rechazar Oferta</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que deseas rechazar esta oferta? Opcionalmente, proporciona un motivo.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <Textarea
-            placeholder="Motivo del rechazo (opcional)"
-            value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
-            rows={3}
-          />
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReject}>
-              Confirmar Rechazo
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <JobOfferCandidatesDrawer
+        open={showCandidatesDrawer}
+        onOpenChange={setShowCandidatesDrawer}
+        jobOfferId={offerId}
+        jobOfferTitle={offer?.title || ''}
+      />
     </>
   );
 }

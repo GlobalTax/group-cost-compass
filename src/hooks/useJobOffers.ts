@@ -65,36 +65,8 @@ export function useSendJobOffer() {
   });
 }
 
-export function useAcceptJobOffer() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => jobOffersRepo.acceptJobOffer(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['job-offers'] });
-      toast.success('Oferta aceptada');
-    },
-    onError: (error: Error) => {
-      toast.error(`Error al aceptar oferta: ${error.message}`);
-    },
-  });
-}
-
-export function useRejectJobOffer() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
-      jobOffersRepo.rejectJobOffer(id, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['job-offers'] });
-      toast.success('Oferta rechazada');
-    },
-    onError: (error: Error) => {
-      toast.error(`Error al rechazar oferta: ${error.message}`);
-    },
-  });
-}
+// Note: Accept/Reject actions now happen at job_offer_candidates level
+// Use useJobOfferCandidates hooks instead
 
 export function useDeleteJobOffer() {
   const queryClient = useQueryClient();
