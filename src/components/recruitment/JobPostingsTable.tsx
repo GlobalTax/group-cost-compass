@@ -86,7 +86,10 @@ export function JobPostingsTable({ jobPostings }: JobPostingsTableProps) {
           </TableHeader>
           <TableBody>
             {jobPostings.map((posting) => {
-              const statusInfo = statusConfig[posting.status as keyof typeof statusConfig];
+              const statusInfo = statusConfig[posting.status as keyof typeof statusConfig] || {
+                label: posting.status || 'Desconocido',
+                variant: 'outline' as const
+              };
               return (
                 <TableRow key={posting.id}>
                   <TableCell className="font-medium">{posting.title}</TableCell>

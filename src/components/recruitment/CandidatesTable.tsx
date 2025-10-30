@@ -86,7 +86,10 @@ export function CandidatesTable({ candidates }: CandidatesTableProps) {
           </TableHeader>
           <TableBody>
             {candidates.map((candidate) => {
-              const statusInfo = statusConfig[candidate.status as keyof typeof statusConfig];
+              const statusInfo = statusConfig[candidate.status as keyof typeof statusConfig] || {
+                label: candidate.status || 'Desconocido',
+                variant: 'outline' as const
+              };
               return (
                 <TableRow key={candidate.id}>
                   <TableCell className="font-medium">
