@@ -46,3 +46,16 @@ export const QUERY = {
   STALE_TIME: 60000, // 1 minuto
   RETRY: 1,
 } as const;
+
+export const RECRUITMENT = {
+  PIPELINE_STAGES: [
+    'new', 'screening', 'phone_interview', 
+    'technical_interview', 'final_interview', 
+    'offer_sent', 'accepted', 'rejected'
+  ],
+  CANDIDATE_STATUS: ['new', 'in_process', 'hired', 'rejected', 'on_hold'],
+  EVALUATION_TYPES: ['phone', 'technical', 'cultural', 'final'],
+  SOURCES: ['linkedin', 'referral', 'website', 'job_board', 'headhunter', 'manual'],
+  EMPLOYMENT_TYPES: ['full-time', 'part-time', 'contract', 'internship'],
+  POSITION_LEVELS: ['junior', 'mid', 'senior', 'lead', 'director'],
+} as const;

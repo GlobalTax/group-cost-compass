@@ -5613,6 +5613,90 @@ export type Database = {
           },
         ]
       }
+      job_postings: {
+        Row: {
+          benefits: Json | null
+          closed_at: string | null
+          created_at: string | null
+          created_by: string
+          department: string | null
+          description: string | null
+          employment_type: string | null
+          hiring_manager_id: string | null
+          id: string
+          location: string | null
+          org_id: string
+          position_level: string | null
+          published_at: string | null
+          recruiter_id: string | null
+          remote_work_allowed: boolean | null
+          requirements: Json | null
+          responsibilities: Json | null
+          salary_currency: string | null
+          salary_max: number | null
+          salary_min: number | null
+          status: string | null
+          target_start_date: string | null
+          title: string
+          updated_at: string | null
+          vacancies_count: number | null
+        }
+        Insert: {
+          benefits?: Json | null
+          closed_at?: string | null
+          created_at?: string | null
+          created_by: string
+          department?: string | null
+          description?: string | null
+          employment_type?: string | null
+          hiring_manager_id?: string | null
+          id?: string
+          location?: string | null
+          org_id: string
+          position_level?: string | null
+          published_at?: string | null
+          recruiter_id?: string | null
+          remote_work_allowed?: boolean | null
+          requirements?: Json | null
+          responsibilities?: Json | null
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          status?: string | null
+          target_start_date?: string | null
+          title: string
+          updated_at?: string | null
+          vacancies_count?: number | null
+        }
+        Update: {
+          benefits?: Json | null
+          closed_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          department?: string | null
+          description?: string | null
+          employment_type?: string | null
+          hiring_manager_id?: string | null
+          id?: string
+          location?: string | null
+          org_id?: string
+          position_level?: string | null
+          published_at?: string | null
+          recruiter_id?: string | null
+          remote_work_allowed?: boolean | null
+          requirements?: Json | null
+          responsibilities?: Json | null
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          status?: string | null
+          target_start_date?: string | null
+          title?: string
+          updated_at?: string | null
+          vacancies_count?: number | null
+        }
+        Relationships: []
+      }
       matter_notifications: {
         Row: {
           case_id: string
@@ -7174,6 +7258,7 @@ export type Database = {
           department: string | null
           hiring_manager_id: string | null
           id: string
+          job_posting_id: string | null
           notes: string | null
           org_id: string
           position_title: string
@@ -7194,6 +7279,7 @@ export type Database = {
           department?: string | null
           hiring_manager_id?: string | null
           id?: string
+          job_posting_id?: string | null
           notes?: string | null
           org_id: string
           position_title: string
@@ -7214,6 +7300,7 @@ export type Database = {
           department?: string | null
           hiring_manager_id?: string | null
           id?: string
+          job_posting_id?: string | null
           notes?: string | null
           org_id?: string
           position_title?: string
@@ -7230,6 +7317,13 @@ export type Database = {
             columns: ["candidate_id"]
             isOneToOne: false
             referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recruitment_processes_job_posting_id_fkey"
+            columns: ["job_posting_id"]
+            isOneToOne: false
+            referencedRelation: "job_postings"
             referencedColumns: ["id"]
           },
         ]

@@ -21,3 +21,11 @@ export * from './systemSettings.repo';
 
 // Budget
 export * from './budget.repo';
+
+// Onboarding
+export * from './onboarding.repo';
+
+// Recruitment
+export * from './jobPostings.repo';
+export * from './candidates.repo';
+export * from './recruitmentPipeline.repo';
