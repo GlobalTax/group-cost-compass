@@ -25,28 +25,33 @@ export type {
   CompanySummary,
 } from "./types";
 
-// Mapeo de columnas (índices) a campos
+// Mapeo de columnas (índices) a campos según formato real A3Nom
 const COLUMN_MAPPING = {
-  employee_code: 0,
-  employee_name: 1,
-  bruto: 2,
-  coste_empresa: 3,
-  sal_neto: 4,
-  total_tc1: 5,
-  irpf_dinero: 6,
-  irpf_especie: 7,
-  ss_trabajador: 8,
-  ss_empresa: 9,
-  anticipos: 10,
-  embargos: 11,
-  dto_preaviso: 12,
-  dtos_varios: 13,
-  prestamos: 14,
-  dto_especial: 15,
-  indemnizacion: 16,
-  enf_acc: 17,
-  bonificacion: 18,
-  porcentaje_imputacion: 19,
+  employee_code: 0,        // Código empleado (vacío o número)
+  employee_name: 1,        // TRABAJADOR
+  employee_nif: 2,         // N.I.F.
+  tipo_paga: 3,            // TIPO PAGA (MENSUAL, FINIQUITO, etc.)
+  fecha_cobro: 4,          // FECHA COBRO
+  bruto: 5,                // BRUTO (mensual)
+  bruto_anual: 6,          // BRUTO anualizado
+  sal_neto: 7,             // SAL.NETO
+  coste_empresa: 8,        // COSTE EMPR (mensual)
+  coste_anual: 9,          // COSTE EMPR anualizado
+  total_tc1: 10,           // TOTAL TC1
+  irpf_dinero: 11,         // IRPF DIN
+  alta_marca: 12,          // Alta (si/alta)
+  irpf_especie: 13,        // IRPF ESP.
+  ss_trabajador: 14,       // SS. TRAB
+  ss_empresa: 15,          // SS EMPRESA
+  anticipos: 16,           // ANTICIPOS
+  embargos: 17,            // EMBARGOS
+  dto_preaviso: 18,        // DTO PREAVI
+  dtos_varios: 19,         // DTOS VARIO
+  prestamos: 20,           // PRESTAMOS
+  dto_especial: 21,        // DTO ESPECI
+  indemnizacion: 22,       // INDEMNIZAC
+  enf_acc: 23,             // ENF/ACC
+  bonificacion: 24,        // BONIFIC
 };
 
 /**
@@ -110,9 +115,22 @@ const processA3NomRows = (rows: any[]): A3NomParseResult => {
       continue;
     }
 
+    // Filtrar solo nóminas mensuales (ignorar finiquitos, pagas extra, etc.)
+    const tipoPaga = String(row[COLUMN_MAPPING.tipo_paga] || "").trim().toUpperCase();
+    if (tipoPaga !== "MENSUAL") {
+      continue;
+    }
+
     // Extraer datos del empleado
-    const employeeCode = String(row[COLUMN_MAPPING.employee_code] || "").trim();
     const employeeName = String(row[COLUMN_MAPPING.employee_name] || "").trim();
+    const employeeNif = String(row[COLUMN_MAPPING.employee_nif] || "").trim();
+    
+    // El código puede estar en col 0 o extraerse del NIF como fallback
+    let employeeCode = String(row[COLUMN_MAPPING.employee_code] || "").trim();
+    if (!employeeCode || employeeCode.length < 2) {
+      // Usar NIF como código si no hay código explícito
+      employeeCode = employeeNif;
+    }
 
     if (!employeeCode || !employeeName) {
       errors.push({
@@ -148,7 +166,7 @@ const processA3NomRows = (rows: any[]): A3NomParseResult => {
       continue;
     }
 
-    // Parsear campos opcionales
+    // Parsear campos opcionales (usar índices actualizados)
     const optionalFields = parseNumericFields(row, {
       sal_neto: COLUMN_MAPPING.sal_neto,
       total_tc1: COLUMN_MAPPING.total_tc1,
@@ -165,13 +183,13 @@ const processA3NomRows = (rows: any[]): A3NomParseResult => {
       indemnizacion: COLUMN_MAPPING.indemnizacion,
       enf_acc: COLUMN_MAPPING.enf_acc,
       bonificacion: COLUMN_MAPPING.bonificacion,
-      porcentaje_imputacion: COLUMN_MAPPING.porcentaje_imputacion,
     });
 
-    // Agregar registro
+    // Agregar registro con NIF incluido
     data.push({
       employee_code: employeeCode,
       employee_name: employeeName,
+      employee_nif: employeeNif,
       company_name: currentCompany.name,
       company_nif: currentCompany.nif,
       bruto,

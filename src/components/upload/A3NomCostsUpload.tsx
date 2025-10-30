@@ -227,7 +227,6 @@ export const A3NomCostsUpload = () => {
             indemnizacion: d.indemnizacion,
             enf_acc: d.enf_acc,
             bonificacion: d.bonificacion,
-            porcentaje_imputacion: d.porcentaje_imputacion,
           };
         });
       console.log("[A3Nom][Import] Costes a insertar:", costsToInsert.length, "filtrados:", validation.data.length - costsToInsert.length);

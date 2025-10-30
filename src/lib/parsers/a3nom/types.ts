@@ -5,6 +5,7 @@
 export interface ParsedA3NomCost {
   employee_code: string;
   employee_name: string;
+  employee_nif: string;
   company_name: string;
   company_nif: string;
   bruto: number;
@@ -24,7 +25,6 @@ export interface ParsedA3NomCost {
   indemnizacion?: number;
   enf_acc?: number;
   bonificacion?: number;
-  porcentaje_imputacion?: number;
 }
 
 export interface CompanySummary {

@@ -4,33 +4,39 @@
 
 /**
  * Verifica si una fila es una fila válida de empleado
- * Criterio: primera columna debe ser código de empleado (alfanumérico corto)
+ * Criterio actualizado: segunda columna debe tener nombre, tercera NIF
  */
 export const isValidEmployeeRow = (row: any): boolean => {
-  if (!row || !row[0]) return false;
+  if (!row || row.length < 4) return false;
 
-  const firstCol = String(row[0]).trim();
+  // La columna 1 debe tener un nombre (texto con más de 5 caracteres)
+  const employeeName = String(row[1] || "").trim();
+  if (employeeName.length < 5) return false;
 
-  // Descartar si es muy largo (probablemente un título o empresa)
-  if (firstCol.length > 10) return false;
+  // La columna 2 debe parecer un NIF (formato básico)
+  const employeeNif = String(row[2] || "").trim();
+  const nifPattern = /^[0-9XYZ][0-9]{7}[A-Z]$/i;
+  if (!nifPattern.test(employeeNif)) return false;
 
-  // Descartar si contiene palabras clave comunes en encabezados
+  // La columna 3 debe tener TIPO PAGA
+  const tipoPaga = String(row[3] || "").trim();
+  if (!tipoPaga || tipoPaga.length === 0) return false;
+
+  // Descartar si la columna 1 contiene palabras clave de encabezado
   const excludeKeywords = [
-    "empresa",
+    "trabajador",
     "total",
     "subtotal",
     "nómina",
     "periodo",
-    "mes",
-    "año",
+    "empresa",
   ];
-  const lowerFirst = firstCol.toLowerCase();
-  if (excludeKeywords.some((k) => lowerFirst.includes(k))) {
+  const lowerName = employeeName.toLowerCase();
+  if (excludeKeywords.some((k) => lowerName.includes(k))) {
     return false;
   }
 
-  // Debe ser alfanumérico (código de empleado)
-  return /^[A-Z0-9]{2,10}$/i.test(firstCol);
+  return true;
 };
 
 /**
