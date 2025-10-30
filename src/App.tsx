@@ -27,6 +27,7 @@ import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
 import PublicOnboarding from "./pages/PublicOnboarding";
+import Recruitment from "./pages/Recruitment";
 
 // Admin pages - lazy loading (code splitting)
 const AdminRoles = lazy(() => import("./pages/AdminRoles"));
@@ -59,6 +60,7 @@ const ProtectedCompanies = withAuth(['admin', 'finance', 'super_admin'])(Compani
 const ProtectedCompanyDetail = withAuth(['admin', 'finance', 'super_admin'])(CompanyDetail);
 const ProtectedUpload = withAuth(['admin', 'super_admin'])(Upload);
 const ProtectedTransfers = withAuth(['admin', 'manager', 'super_admin'])(Transfers);
+const ProtectedRecruitment = withAuth(['admin', 'manager', 'super_admin'])(Recruitment);
 const ProtectedAdminRoles = withAuth(['super_admin'])(AdminRoles);
 const ProtectedAdminUsers = withAuth(['super_admin'])(AdminUsers);
 const ProtectedAdminCompanies = withAuth(['super_admin'])(AdminCompanies);
@@ -101,6 +103,7 @@ const App = () => (
                     <Route path="/dashboard" element={<ProtectedDashboard />} />
               <Route path="/employees" element={<ProtectedEmployees />} />
               <Route path="/employees/:id" element={<ProtectedEmployeeDetail />} />
+              <Route path="/recruitment" element={<ProtectedRecruitment />} />
               <Route path="/companies" element={<ProtectedCompanies />} />
               <Route path="/companies/:id" element={<ProtectedCompanyDetail />} />
               <Route path="/upload" element={<ProtectedUpload />} />
