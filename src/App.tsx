@@ -26,6 +26,7 @@ import BudgetDetail from "./pages/BudgetDetail";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
+import PublicOnboarding from "./pages/PublicOnboarding";
 
 // Admin pages - lazy loading (code splitting)
 const AdminRoles = lazy(() => import("./pages/AdminRoles"));
@@ -95,6 +96,7 @@ const App = () => (
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/setup" element={<Setup />} />
+                    <Route path="/onboarding/:token" element={<PublicOnboarding />} />
                     <Route path="/" element={<ProtectedDashboard />} />
                     <Route path="/dashboard" element={<ProtectedDashboard />} />
               <Route path="/employees" element={<ProtectedEmployees />} />
