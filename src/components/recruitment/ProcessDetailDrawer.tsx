@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useRecruitmentProcess } from '@/hooks/useRecruitmentPipeline';
 import {
   Drawer,
@@ -6,8 +7,10 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Briefcase, Calendar, DollarSign, User } from 'lucide-react';
+import { Briefcase, Calendar, DollarSign, User, FileText } from 'lucide-react';
+import { CreateJobOfferDialog } from './CreateJobOfferDialog';
 
 interface ProcessDetailDrawerProps {
   open: boolean;
@@ -17,6 +20,7 @@ interface ProcessDetailDrawerProps {
 
 export function ProcessDetailDrawer({ open, onOpenChange, processId }: ProcessDetailDrawerProps) {
   const { data: process, isLoading } = useRecruitmentProcess(processId);
+  const [showCreateOffer, setShowCreateOffer] = useState(false);
 
   if (isLoading) {
     return (
@@ -141,15 +145,34 @@ export function ProcessDetailDrawer({ open, onOpenChange, processId }: ProcessDe
             </div>
           )}
 
-          {/* Notas */}
-          {process.notes && (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-sm">Notas</h3>
-              <p className="text-sm text-muted-foreground">{process.notes}</p>
+            {/* Notas */}
+            {process.notes && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">Notas</h3>
+                <p className="text-sm text-muted-foreground">{process.notes}</p>
+              </div>
+            )}
+
+            {/* Acciones */}
+            <div className="pt-4">
+              <Button onClick={() => setShowCreateOffer(true)}>
+                <FileText className="h-4 w-4 mr-2" />
+                Generar Oferta
+              </Button>
             </div>
-          )}
-        </div>
-      </DrawerContent>
-    </Drawer>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {process?.candidate && (
+        <CreateJobOfferDialog
+          open={showCreateOffer}
+          onOpenChange={setShowCreateOffer}
+          candidateId={process.candidate_id}
+          candidateEmail={process.candidate.email}
+          processId={processId}
+          defaultTitle={process.position_title}
+        />
+      )}
   );
 }

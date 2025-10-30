@@ -6,6 +6,7 @@ import { Briefcase, Users, Kanban, Plus, Settings } from 'lucide-react';
 import { JobPostingsTable } from '@/components/recruitment/JobPostingsTable';
 import { CandidatesTable } from '@/components/recruitment/CandidatesTable';
 import { PipelineKanban } from '@/components/recruitment/PipelineKanban';
+import { JobOffersTable } from '@/components/recruitment/JobOffersTable';
 import { CreateJobPostingDialog } from '@/components/recruitment/CreateJobPostingDialog';
 import { CreateCandidateDialog } from '@/components/recruitment/CreateCandidateDialog';
 import { CreateRecruitmentProcessDialog } from '@/components/recruitment/CreateRecruitmentProcessDialog';
@@ -15,6 +16,7 @@ import { JobPostingsFilters } from '@/components/recruitment/JobPostingsFilters'
 import { CandidatesFilters } from '@/components/recruitment/CandidatesFilters';
 import { useJobPostings } from '@/hooks/useJobPostings';
 import { useCandidates } from '@/hooks/useCandidates';
+import { useJobOffers } from '@/hooks/useJobOffers';
 import type { JobPostingFilters } from '@/lib/validators/jobPostingSchema';
 import type { CandidateFilters } from '@/lib/validators/candidateSchema';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,6 +33,7 @@ export default function Recruitment() {
 
   const { data: jobPostings, isLoading: loadingPostings } = useJobPostings(jobFilters);
   const { data: candidates, isLoading: loadingCandidates } = useCandidates(candidateFilters);
+  const { data: jobOffers, isLoading: loadingOffers } = useJobOffers();
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -47,6 +50,7 @@ export default function Recruitment() {
             <TabsTrigger value="postings">Vacantes</TabsTrigger>
             <TabsTrigger value="candidates">Candidatos</TabsTrigger>
             <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+            <TabsTrigger value="offers">Ofertas</TabsTrigger>
           </TabsList>
 
           <div className="flex gap-2">
@@ -97,6 +101,14 @@ export default function Recruitment() {
 
         <TabsContent value="pipeline" className="space-y-4">
           <PipelineKanban />
+        </TabsContent>
+
+        <TabsContent value="offers" className="space-y-4">
+          {loadingOffers ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <JobOffersTable jobOffers={jobOffers || []} />
+          )}
         </TabsContent>
       </Tabs>
 
