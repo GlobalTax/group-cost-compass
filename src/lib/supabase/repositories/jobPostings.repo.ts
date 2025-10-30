@@ -38,7 +38,7 @@ export interface JobPosting {
 export async function fetchJobPostings(filters?: JobPostingFilters) {
   let query = supabase
     .from('job_postings')
-    .select('*, recruitment_processes(count)', { count: 'exact' })
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (filters?.status) {
@@ -61,14 +61,22 @@ export async function fetchJobPostings(filters?: JobPostingFilters) {
 
   if (error) throw error;
 
-  // Transform data to include candidates count
-  const transformedData = data?.map((posting: any) => ({
-    ...posting,
-    candidates_count: posting.recruitment_processes?.[0]?.count || 0,
-    recruitment_processes: undefined,
-  }));
+  // Fetch candidates count for each posting
+  const postingsWithCount = await Promise.all(
+    (data || []).map(async (posting: any) => {
+      const { count } = await supabase
+        .from('recruitment_processes')
+        .select('*', { count: 'exact', head: true })
+        .eq('job_posting_id', posting.id);
 
-  return transformedData as JobPosting[];
+      return {
+        ...posting,
+        candidates_count: count || 0,
+      };
+    })
+  );
+
+  return postingsWithCount as JobPosting[];
 }
 
 export async function fetchJobPostingById(id: string) {

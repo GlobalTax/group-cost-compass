@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { TagsInput } from '@/components/ui/tags-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface CreateCandidateDialogProps {
@@ -284,16 +285,40 @@ export function CreateCandidateDialog({ open, onOpenChange, candidate }: CreateC
 
             <FormField
               control={form.control}
+              name="skills"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Skills</FormLabel>
+                  <FormControl>
+                    <TagsInput value={field.value || []} onChange={field.onChange} placeholder="Escribe y presiona Enter" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="languages"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Idiomas</FormLabel>
+                  <FormControl>
+                    <TagsInput value={field.value || []} onChange={field.onChange} placeholder="Escribe y presiona Enter" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Notas</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Información adicional sobre el candidato..."
-                      rows={3}
-                      {...field}
-                    />
+                    <Textarea placeholder="Información adicional..." rows={3} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

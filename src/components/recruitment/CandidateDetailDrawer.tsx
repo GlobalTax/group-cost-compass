@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { useCandidate } from '@/hooks/useCandidates';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase/client';
 import {
   Drawer,
   DrawerContent,
@@ -7,7 +10,9 @@ import {
 } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, Phone, MapPin, Briefcase, Calendar, DollarSign, Linkedin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Mail, Phone, MapPin, Briefcase, Calendar, DollarSign, Linkedin, TrendingUp } from 'lucide-react';
+import { ProcessDetailDrawer } from './ProcessDetailDrawer';
 
 interface CandidateDetailDrawerProps {
   open: boolean;
@@ -17,6 +22,23 @@ interface CandidateDetailDrawerProps {
 
 export function CandidateDetailDrawer({ open, onOpenChange, candidateId }: CandidateDetailDrawerProps) {
   const { data: candidate, isLoading } = useCandidate(candidateId);
+  const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
+
+  // Fetch active processes for this candidate
+  const { data: processes } = useQuery({
+    queryKey: ['candidate-processes', candidateId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('recruitment_processes')
+        .select('*, job_postings(title), pipeline_stages(name, color)')
+        .eq('candidate_id', candidateId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!candidateId && open,
+  });
 
   if (isLoading) {
     return (
@@ -160,6 +182,45 @@ export function CandidateDetailDrawer({ open, onOpenChange, candidateId }: Candi
             </div>
           </div>
 
+          {/* Active Processes */}
+          {processes && processes.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Procesos Activos ({processes.length})
+              </h3>
+              <div className="space-y-2">
+                {processes.map((process: any) => (
+                  <div
+                    key={process.id}
+                    className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                    onClick={() => setSelectedProcessId(process.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">{process.position_title}</p>
+                        {process.job_postings && (
+                          <p className="text-xs text-muted-foreground">
+                            {process.job_postings.title}
+                          </p>
+                        )}
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        style={{
+                          backgroundColor: process.pipeline_stages?.color + '20',
+                          color: process.pipeline_stages?.color,
+                        }}
+                      >
+                        {process.pipeline_stages?.name || 'Sin etapa'}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Notas */}
           {candidate.notes && (
             <div className="space-y-3">
@@ -169,6 +230,15 @@ export function CandidateDetailDrawer({ open, onOpenChange, candidateId }: Candi
           )}
         </div>
       </DrawerContent>
+
+      {/* Process Detail Drawer */}
+      {selectedProcessId && (
+        <ProcessDetailDrawer
+          open={!!selectedProcessId}
+          onOpenChange={(open) => !open && setSelectedProcessId(null)}
+          processId={selectedProcessId}
+        />
+      )}
     </Drawer>
   );
 }

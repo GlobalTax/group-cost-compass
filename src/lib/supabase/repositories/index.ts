@@ -29,3 +29,6 @@ export * from './onboarding.repo';
 export * from './jobPostings.repo';
 export * from './candidates.repo';
 export * from './recruitmentPipeline.repo';
+export type { JobPosting } from './jobPostings.repo';
+export type { Candidate } from './candidates.repo';
+export type { PipelineStage, RecruitmentProcess } from './recruitmentPipeline.repo';

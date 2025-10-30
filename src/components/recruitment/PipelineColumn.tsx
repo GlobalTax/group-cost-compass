@@ -1,3 +1,4 @@
+import { useDroppable } from '@dnd-kit/core';
 import { ProcessCard } from './ProcessCard';
 import { Badge } from '@/components/ui/badge';
 
@@ -12,6 +13,10 @@ interface PipelineColumnProps {
 }
 
 export function PipelineColumn({ stage, processes }: PipelineColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: stage.id,
+  });
+
   return (
     <div className="min-w-[320px] flex flex-col">
       {/* Header */}
@@ -29,7 +34,12 @@ export function PipelineColumn({ stage, processes }: PipelineColumnProps) {
       </div>
 
       {/* Cards */}
-      <div className="flex-1 p-3 space-y-3 border border-t-0 rounded-b-lg bg-background overflow-y-auto max-h-[600px]">
+      <div
+        ref={setNodeRef}
+        className={`flex-1 p-3 space-y-3 border border-t-0 rounded-b-lg overflow-y-auto max-h-[600px] transition-colors ${
+          isOver ? 'bg-accent/50' : 'bg-background'
+        }`}
+      >
         {processes.length === 0 ? (
           <div className="text-center py-8 text-sm text-muted-foreground">
             Sin candidatos

@@ -2,23 +2,35 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Users, Kanban, Plus } from 'lucide-react';
+import { Briefcase, Users, Kanban, Plus, Settings } from 'lucide-react';
 import { JobPostingsTable } from '@/components/recruitment/JobPostingsTable';
 import { CandidatesTable } from '@/components/recruitment/CandidatesTable';
 import { PipelineKanban } from '@/components/recruitment/PipelineKanban';
 import { CreateJobPostingDialog } from '@/components/recruitment/CreateJobPostingDialog';
 import { CreateCandidateDialog } from '@/components/recruitment/CreateCandidateDialog';
+import { CreateRecruitmentProcessDialog } from '@/components/recruitment/CreateRecruitmentProcessDialog';
+import { ConfigurePipelineDialog } from '@/components/recruitment/ConfigurePipelineDialog';
+import { RecruitmentKPIs } from '@/components/recruitment/RecruitmentKPIs';
+import { JobPostingsFilters } from '@/components/recruitment/JobPostingsFilters';
+import { CandidatesFilters } from '@/components/recruitment/CandidatesFilters';
 import { useJobPostings } from '@/hooks/useJobPostings';
 import { useCandidates } from '@/hooks/useCandidates';
+import type { JobPostingFilters } from '@/lib/validators/jobPostingSchema';
+import type { CandidateFilters } from '@/lib/validators/candidateSchema';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Recruitment() {
   const [activeTab, setActiveTab] = useState('postings');
   const [showCreatePosting, setShowCreatePosting] = useState(false);
   const [showCreateCandidate, setShowCreateCandidate] = useState(false);
+  const [showCreateProcess, setShowCreateProcess] = useState(false);
+  const [showConfigurePipeline, setShowConfigurePipeline] = useState(false);
 
-  const { data: jobPostings, isLoading: loadingPostings } = useJobPostings();
-  const { data: candidates, isLoading: loadingCandidates } = useCandidates();
+  const [jobFilters, setJobFilters] = useState<JobPostingFilters>({});
+  const [candidateFilters, setCandidateFilters] = useState<CandidateFilters>({});
+
+  const { data: jobPostings, isLoading: loadingPostings } = useJobPostings(jobFilters);
+  const { data: candidates, isLoading: loadingCandidates } = useCandidates(candidateFilters);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -27,24 +39,17 @@ export default function Recruitment() {
         subtitle="Gestiona vacantes, candidatos y pipeline de contratación"
       />
 
+      <RecruitmentKPIs />
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-4">
           <TabsList>
-            <TabsTrigger value="postings">
-              <Briefcase className="h-4 w-4 mr-2" />
-              Vacantes
-            </TabsTrigger>
-            <TabsTrigger value="candidates">
-              <Users className="h-4 w-4 mr-2" />
-              Candidatos
-            </TabsTrigger>
-            <TabsTrigger value="pipeline">
-              <Kanban className="h-4 w-4 mr-2" />
-              Pipeline
-            </TabsTrigger>
+            <TabsTrigger value="postings">Vacantes</TabsTrigger>
+            <TabsTrigger value="candidates">Candidatos</TabsTrigger>
+            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           </TabsList>
 
-          <div>
+          <div className="flex gap-2">
             {activeTab === 'postings' && (
               <Button onClick={() => setShowCreatePosting(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -57,28 +62,34 @@ export default function Recruitment() {
                 Añadir Candidato
               </Button>
             )}
+            {activeTab === 'pipeline' && (
+              <>
+                <Button onClick={() => setShowCreateProcess(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear Proceso
+                </Button>
+                <Button variant="outline" onClick={() => setShowConfigurePipeline(true)}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configurar
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
         <TabsContent value="postings" className="space-y-4">
+          <JobPostingsFilters filters={jobFilters} onFiltersChange={setJobFilters} />
           {loadingPostings ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+            <Skeleton className="h-64" />
           ) : (
             <JobPostingsTable jobPostings={jobPostings || []} />
           )}
         </TabsContent>
 
         <TabsContent value="candidates" className="space-y-4">
+          <CandidatesFilters filters={candidateFilters} onFiltersChange={setCandidateFilters} />
           {loadingCandidates ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+            <Skeleton className="h-64" />
           ) : (
             <CandidatesTable candidates={candidates || []} />
           )}
@@ -97,6 +108,16 @@ export default function Recruitment() {
       <CreateCandidateDialog
         open={showCreateCandidate}
         onOpenChange={setShowCreateCandidate}
+      />
+
+      <CreateRecruitmentProcessDialog
+        open={showCreateProcess}
+        onOpenChange={setShowCreateProcess}
+      />
+
+      <ConfigurePipelineDialog
+        open={showConfigurePipeline}
+        onOpenChange={setShowConfigurePipeline}
       />
     </div>
   );
