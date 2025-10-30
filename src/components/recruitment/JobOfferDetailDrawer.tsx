@@ -114,9 +114,6 @@ export function JobOfferDetailDrawer({ open, onOpenChange, offerId }: JobOfferDe
   if (!offer) return null;
 
   const statusInfo = statusConfig[offer.status];
-  const candidateName = offer.candidate
-    ? `${offer.candidate.first_name} ${offer.candidate.last_name}`
-    : 'Sin candidato';
 
   return (
     <>
@@ -130,18 +127,12 @@ export function JobOfferDetailDrawer({ open, onOpenChange, offerId }: JobOfferDe
           </DrawerHeader>
 
           <div className="p-6 overflow-y-auto space-y-6">
-            {/* Candidato */}
+            {/* Candidatos Asociados */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm">Candidato</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span>{candidateName}</span>
-                </div>
-                <div className="text-sm text-muted-foreground ml-6">
-                  {offer.candidate_email}
-                </div>
-              </div>
+              <h3 className="font-semibold text-sm">Candidatos</h3>
+              <p className="text-sm text-muted-foreground">
+                {offer.candidates_count || 0} candidato(s) asociado(s)
+              </p>
             </div>
 
             {/* Detalles del Puesto */}
@@ -173,13 +164,21 @@ export function JobOfferDetailDrawer({ open, onOpenChange, offerId }: JobOfferDe
             <div className="space-y-3">
               <h3 className="font-semibold text-sm">Retribución</h3>
               <div className="space-y-2 text-sm">
-                {offer.salary_amount && (
+                {offer.salary_base && (
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">
-                      {offer.salary_amount.toLocaleString('es-ES')} {offer.salary_currency} / {offer.salary_period}
+                      {offer.salary_base.toLocaleString('es-ES')} {offer.salary_currency} (base anual)
                     </span>
                   </div>
+                )}
+                {offer.bonus_amount && (
+                  <div className="ml-6">
+                    Bonus: {offer.bonus_amount.toLocaleString('es-ES')} {offer.salary_currency}
+                  </div>
+                )}
+                {offer.exclusivity_percentage && (
+                  <div className="ml-6">Exclusividad: {offer.exclusivity_percentage}%</div>
                 )}
                 {offer.work_schedule && (
                   <div className="ml-6">Horario: {offer.work_schedule}</div>

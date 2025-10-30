@@ -155,7 +155,7 @@ export function ProcessDetailDrawer({ open, onOpenChange, processId }: ProcessDe
             )}
 
             {/* Acciones */}
-            <div className="pt-4">
+            <div className="flex flex-wrap gap-2 pt-4">
               <Button onClick={() => setShowCreateOffer(true)}>
                 <FileText className="h-4 w-4 mr-2" />
                 Generar Oferta
@@ -165,16 +165,10 @@ export function ProcessDetailDrawer({ open, onOpenChange, processId }: ProcessDe
         </DrawerContent>
       </Drawer>
 
-      {process?.candidate && (
-        <CreateJobOfferDialog
-          open={showCreateOffer}
-          onOpenChange={setShowCreateOffer}
-          candidateId={process.candidate_id}
-          candidateEmail={process.candidate.email}
-          processId={processId}
-          defaultTitle={process.position_title}
-        />
-      )}
+      <CreateJobOfferDialog
+        open={showCreateOffer}
+        onOpenChange={setShowCreateOffer}
+      />
     </>
   );
 }

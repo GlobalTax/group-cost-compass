@@ -42,9 +42,9 @@ export function JobOffersTable({ jobOffers }: JobOffersTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Puesto</TableHead>
-              <TableHead>Candidato</TableHead>
-              <TableHead>Salario</TableHead>
+          <TableHead>Puesto</TableHead>
+          <TableHead>Candidatos</TableHead>
+          <TableHead>Salario Base</TableHead>
               <TableHead>Tipo Contrato</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Fecha Creación</TableHead>
@@ -57,19 +57,20 @@ export function JobOffersTable({ jobOffers }: JobOffersTableProps) {
                 label: offer.status || 'Desconocido',
                 variant: 'outline' as const
               };
-              const candidateName = offer.candidate
-                ? `${offer.candidate.first_name} ${offer.candidate.last_name}`
-                : 'Sin candidato';
 
               return (
                 <TableRow key={offer.id}>
                   <TableCell className="font-medium">{offer.title}</TableCell>
-                  <TableCell>{candidateName}</TableCell>
                   <TableCell>
-                    {offer.salary_amount ? `${offer.salary_amount.toLocaleString('es-ES')} ${offer.salary_currency}` : '-'}
+                    {offer.candidates_count || 0} candidato(s)
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{offer.position_level || 'N/A'}</Badge>
+                    {offer.salary_base
+                      ? `${offer.salary_base.toLocaleString('es-ES')} ${offer.salary_currency || 'EUR'}`
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{offer.contract_type || 'N/A'}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>

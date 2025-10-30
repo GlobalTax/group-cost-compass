@@ -8,22 +8,38 @@ export interface JobOffer {
   title: string;
   department: string | null;
   position_level: string | null;
-  candidate_name: string;
-  candidate_email: string;
-  candidate_phone: string | null;
-  salary_amount: number | null;
-  salary_currency: string | null;
-  salary_period: string | null;
-  start_date: string | null;
-  probation_period_months: number | null;
-  vacation_days: number | null;
-  work_schedule: string | null;
   work_location: string | null;
+  start_date: string | null;
+  
+  // Retribución
+  salary_base: number | null;
+  bonus_amount: number | null;
+  bonus_conditions: string | null;
+  exclusivity_compensation: number | null;
+  exclusivity_percentage: number | null;
+  salary_currency: string | null;
+  
+  // Contrato
+  contract_type: string | null;
+  contract_duration: string | null;
+  probation_duration: string | null;
+  weekly_hours: number | null;
+  
+  // Beneficios
+  vacation_days: number | null;
   remote_work_allowed: boolean | null;
-  benefits: any;
-  requirements: any;
-  responsibilities: any;
+  expense_reimbursement: string | null;
+  other_benefits: any;
+  
+  // Pactos legales
+  exclusivity_clause: string | null;
+  non_compete_clause: string | null;
+  
+  // Otros
+  work_schedule: string | null;
   additional_notes: string | null;
+  
+  // Status y metadata
   status: string;
   template_id: string | null;
   sent_at: string | null;
@@ -35,11 +51,31 @@ export interface JobOffer {
   created_by: string;
   created_at: string;
   updated_at: string;
+  
+  // Relaciones
+  candidates_count?: number;
+}
+
+export interface JobOfferCandidate {
+  id: string;
+  org_id: string;
+  job_offer_id: string;
+  candidate_id: string;
+  status: string;
+  pdf_url: string | null;
+  sent_at: string | null;
+  viewed_at: string | null;
+  accepted_at: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
   candidate?: {
     id: string;
     first_name: string;
     last_name: string;
     email: string;
+    phone: string;
   };
 }
 
@@ -53,8 +89,7 @@ export async function fetchJobOffers(filters?: JobOfferFilters) {
   let query = supabase
     .from('job_offers')
     .select(`
-      *,
-      candidate:candidates(id, first_name, last_name, email)
+      *
     `)
     .order('created_at', { ascending: false });
 
@@ -62,18 +97,26 @@ export async function fetchJobOffers(filters?: JobOfferFilters) {
     query = query.eq('status', filters.status);
   }
 
-  if (filters?.candidate_id) {
-    query = query.eq('candidate_id', filters.candidate_id);
-  }
-
   if (filters?.search) {
-    query = query.or(`position_title.ilike.%${filters.search}%,candidate_email.ilike.%${filters.search}%`);
+    query = query.or(`title.ilike.%${filters.search}%,department.ilike.%${filters.search}%`);
   }
 
   const { data, error } = await query;
-
   if (error) throw error;
-  return data as JobOffer[];
+
+  // Obtener conteo de candidatos asociados para cada oferta
+  const offersWithCounts = await Promise.all(
+    (data || []).map(async (offer) => {
+      const { count } = await supabase
+        .from('job_offer_candidates')
+        .select('*', { count: 'exact', head: true })
+        .eq('job_offer_id', offer.id);
+      
+      return { ...offer, candidates_count: count || 0 };
+    })
+  );
+
+  return offersWithCounts as JobOffer[];
 }
 
 export async function fetchJobOfferById(id: string) {

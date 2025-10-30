@@ -5367,6 +5367,76 @@ export type Database = {
         }
         Relationships: []
       }
+      job_offer_candidates: {
+        Row: {
+          accepted_at: string | null
+          candidate_id: string
+          created_at: string
+          id: string
+          job_offer_id: string
+          org_id: string
+          pdf_url: string | null
+          rejected_at: string | null
+          rejection_reason: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          candidate_id: string
+          created_at?: string
+          id?: string
+          job_offer_id: string
+          org_id: string
+          pdf_url?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          job_offer_id?: string
+          org_id?: string
+          pdf_url?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_offer_candidates_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_offer_candidates_job_offer_id_fkey"
+            columns: ["job_offer_id"]
+            isOneToOne: false
+            referencedRelation: "job_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_offer_candidates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_offer_signatures: {
         Row: {
           candidate_email: string
@@ -5492,18 +5562,29 @@ export type Database = {
           access_token: string | null
           additional_notes: string | null
           benefits: Json | null
-          candidate_email: string
+          bonus_amount: number | null
+          bonus_conditions: string | null
+          candidate_email: string | null
           candidate_id: string | null
-          candidate_name: string
+          candidate_name: string | null
           candidate_phone: string | null
+          contract_duration: string | null
+          contract_type: string | null
           created_at: string
           created_by: string
           department: string | null
           employee_onboarding_id: string | null
+          exclusivity_clause: string | null
+          exclusivity_compensation: number | null
+          exclusivity_percentage: number | null
+          expense_reimbursement: string | null
           expires_at: string | null
           id: string
+          non_compete_clause: string | null
           org_id: string
+          other_benefits: Json | null
           position_level: string | null
+          probation_duration: string | null
           probation_period_months: number | null
           recruitment_process_id: string | null
           remote_work_allowed: boolean | null
@@ -5511,6 +5592,7 @@ export type Database = {
           responded_at: string | null
           responsibilities: Json | null
           salary_amount: number | null
+          salary_base: number | null
           salary_currency: string | null
           salary_period: string | null
           sent_at: string | null
@@ -5521,6 +5603,7 @@ export type Database = {
           updated_at: string
           vacation_days: number | null
           viewed_at: string | null
+          weekly_hours: number | null
           work_location: string | null
           work_schedule: string | null
         }
@@ -5528,18 +5611,29 @@ export type Database = {
           access_token?: string | null
           additional_notes?: string | null
           benefits?: Json | null
-          candidate_email: string
+          bonus_amount?: number | null
+          bonus_conditions?: string | null
+          candidate_email?: string | null
           candidate_id?: string | null
-          candidate_name: string
+          candidate_name?: string | null
           candidate_phone?: string | null
+          contract_duration?: string | null
+          contract_type?: string | null
           created_at?: string
           created_by: string
           department?: string | null
           employee_onboarding_id?: string | null
+          exclusivity_clause?: string | null
+          exclusivity_compensation?: number | null
+          exclusivity_percentage?: number | null
+          expense_reimbursement?: string | null
           expires_at?: string | null
           id?: string
+          non_compete_clause?: string | null
           org_id: string
+          other_benefits?: Json | null
           position_level?: string | null
+          probation_duration?: string | null
           probation_period_months?: number | null
           recruitment_process_id?: string | null
           remote_work_allowed?: boolean | null
@@ -5547,6 +5641,7 @@ export type Database = {
           responded_at?: string | null
           responsibilities?: Json | null
           salary_amount?: number | null
+          salary_base?: number | null
           salary_currency?: string | null
           salary_period?: string | null
           sent_at?: string | null
@@ -5557,6 +5652,7 @@ export type Database = {
           updated_at?: string
           vacation_days?: number | null
           viewed_at?: string | null
+          weekly_hours?: number | null
           work_location?: string | null
           work_schedule?: string | null
         }
@@ -5564,18 +5660,29 @@ export type Database = {
           access_token?: string | null
           additional_notes?: string | null
           benefits?: Json | null
-          candidate_email?: string
+          bonus_amount?: number | null
+          bonus_conditions?: string | null
+          candidate_email?: string | null
           candidate_id?: string | null
-          candidate_name?: string
+          candidate_name?: string | null
           candidate_phone?: string | null
+          contract_duration?: string | null
+          contract_type?: string | null
           created_at?: string
           created_by?: string
           department?: string | null
           employee_onboarding_id?: string | null
+          exclusivity_clause?: string | null
+          exclusivity_compensation?: number | null
+          exclusivity_percentage?: number | null
+          expense_reimbursement?: string | null
           expires_at?: string | null
           id?: string
+          non_compete_clause?: string | null
           org_id?: string
+          other_benefits?: Json | null
           position_level?: string | null
+          probation_duration?: string | null
           probation_period_months?: number | null
           recruitment_process_id?: string | null
           remote_work_allowed?: boolean | null
@@ -5583,6 +5690,7 @@ export type Database = {
           responded_at?: string | null
           responsibilities?: Json | null
           salary_amount?: number | null
+          salary_base?: number | null
           salary_currency?: string | null
           salary_period?: string | null
           sent_at?: string | null
@@ -5593,6 +5701,7 @@ export type Database = {
           updated_at?: string
           vacation_days?: number | null
           viewed_at?: string | null
+          weekly_hours?: number | null
           work_location?: string | null
           work_schedule?: string | null
         }
