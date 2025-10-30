@@ -9,9 +9,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, FileText, UserPlus } from 'lucide-react';
 import type { JobOffer } from '@/lib/supabase/repositories/jobOffers.repo';
 import { JobOfferDetailDrawer } from './JobOfferDetailDrawer';
+import { AssociateCandidatesDialog } from './AssociateCandidatesDialog';
 
 interface JobOffersTableProps {
   jobOffers: JobOffer[];
@@ -27,6 +28,8 @@ const statusConfig = {
 
 export function JobOffersTable({ jobOffers }: JobOffersTableProps) {
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
+  const [associateDialogOpen, setAssociateDialogOpen] = useState(false);
+  const [selectedOfferForAssociate, setSelectedOfferForAssociate] = useState<{ id: string; title: string } | null>(null);
 
   if (jobOffers.length === 0) {
     return (
@@ -84,8 +87,20 @@ export function JobOffersTable({ jobOffers }: JobOffersTableProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => setSelectedOfferId(offer.id)}
+                        title="Ver detalles"
                       >
                         <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedOfferForAssociate({ id: offer.id, title: offer.title });
+                          setAssociateDialogOpen(true);
+                        }}
+                        title="Asociar candidatos"
+                      >
+                        <UserPlus className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -108,6 +123,18 @@ export function JobOffersTable({ jobOffers }: JobOffersTableProps) {
           open={!!selectedOfferId}
           onOpenChange={(open) => !open && setSelectedOfferId(null)}
           offerId={selectedOfferId}
+        />
+      )}
+
+      {selectedOfferForAssociate && (
+        <AssociateCandidatesDialog
+          open={associateDialogOpen}
+          onOpenChange={(open) => {
+            setAssociateDialogOpen(open);
+            if (!open) setSelectedOfferForAssociate(null);
+          }}
+          jobOfferId={selectedOfferForAssociate.id}
+          jobOfferTitle={selectedOfferForAssociate.title}
         />
       )}
     </>

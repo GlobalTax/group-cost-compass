@@ -11,6 +11,7 @@ import { CreateJobPostingDialog } from '@/components/recruitment/CreateJobPostin
 import { CreateCandidateDialog } from '@/components/recruitment/CreateCandidateDialog';
 import { CreateRecruitmentProcessDialog } from '@/components/recruitment/CreateRecruitmentProcessDialog';
 import { ConfigurePipelineDialog } from '@/components/recruitment/ConfigurePipelineDialog';
+import { CreateJobOfferDialog } from '@/components/recruitment/CreateJobOfferDialog';
 import { RecruitmentKPIs } from '@/components/recruitment/RecruitmentKPIs';
 import { JobPostingsFilters } from '@/components/recruitment/JobPostingsFilters';
 import { CandidatesFilters } from '@/components/recruitment/CandidatesFilters';
@@ -27,6 +28,7 @@ export default function Recruitment() {
   const [showCreateCandidate, setShowCreateCandidate] = useState(false);
   const [showCreateProcess, setShowCreateProcess] = useState(false);
   const [showConfigurePipeline, setShowConfigurePipeline] = useState(false);
+  const [showCreateOffer, setShowCreateOffer] = useState(false);
 
   const [jobFilters, setJobFilters] = useState<JobPostingFilters>({});
   const [candidateFilters, setCandidateFilters] = useState<CandidateFilters>({});
@@ -77,6 +79,12 @@ export default function Recruitment() {
                   Configurar
                 </Button>
               </>
+            )}
+            {activeTab === 'offers' && (
+              <Button onClick={() => setShowCreateOffer(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Oferta
+              </Button>
             )}
           </div>
         </div>
@@ -130,6 +138,11 @@ export default function Recruitment() {
       <ConfigurePipelineDialog
         open={showConfigurePipeline}
         onOpenChange={setShowConfigurePipeline}
+      />
+
+      <CreateJobOfferDialog
+        open={showCreateOffer}
+        onOpenChange={setShowCreateOffer}
       />
     </div>
   );

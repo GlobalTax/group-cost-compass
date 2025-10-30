@@ -11,30 +11,19 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { 
   DollarSign, 
   Calendar, 
-  Briefcase, 
-  FileText, 
-  Upload,
   Send,
-  CheckCircle,
-  XCircle,
   User,
   MapPin
 } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 interface JobOfferDetailDrawerProps {
   open: boolean;
@@ -199,10 +188,26 @@ export function JobOfferDetailDrawer({ open, onOpenChange, offerId }: JobOfferDe
             {/* Acciones */}
             <div className="flex flex-wrap gap-2 pt-4">
               {offer.status === 'draft' && (
-                <Button onClick={handleSend} disabled={sendOffer.isPending}>
-                  <Send className="h-4 w-4 mr-2" />
-                  Enviar Oferta
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button 
+                          onClick={handleSend} 
+                          disabled={sendOffer.isPending || (offer.candidates_count || 0) === 0}
+                        >
+                          <Send className="h-4 w-4 mr-2" />
+                          Enviar Oferta
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {(offer.candidates_count || 0) === 0 && (
+                      <TooltipContent>
+                        <p>Debes asociar al menos un candidato antes de enviar</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           </div>
