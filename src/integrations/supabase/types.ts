@@ -781,6 +781,71 @@ export type Database = {
         }
         Relationships: []
       }
+      bonus_payments: {
+        Row: {
+          amount: number
+          bonus_type: string
+          created_at: string | null
+          deal_id: string | null
+          employee_id: string
+          fiscal_year: number
+          id: string
+          notes: string | null
+          payment_date: string
+        }
+        Insert: {
+          amount: number
+          bonus_type: string
+          created_at?: string | null
+          deal_id?: string | null
+          employee_id: string
+          fiscal_year: number
+          id?: string
+          notes?: string | null
+          payment_date: string
+        }
+        Update: {
+          amount?: number
+          bonus_type?: string
+          created_at?: string | null
+          deal_id?: string | null
+          employee_id?: string
+          fiscal_year?: number
+          id?: string
+          notes?: string | null
+          payment_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_payments_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_payments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_payments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "bonus_payments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
+            referencedColumns: ["employee_id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           created_at: string | null
@@ -1567,6 +1632,48 @@ export type Database = {
           },
         ]
       }
+      compensation_bands: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          level: string
+          max_bonus_pct: number
+          max_salary: number
+          min_salary: number
+          success_fee_base_pct: number
+          target_bonus_pct: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          level: string
+          max_bonus_pct?: number
+          max_salary: number
+          min_salary: number
+          success_fee_base_pct?: number
+          target_bonus_pct?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          level?: string
+          max_bonus_pct?: number
+          max_salary?: number
+          min_salary?: number
+          success_fee_base_pct?: number
+          target_bonus_pct?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       contact_documents: {
         Row: {
           contact_id: string
@@ -1976,6 +2083,135 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      deal_participants: {
+        Row: {
+          bonus_amount: number | null
+          created_at: string | null
+          deal_id: string
+          employee_id: string
+          id: string
+          participation_pct: number
+          role_in_deal: string | null
+        }
+        Insert: {
+          bonus_amount?: number | null
+          created_at?: string | null
+          deal_id: string
+          employee_id: string
+          id?: string
+          participation_pct?: number
+          role_in_deal?: string | null
+        }
+        Update: {
+          bonus_amount?: number | null
+          created_at?: string | null
+          deal_id?: string
+          employee_id?: string
+          id?: string
+          participation_pct?: number
+          role_in_deal?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_participants_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_participants_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_participants_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "deal_participants_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
+            referencedColumns: ["employee_id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          client_name: string | null
+          close_date: string | null
+          created_at: string | null
+          deal_name: string
+          deal_type: string | null
+          fiscal_year: number | null
+          id: string
+          lead_partner_id: string | null
+          notes: string | null
+          status: string
+          success_fee_pool: number | null
+          total_fees: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_name?: string | null
+          close_date?: string | null
+          created_at?: string | null
+          deal_name: string
+          deal_type?: string | null
+          fiscal_year?: number | null
+          id?: string
+          lead_partner_id?: string | null
+          notes?: string | null
+          status?: string
+          success_fee_pool?: number | null
+          total_fees?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_name?: string | null
+          close_date?: string | null
+          created_at?: string | null
+          deal_name?: string
+          deal_type?: string | null
+          fiscal_year?: number | null
+          id?: string
+          lead_partner_id?: string | null
+          notes?: string | null
+          status?: string
+          success_fee_pool?: number | null
+          total_fees?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_lead_partner_id_fkey"
+            columns: ["lead_partner_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_lead_partner_id_fkey"
+            columns: ["lead_partner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "deals_lead_partner_id_fkey"
+            columns: ["lead_partner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
+            referencedColumns: ["employee_id"]
+          },
+        ]
       }
       deed_assignees: {
         Row: {
@@ -5126,7 +5362,9 @@ export type Database = {
         Row: {
           address: string | null
           birth_date: string | null
+          bonus_extra: number | null
           company_id: string | null
+          compensation_level: string | null
           contract_type: string | null
           created_at: string | null
           department: string | null
@@ -5142,6 +5380,8 @@ export type Database = {
           phone: string | null
           position: string | null
           seniority_date: string | null
+          success_fee_pct: number | null
+          target_bonus_pct: number | null
           termination_date: string | null
           transfer_group: boolean | null
           updated_at: string | null
@@ -5149,7 +5389,9 @@ export type Database = {
         Insert: {
           address?: string | null
           birth_date?: string | null
+          bonus_extra?: number | null
           company_id?: string | null
+          compensation_level?: string | null
           contract_type?: string | null
           created_at?: string | null
           department?: string | null
@@ -5165,6 +5407,8 @@ export type Database = {
           phone?: string | null
           position?: string | null
           seniority_date?: string | null
+          success_fee_pct?: number | null
+          target_bonus_pct?: number | null
           termination_date?: string | null
           transfer_group?: boolean | null
           updated_at?: string | null
@@ -5172,7 +5416,9 @@ export type Database = {
         Update: {
           address?: string | null
           birth_date?: string | null
+          bonus_extra?: number | null
           company_id?: string | null
+          compensation_level?: string | null
           contract_type?: string | null
           created_at?: string | null
           department?: string | null
@@ -5188,6 +5434,8 @@ export type Database = {
           phone?: string | null
           position?: string | null
           seniority_date?: string | null
+          success_fee_pct?: number | null
+          target_bonus_pct?: number | null
           termination_date?: string | null
           transfer_group?: boolean | null
           updated_at?: string | null
@@ -6632,6 +6880,88 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_department_org_chart"
             referencedColumns: ["department_id"]
+          },
+        ]
+      }
+      performance_reviews: {
+        Row: {
+          areas_improvement: string | null
+          bonus_multiplier: number | null
+          created_at: string | null
+          employee_id: string
+          id: string
+          performance_score: number | null
+          review_date: string | null
+          review_period: string
+          reviewer_id: string | null
+          strengths: string | null
+        }
+        Insert: {
+          areas_improvement?: string | null
+          bonus_multiplier?: number | null
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          performance_score?: number | null
+          review_date?: string | null
+          review_period: string
+          reviewer_id?: string | null
+          strengths?: string | null
+        }
+        Update: {
+          areas_improvement?: string | null
+          bonus_multiplier?: number | null
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          performance_score?: number | null
+          review_date?: string | null
+          review_period?: string
+          reviewer_id?: string | null
+          strengths?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_reviews_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_reviews_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "performance_reviews_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "performance_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "performance_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
+            referencedColumns: ["employee_id"]
           },
         ]
       }
