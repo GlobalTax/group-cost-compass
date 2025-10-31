@@ -1,3 +1,10 @@
+/**
+ * @deprecated Este parser está deprecado. Usar en su lugar:
+ * import { parseA3NomCostsFile } from "@/lib/parsers/a3nom"
+ * 
+ * Programado para eliminación en próximo sprint.
+ */
+
 import Papa from "papaparse";
 
 export interface ParsedCost {

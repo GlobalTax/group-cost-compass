@@ -61,13 +61,16 @@ export const createTransfer = async (data: TransferInsert): Promise<Transfer> =>
 
 /**
  * Detecta transferencias automáticamente basándose en cambios de empresa
+ * 
+ * @deprecated Usar detectPotentialTransfers de transferDetectionService
+ * @see {@link src/services/transfers/transferDetectionService.ts}
  */
 export const detectPotentialTransfers = async (
   employeeId: string
 ): Promise<
   Array<{ from_company_id: string; to_company_id: string; detected_date: string }>
 > => {
-  // Esta es una función de análisis que debería implementarse
-  // según la lógica de negocio específica
+  // Migrado a src/services/transfers/transferDetectionService.ts
+  // para mejor separación de concerns
   return [];
 };

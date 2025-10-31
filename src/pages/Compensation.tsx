@@ -14,6 +14,7 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { useBonusPayments } from "@/hooks/useBonusPayments";
 import { useEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { useDeals } from "@/hooks/useDeals";
+import { calculateCompensationStats } from "@/services/compensation/compensationStatsService";
 import { exportCompensationSummary } from "@/lib/exporters/compensationExporter";
 import { toast } from "sonner";
 
@@ -27,29 +28,14 @@ export default function Compensation() {
   const { data: allCosts } = useEmployeeCosts();
   const { data: deals } = useDeals({ fiscalYear: currentYear });
 
-  const currentYearCosts = allCosts?.filter((cost) => {
-    const costYear = new Date(cost.period).getFullYear();
-    return costYear === currentYear;
-  }) || [];
-
-  const totalFixedSalary = currentYearCosts.reduce(
-    (sum, cost) => sum + Number(cost.bruto || 0),
-    0
-  );
-
-  const totalBonusPaid =
-    bonusPayments?.reduce((sum, payment) => sum + Number(payment.amount), 0) || 0;
-
-  const variablePercentage =
-    totalFixedSalary > 0 ? (totalBonusPaid / totalFixedSalary) * 100 : 0;
-
-  const activeEmployees = employees?.filter((emp) => !emp.termination_date).length || 0;
-
-  const activeDeals = deals?.filter((d) => d.status === "active" || d.status === "pipeline") || [];
-  const poolCommitted = activeDeals.reduce((sum, deal) => sum + Number(deal.success_fee_pool || 0), 0);
-
-  const variableThreshold = 15;
-  const showVariableAlert = variablePercentage > variableThreshold;
+  // Calcular stats usando servicio
+  const stats = calculateCompensationStats({
+    costs: allCosts || [],
+    bonusPayments: bonusPayments || [],
+    employees: employees || [],
+    deals: deals || [],
+    currentYear,
+  });
 
   const handleExportSummary = async () => {
     try {
@@ -73,21 +59,21 @@ export default function Compensation() {
         </Button>
       </div>
 
-      {showVariableAlert && (
+      {stats.showVariableAlert && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            El % variable ({variablePercentage.toFixed(1)}%) supera el {variableThreshold}% sobre masa salarial.
+            El % variable ({stats.variablePercentage.toFixed(1)}%) supera el 15% sobre masa salarial.
           </AlertDescription>
         </Alert>
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <CompensationKPIs
-          totalFixedSalary={totalFixedSalary}
-          totalBonusPaid={totalBonusPaid}
-          variablePercentage={variablePercentage}
-          activeEmployees={activeEmployees}
+          totalFixedSalary={stats.totalFixedSalary}
+          totalBonusPaid={stats.totalBonusPaid}
+          variablePercentage={stats.variablePercentage}
+          activeEmployees={stats.activeEmployees}
         />
         <div className="flex items-start gap-4 rounded-lg border border-border bg-card p-6">
           <div className="rounded-full bg-info/10 p-3">
@@ -101,7 +87,7 @@ export default function Compensation() {
                 currency: "EUR",
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0,
-              }).format(poolCommitted)}
+              }).format(stats.poolCommitted)}
             </p>
           </div>
         </div>

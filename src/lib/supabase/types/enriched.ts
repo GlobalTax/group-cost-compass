@@ -7,10 +7,19 @@ export type EmployeeCost = Database['public']['Tables']['hr_employee_costs']['Ro
 export type Transfer = Database['public']['Tables']['hr_transfers']['Row'];
 export type RoleConfiguration = Database['public']['Tables']['role_configurations']['Row'];
 export type SystemSetting = Database['public']['Tables']['system_settings']['Row'];
+export type Department = Database['public']['Tables']['departments']['Row'];
+export type BonusPayment = Database['public']['Tables']['bonus_payments']['Row'];
+export type Deal = Database['public']['Tables']['deals']['Row'];
 
 // Enriched types (con relaciones)
 export interface EmployeeWithCompany extends Employee {
   companies: Company | null;
+}
+
+export interface EmployeeWithDetails extends Employee {
+  companies: Company | null;
+  hr_employee_costs: EmployeeCost[];
+  hr_transfers: Transfer[];
 }
 
 export interface CostWithRelations extends EmployeeCost {
@@ -23,6 +32,42 @@ export interface CostWithRelations extends EmployeeCost {
       name: string;
     } | null;
   } | null;
+}
+
+// Tipos enriquecidos que NO heredan de base (por conflictos de nombres)
+export interface TransferWithRelations {
+  id: string;
+  employee_id: string;
+  from_company_id: string;
+  to_company_id: string;
+  transfer_date: string;
+  reason: string | null;
+  days_between: number | null;
+  created_at: string;
+  updated_at: string;
+  org_id: string;
+  employee: {
+    id: string;
+    full_name: string;
+  } | null;
+  from_company: Company | null;
+  to_company: Company | null;
+}
+
+// Dashboard types
+export interface CompanyDashboardData {
+  id: string;
+  name: string;
+  bruto: number;
+  coste: number;
+  employees: number;
+  percentOfTotal: number;
+}
+
+export interface HeatmapDataPoint {
+  month: string;
+  avgCostPerEmployee: number;
+  employees: number;
 }
 
 // Tipos para transformaciones
