@@ -45,40 +45,13 @@ export default function BudgetDetail() {
   const updatePeriod = useUpdateBudgetPeriod();
   const deletePeriod = useDeleteBudgetPeriod();
 
-  if (isLoading) {
-    return <div className="p-6 text-center text-muted-foreground">Cargando...</div>;
-  }
-
-  if (!period) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-muted-foreground">Presupuesto no encontrado</p>
-        <Button variant="outline" onClick={() => navigate("/budget")} className="mt-4">
-          Volver a Presupuestos
-        </Button>
-      </div>
-    );
-  }
-
-  const handleStatusChange = (newStatus: string) => {
-    if (!id) return;
-    updatePeriod.mutate({ id, updates: { status: newStatus } });
-  };
-
-  const handleDelete = () => {
-    if (!id) return;
-    deletePeriod.mutate(id, {
-      onSuccess: () => navigate("/budget"),
-    });
-  };
-
-  // Calcular totales
+  // Calcular totales (antes de returns condicionales)
   const totalBudgetedIncome = incomeList.reduce((sum, item) => sum + (item.budgeted_amount || 0), 0);
   const totalActualIncome = incomeList.reduce((sum, item) => sum + (item.actual_amount || 0), 0);
   const totalBudgetedExpenses = expensesList.reduce((sum, item) => sum + (item.budgeted_amount || 0), 0);
   const totalActualExpenses = expensesList.reduce((sum, item) => sum + (item.actual_amount || 0), 0);
 
-  // Datos para gráficos
+  // Datos para gráficos (antes de returns condicionales)
   const incomeTrendData = useMemo(() => {
     if (!incomeList || incomeList.length === 0) return [];
     
@@ -130,6 +103,34 @@ export default function BudgetDetail() {
       color: getCategoryColor(category, 'expense'),
     }));
   }, [expensesList]);
+
+  // Returns condicionales después de todos los hooks
+  if (isLoading) {
+    return <div className="p-6 text-center text-muted-foreground">Cargando...</div>;
+  }
+
+  if (!period) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-muted-foreground">Presupuesto no encontrado</p>
+        <Button variant="outline" onClick={() => navigate("/budget")} className="mt-4">
+          Volver a Presupuestos
+        </Button>
+      </div>
+    );
+  }
+
+  const handleStatusChange = (newStatus: string) => {
+    if (!id) return;
+    updatePeriod.mutate({ id, updates: { status: newStatus } });
+  };
+
+  const handleDelete = () => {
+    if (!id) return;
+    deletePeriod.mutate(id, {
+      onSuccess: () => navigate("/budget"),
+    });
+  };
 
   return (
     <div className="p-6 space-y-6">
