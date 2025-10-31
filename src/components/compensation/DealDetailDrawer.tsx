@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar, DollarSign, Users, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { DealParticipantsManager } from "./DealParticipantsManager";
+import { Separator } from "@/components/ui/separator";
 
 interface DealDetailDrawerProps {
   dealId: string | null;
@@ -109,31 +111,11 @@ export function DealDetailDrawer({ dealId, open, onOpenChange }: DealDetailDrawe
               </div>
 
               {/* Equipo participante */}
-              {deal.participants && deal.participants.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Equipo Participante</h3>
-                  <div className="space-y-2">
-                    {deal.participants.map((participant) => (
-                      <div
-                        key={participant.id}
-                        className="flex items-center justify-between rounded-lg border border-border bg-card p-3"
-                      >
-                        <div>
-                          <p className="font-medium">{participant.employee.full_name}</p>
-                          {participant.role_in_deal && (
-                            <p className="text-sm text-muted-foreground">{participant.role_in_deal}</p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">{Number(participant.participation_pct)}%</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatCurrency(Number(participant.bonus_amount))}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {deal && (
+                <>
+                  <Separator />
+                  <DealParticipantsManager deal={deal} />
+                </>
               )}
 
               {/* Notas */}

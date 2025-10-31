@@ -56,14 +56,14 @@ export const bonusPaymentSchema = z.object({
 });
 
 export const performanceReviewSchema = z.object({
-  employee_id: z.string().uuid("ID de empleado inválido"),
+  employee_id: z.string().min(1, "Empleado requerido"),
   review_period: z.string().min(1, "Período de evaluación requerido"),
-  reviewer_id: z.string().uuid().optional().nullable(),
-  performance_score: z.coerce.number().min(0).max(10, "La puntuación debe estar entre 0 y 10").optional().nullable(),
-  bonus_multiplier: z.coerce.number().min(0).max(2, "El multiplicador debe estar entre 0 y 2"),
+  reviewer_id: z.string().optional(),
+  performance_score: z.coerce.number().min(0).max(10, "La puntuación debe estar entre 0 y 10").optional(),
+  bonus_multiplier: z.coerce.number().min(0).max(2, "El multiplicador debe estar entre 0 y 2").default(1.0),
   strengths: z.string().optional(),
   areas_improvement: z.string().optional(),
-  review_date: z.string().optional().nullable(),
+  review_date: z.string().optional(),
 });
 
 export type CompensationBandFormData = z.infer<typeof compensationBandSchema>;

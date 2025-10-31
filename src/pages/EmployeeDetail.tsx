@@ -14,6 +14,7 @@ import { GeneralInfoTab } from "@/components/employees/tabs/GeneralInfoTab";
 import { CostsTab } from "@/components/employees/tabs/CostsTab";
 import { TransfersTab } from "@/components/employees/tabs/TransfersTab";
 import { SalaryIncreasesTab } from "@/components/employees/tabs/SalaryIncreasesTab";
+import { CompensationTab } from "@/components/employees/tabs/CompensationTab";
 
 export default function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -144,11 +145,12 @@ export default function EmployeeDetail() {
 
         {/* Tabs */}
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="general">Información General</TabsTrigger>
             <TabsTrigger value="costs">Histórico de Nóminas</TabsTrigger>
             <TabsTrigger value="transfers">Movimientos Laborales</TabsTrigger>
             <TabsTrigger value="increases">Subidas Salariales</TabsTrigger>
+            <TabsTrigger value="compensation">Compensación</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-4">
@@ -165,6 +167,10 @@ export default function EmployeeDetail() {
 
           <TabsContent value="increases" className="space-y-4">
             <SalaryIncreasesTab costs={costs || []} />
+          </TabsContent>
+
+          <TabsContent value="compensation" className="space-y-4">
+            <CompensationTab employee={employee} annualSalary={financials.annualBaseSalary} />
           </TabsContent>
         </Tabs>
       </div>
