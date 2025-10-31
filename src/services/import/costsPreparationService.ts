@@ -6,7 +6,7 @@
 import type { ParsedA3NomCost } from "@/lib/parsers/a3nom/types";
 import type { Database } from "@/integrations/supabase/types";
 
-type CostInsert = Database['public']['Tables']['hr_employee_costs']['Insert'];
+export type CostInsert = Database['public']['Tables']['hr_employee_costs']['Insert'];
 
 interface CompanyInfo {
   id: string;
