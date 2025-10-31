@@ -32,3 +32,12 @@ export * from './recruitmentPipeline.repo';
 export type { JobPosting } from './jobPostings.repo';
 export type { Candidate } from './candidates.repo';
 export type { PipelineStage, RecruitmentProcess } from './recruitmentPipeline.repo';
+
+// Compensation
+export * from './compensation.repo';
+export * from './deals.repo';
+export * from './bonusPayments.repo';
+export * from './performanceReviews.repo';
+export type { DealWithParticipants } from './deals.repo';
+export type { BonusPaymentWithDetails } from './bonusPayments.repo';
+export type { PerformanceReviewWithDetails } from './performanceReviews.repo';

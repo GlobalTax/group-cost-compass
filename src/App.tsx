@@ -28,6 +28,8 @@ import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
 import PublicOnboarding from "./pages/PublicOnboarding";
 import Recruitment from "./pages/Recruitment";
+import Compensation from "./pages/Compensation";
+import DealsTracker from "./pages/DealsTracker";
 
 // Admin pages - lazy loading (code splitting)
 const AdminRoles = lazy(() => import("./pages/AdminRoles"));
@@ -61,6 +63,8 @@ const ProtectedCompanyDetail = withAuth(['admin', 'finance', 'super_admin'])(Com
 const ProtectedUpload = withAuth(['admin', 'super_admin'])(Upload);
 const ProtectedTransfers = withAuth(['admin', 'manager', 'super_admin'])(Transfers);
 const ProtectedRecruitment = withAuth(['admin', 'manager', 'super_admin'])(Recruitment);
+const ProtectedCompensation = withAuth(['admin', 'finance', 'super_admin'])(Compensation);
+const ProtectedDealsTracker = withAuth(['admin', 'finance', 'super_admin'])(DealsTracker);
 const ProtectedAdminRoles = withAuth(['super_admin'])(AdminRoles);
 const ProtectedAdminUsers = withAuth(['super_admin'])(AdminUsers);
 const ProtectedAdminCompanies = withAuth(['super_admin'])(AdminCompanies);
@@ -112,6 +116,8 @@ const App = () => (
                     <Route path="/budget" element={<ProtectedBudget />} />
                     <Route path="/budget/new" element={<ProtectedBudgetDetail />} />
                     <Route path="/budget/:id" element={<ProtectedBudgetDetail />} />
+                    <Route path="/compensation" element={<ProtectedCompensation />} />
+                    <Route path="/compensation/deals" element={<ProtectedDealsTracker />} />
                     <Route path="/audit" element={<ProtectedAudit />} />
                 <Route path="/admin/roles" element={
                   <Suspense fallback={<PageLoader />}>
