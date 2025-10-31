@@ -28,8 +28,7 @@ export const useEmployeeCosts = (employeeId?: string, filters?: {
   return useQuery({
     queryKey: ["employee-costs", employeeId, filters],
     queryFn: () => fetchCosts(costsFilters),
-    staleTime: 30000, // 30 segundos
-    enabled: !!employeeId, // Solo fetch si hay employeeId
+    staleTime: 30000,
   });
 };
 
