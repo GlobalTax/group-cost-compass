@@ -814,6 +814,160 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_expenses: {
+        Row: {
+          actual_amount: number | null
+          budget_period_id: string
+          budgeted_amount: number
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          notes: string | null
+          subcategory: string | null
+        }
+        Insert: {
+          actual_amount?: number | null
+          budget_period_id: string
+          budgeted_amount?: number
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          notes?: string | null
+          subcategory?: string | null
+        }
+        Update: {
+          actual_amount?: number | null
+          budget_period_id?: string
+          budgeted_amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          notes?: string | null
+          subcategory?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_expenses_budget_period_id_fkey"
+            columns: ["budget_period_id"]
+            isOneToOne: false
+            referencedRelation: "budget_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_expenses_budget_period_id_fkey"
+            columns: ["budget_period_id"]
+            isOneToOne: false
+            referencedRelation: "vw_budget_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_income: {
+        Row: {
+          actual_amount: number | null
+          budget_period_id: string
+          budgeted_amount: number
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          notes: string | null
+          subcategory: string | null
+        }
+        Insert: {
+          actual_amount?: number | null
+          budget_period_id: string
+          budgeted_amount?: number
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          notes?: string | null
+          subcategory?: string | null
+        }
+        Update: {
+          actual_amount?: number | null
+          budget_period_id?: string
+          budgeted_amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          notes?: string | null
+          subcategory?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_income_budget_period_id_fkey"
+            columns: ["budget_period_id"]
+            isOneToOne: false
+            referencedRelation: "budget_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_income_budget_period_id_fkey"
+            columns: ["budget_period_id"]
+            isOneToOne: false
+            referencedRelation: "vw_budget_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_periods: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          period: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          period: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          period?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "budget_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["company_id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           attendees_emails: string[] | null
@@ -10234,6 +10388,44 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_budget_summary: {
+        Row: {
+          actual_income: number | null
+          actual_result: number | null
+          budgeted_income: number | null
+          budgeted_result: number | null
+          company_id: string | null
+          company_name: string | null
+          id: string | null
+          period: string | null
+          status: string | null
+          total_actual_expenses: number | null
+          total_budgeted_expenses: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "budget_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["company_id"]
           },
         ]
       }

@@ -59,7 +59,14 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
 
   const onSubmit = async (data: BudgetPeriodInput) => {
     try {
-      const result = await createMutation.mutateAsync(data);
+      // Normalizar company_id: convertir string vacío a null
+      const cleanData: BudgetPeriodInput = {
+        ...data,
+        company_id: data.company_id && data.company_id.trim() !== "" ? data.company_id : null,
+      };
+      
+      const result = await createMutation.mutateAsync(cleanData);
+      form.reset();
       onOpenChange(false);
       navigate(`/budget/${result.id}`);
     } catch (error) {

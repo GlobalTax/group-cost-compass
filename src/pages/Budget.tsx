@@ -25,7 +25,7 @@ export default function Budget() {
   const [chartType, setChartType] = useState<'income' | 'expenses' | 'result' | 'all'>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const { data: summaryData, isLoading } = useBudgetSummary({ 
+  const { data: summaryData, isLoading, isError, error } = useBudgetSummary({ 
     year, 
     companyId: companyId === "all" ? undefined : companyId 
   });
@@ -116,6 +116,10 @@ export default function Budget() {
 
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Cargando...</div>
+      ) : isError ? (
+        <div className="text-center py-8 text-destructive">
+          No se pudo cargar el resumen de presupuestos. {error?.message}
+        </div>
       ) : (
         <>
           <BudgetKPIs
