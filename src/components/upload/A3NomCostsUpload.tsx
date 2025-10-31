@@ -10,7 +10,7 @@ import { ImportProgress } from "./ImportProgress";
 import { parseA3NomCostsFile, type A3NomParseResult } from "@/lib/parsers/a3nom";
 import { useBulkCreateEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { useBulkCreateEmployees } from "@/hooks/useBulkCreateEmployees";
-import { supabase } from "@/integrations/supabase/client";
+import { importA3NomData } from "@/services/import/a3nomImportService";
 import { toast } from "sonner";
 import { InfoIcon, Upload } from "lucide-react";
 
@@ -65,225 +65,38 @@ export const A3NomCostsUpload = () => {
     setImporting(true);
     setImportProgress({ current: 0, total: validation.data.length });
 
-    console.group("[A3Nom][Import] Inicio");
-    console.log("Total registros del archivo:", validation.data.length);
-    console.log("Período:", period);
-
     try {
-      // 1. Obtener catálogo de empresas (incluyendo org_id)
-      const { data: companies, error: companiesError } = await supabase
-        .from("companies")
-        .select("id, name, nif, org_id");
-
-      if (companiesError) throw companiesError;
-
-      console.log("[A3Nom][Import] Empresas catálogo:", companies?.length, companies?.slice(0, 5));
-
-      if (!companies || companies.length === 0) {
-        toast.error("No se pudieron cargar las empresas del catálogo");
-        return;
-      }
-
-      // Crear mapa NIF → company info (con org_id)
-      const companyMap = new Map(
-        companies.map(c => [c.nif, { id: c.id, name: c.name, org_id: c.org_id }])
-      );
-
-      // 2. Validar que todas las empresas del archivo existan en el catálogo
-      const missingCompanies = new Set<string>();
-      for (const cost of validation.data) {
-        if (!companyMap.has(cost.company_nif)) {
-          missingCompanies.add(`${cost.company_name} (${cost.company_nif})`);
-        }
-      }
-
-      console.log("[A3Nom][Import] Empresas faltantes:", missingCompanies.size, Array.from(missingCompanies));
-      if (missingCompanies.size > 0) {
-        toast.error(
-          `Empresas no encontradas en el catálogo: ${Array.from(missingCompanies).join(", ")}`
-        );
-        setImporting(false);
-        return;
-      }
-
-      // 3. Obtener empleados existentes y crear mapa con clave compuesta
-      const employeeCodes = validation.data.map(d => d.employee_code);
-      const { data: employees, error: employeeError } = await supabase
-        .from("hr_employees")
-        .select("id, employee_code, full_name, company_id")
-        .in("employee_code", employeeCodes);
-
-      if (employeeError) throw employeeError;
-      console.log("[A3Nom][Import] Códigos empleados en archivo:", employeeCodes.length);
-      console.log("[A3Nom][Import] Empleados existentes en BD:", employees?.length);
-
-      // Mapa con clave compuesta: "companyId:employeeCode" → employeeId
-      const employeeMap = new Map(
-        employees?.map(e => [`${e.company_id}:${e.employee_code}`, e.id]) || []
-      );
-      console.log("[A3Nom][Import] Tamaño employeeMap:", employeeMap.size);
-
-      // 4. Identificar empleados faltantes (por combinación empresa+código)
-      const missingEmployees = validation.data.filter(d => {
-        const companyInfo = companyMap.get(d.company_nif);
-        if (!companyInfo) return false;
-        const compositeKey = `${companyInfo.id}:${d.employee_code}`;
-        return !employeeMap.has(compositeKey);
+      const result = await importA3NomData({
+        parseResult: validation,
+        period,
+        onProgress: (current, total) => setImportProgress({ current, total }),
+        createEmployeesFn: (employees) => createEmployees.mutateAsync(employees),
+        bulkCreateCostsFn: async (costs) => {
+          await bulkCreateCosts.mutateAsync(costs);
+        },
       });
-      console.warn("[A3Nom][Import] Empleados faltantes (empresa+código):", missingEmployees.length, missingEmployees.slice(0, 10).map(e => ({ code: e.employee_code, name: e.employee_name, company_nif: e.company_nif })));
 
-      if (missingEmployees.length > 0) {
-        setImportProgress({
-          current: 0,
-          total: missingEmployees.length
-        });
-
-        const employeesToCreate = missingEmployees.map(d => {
-          const companyInfo = companyMap.get(d.company_nif)!;
-          
-          return {
-            employee_code: d.employee_code,
-            full_name: d.employee_name,
-            company_id: companyInfo.id,
-            org_id: companyInfo.org_id, // CRÍTICO: incluir org_id para pasar RLS
-            hire_date: `${period}-01`,
-            notes: `Creado automáticamente desde importación A3Nom ${period}`,
-          };
-        });
-        console.log("[A3Nom][Import] Empleados a crear:", employeesToCreate.length);
-        console.log("[A3Nom][Import] Ejemplo empleadosToCreate:", employeesToCreate.slice(0, 5));
-
-        // Ejecutar creación en batch con manejo de errores RLS
-        try {
-          const newEmployees = await createEmployees.mutateAsync(employeesToCreate);
-          
-          // Actualizar el mapa con los nuevos empleados (clave compuesta)
-          newEmployees.forEach(emp => {
-            if (emp.employee_code && emp.company_id) {
-              const compositeKey = `${emp.company_id}:${emp.employee_code}`;
-              employeeMap.set(compositeKey, emp.id);
-            }
-          });
-
-          toast.success(
-            `✅ ${newEmployees.length} empleado(s) nuevo(s): ${newEmployees.slice(0, 3).map(e => e.full_name).join(", ")}${newEmployees.length > 3 ? "..." : ""}`
-          );
-        } catch (error) {
-          const errorMessage = (error as Error).message;
-          console.error("[A3Nom][Import] Error creando empleados:", error);
-          if (errorMessage.includes("row-level security") || errorMessage.includes("RLS")) {
-            toast.error("Error RLS: No se pudieron crear empleados. Verifica que org_id esté configurado correctamente.");
-          } else {
-            toast.error(`Error al crear empleados: ${errorMessage}`);
-          }
-          throw error;
-        }
-
+      // Mostrar warnings si los hay
+      if (result.warnings.length > 0) {
+        result.warnings.slice(0, 3).forEach(warning => toast.warning(warning));
       }
 
-      // 5. Preparar registros de costes con validación estricta de empresa
-      const costsToInsert = validation.data
-        .filter(d => {
-          const companyInfo = companyMap.get(d.company_nif);
-          
-          if (!companyInfo) {
-            toast.error(`Empresa con NIF ${d.company_nif} no encontrada en catálogo`);
-            return false;
-          }
-
-          // Buscar empleado con clave compuesta (empresa+código)
-          const compositeKey = `${companyInfo.id}:${d.employee_code}`;
-          const hasEmployee = employeeMap.has(compositeKey);
-          
-          if (!hasEmployee) {
-            toast.warning(`Empleado ${d.employee_name} (${d.employee_code}) no encontrado en ${companyInfo.name}`);
-            return false;
-          }
-          
-          return true;
-        })
-        .map(d => {
-          const companyInfo = companyMap.get(d.company_nif)!;
-          const compositeKey = `${companyInfo.id}:${d.employee_code}`;
-          const employeeId = employeeMap.get(compositeKey)!;
-          
-          return {
-            employee_id: employeeId,
-            period: `${period}-01`,
-            bruto: d.bruto,
-            coste_empresa: d.coste_empresa,
-            sal_neto: d.sal_neto,
-            total_tc1: d.total_tc1,
-            irpf_dinero: d.irpf_dinero,
-            irpf_especie: d.irpf_especie,
-            ss_trabajador: d.ss_trabajador,
-            ss_empresa: d.ss_empresa,
-            anticipos: d.anticipos,
-            embargos: d.embargos,
-            dto_preaviso: d.dto_preaviso,
-            dtos_varios: d.dtos_varios,
-            prestamos: d.prestamos,
-            dto_especial: d.dto_especial,
-            indemnizacion: d.indemnizacion,
-            enf_acc: d.enf_acc,
-            bonificacion: d.bonificacion,
-          };
-        });
-      console.log("[A3Nom][Import] Costes a insertar:", costsToInsert.length, "filtrados:", validation.data.length - costsToInsert.length);
-      console.log("[A3Nom][Import] Ejemplo costes:", costsToInsert.slice(0, 3));
-
-      if (costsToInsert.length === 0) {
-        throw new Error("No hay datos válidos para importar");
+      // Mensaje de empleados creados si aplica
+      if (result.employeesCreated > 0) {
+        toast.success(`✅ ${result.employeesCreated} empleado(s) creado(s)`);
       }
 
-      // 6. Verificar si ya existen costes para este período
-      const { data: existing } = await supabase
-        .from("hr_employee_costs")
-        .select("id")
-        .eq("period", `${period}-01`)
-        .in("employee_id", costsToInsert.map(c => c.employee_id))
-        .limit(1);
-
-      if (existing && existing.length > 0) {
-        const confirmOverwrite = window.confirm(
-          `Ya existen costes para el período ${period}. ¿Deseas sobrescribirlos?`
-        );
-        
-        if (!confirmOverwrite) {
-          setImporting(false);
-          return;
-        }
-
-        // Eliminar costes existentes
-        await supabase
-          .from("hr_employee_costs")
-          .delete()
-          .eq("period", `${period}-01`)
-          .in("employee_id", costsToInsert.map(c => c.employee_id));
-      }
-
-      // 7. Importar costes en lotes
-      const BATCH_SIZE = 50;
-      for (let i = 0; i < costsToInsert.length; i += BATCH_SIZE) {
-        const batch = costsToInsert.slice(i, i + BATCH_SIZE);
-        console.log(`[A3Nom][Import] Insertando batch ${i} - ${Math.min(i + BATCH_SIZE, costsToInsert.length)} de ${costsToInsert.length}`);
-        await bulkCreateCosts.mutateAsync(batch);
-        setImportProgress({ current: Math.min(i + BATCH_SIZE, costsToInsert.length), total: costsToInsert.length });
-      }
-
+      // Mensaje de éxito final
       const companiesCount = validation.summary.companiesDetected;
       toast.success(
-        `✅ Importación completada: ${costsToInsert.length} registros de ${companiesCount} empresa${companiesCount > 1 ? 's' : ''}`
+        `✅ Importación completada: ${result.costsImported} registros de ${companiesCount} empresa${companiesCount > 1 ? 's' : ''}`
       );
-      console.groupEnd();
-      
+
       // Reset
       setFile(null);
       setValidation(null);
       setPeriod("");
     } catch (error) {
-      console.error("[A3Nom][Import] Error general:", error);
-      console.groupEnd();
       toast.error(`Error en importación: ${(error as Error).message}`);
     } finally {
       setImporting(false);
