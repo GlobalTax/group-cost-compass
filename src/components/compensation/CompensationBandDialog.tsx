@@ -63,6 +63,7 @@ export function CompensationBandDialog({
     defaultValues: band
       ? {
           level: band.level,
+          department: band.department,
           min_salary: Number(band.min_salary),
           max_salary: Number(band.max_salary),
           target_bonus_pct: Number(band.target_bonus_pct),
@@ -73,6 +74,7 @@ export function CompensationBandDialog({
         }
       : {
           level: "",
+          department: "M&A",
           min_salary: 0,
           max_salary: 0,
           target_bonus_pct: 0,
@@ -115,30 +117,62 @@ export function CompensationBandDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="level"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nivel Profesional</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un nivel" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {LEVELS.map((level) => (
-                        <SelectItem key={level.value} value={level.value}>
-                          {level.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Departamento</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona departamento" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="M&A">M&A</SelectItem>
+                        <SelectItem value="Ventas">Ventas</SelectItem>
+                        <SelectItem value="Operaciones">Operaciones</SelectItem>
+                        <SelectItem value="Tech">Tech</SelectItem>
+                        <SelectItem value="Finanzas">Finanzas</SelectItem>
+                        <SelectItem value="RRHH">RRHH</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nivel</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona nivel" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="IC-1">IC-1 - Analyst</SelectItem>
+                        <SelectItem value="IC-2">IC-2 - Senior Analyst</SelectItem>
+                        <SelectItem value="IC-3">IC-3 - Principal/Specialist</SelectItem>
+                        <SelectItem value="M-1">M-1 - Manager</SelectItem>
+                        <SelectItem value="M-2">M-2 - Senior Manager</SelectItem>
+                        <SelectItem value="Head">Head of Department</SelectItem>
+                        <SelectItem value="Director">Director</SelectItem>
+                        <SelectItem value="Partner">Partner</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField

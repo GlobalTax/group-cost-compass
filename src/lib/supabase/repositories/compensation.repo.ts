@@ -13,8 +13,30 @@ export async function fetchCompensationBands(): Promise<CompensationBand[]> {
     .from("compensation_bands")
     .select("*")
     .eq("is_active", true)
+    .order("department", { ascending: true })
     .order("min_salary", { ascending: true });
 
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Obtener bandas salariales filtradas por departamento
+ */
+export async function fetchCompensationBandsByDepartment(
+  department?: string
+): Promise<CompensationBand[]> {
+  let query = supabase
+    .from("compensation_bands")
+    .select("*")
+    .eq("is_active", true)
+    .order("level", { ascending: true });
+
+  if (department) {
+    query = query.eq("department", department);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }

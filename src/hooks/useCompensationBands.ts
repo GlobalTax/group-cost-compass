@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   fetchCompensationBands,
+  fetchCompensationBandsByDepartment,
   createCompensationBand,
   updateCompensationBand,
   deleteCompensationBand,
@@ -16,6 +17,14 @@ export const useCompensationBands = () => {
   return useQuery({
     queryKey: ["compensation-bands"],
     queryFn: fetchCompensationBands,
+    staleTime: 60000,
+  });
+};
+
+export const useCompensationBandsByDepartment = (department?: string) => {
+  return useQuery({
+    queryKey: ["compensation-bands", department],
+    queryFn: () => fetchCompensationBandsByDepartment(department),
     staleTime: 60000,
   });
 };

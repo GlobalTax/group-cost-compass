@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const compensationBandSchema = z.object({
   level: z.string().min(1, "Nivel requerido"),
+  department: z.string().min(1, "Departamento requerido"),
   min_salary: z.coerce.number().min(0, "El salario mínimo debe ser mayor a 0"),
   max_salary: z.coerce.number().min(0, "El salario máximo debe ser mayor a 0"),
   target_bonus_pct: z.coerce.number().min(0).max(200, "El bonus objetivo debe estar entre 0 y 200%"),

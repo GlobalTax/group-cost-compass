@@ -1635,6 +1635,7 @@ export type Database = {
       compensation_bands: {
         Row: {
           created_at: string | null
+          department: string
           description: string | null
           id: string
           is_active: boolean | null
@@ -1648,6 +1649,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          department: string
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -1661,6 +1663,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          department?: string
           description?: string | null
           id?: string
           is_active?: boolean | null
