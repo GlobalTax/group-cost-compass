@@ -51,7 +51,7 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
     resolver: zodResolver(budgetPeriodSchema),
     defaultValues: {
       period: format(new Date(), "yyyy-MM-01"),
-      company_id: "__all__",
+      company_id: undefined,
       status: "draft",
       notes: "",
     },
@@ -145,8 +145,8 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
                 <FormItem>
                   <FormLabel>Empresa</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    value={field.value || "__all__"}
+                    onValueChange={(v) => field.onChange(v === "__all__" ? undefined : v)}
+                    value={field.value ?? "__all__"}
                   >
                     <FormControl>
                       <SelectTrigger>
