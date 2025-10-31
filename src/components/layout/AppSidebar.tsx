@@ -86,7 +86,16 @@ export function AppSidebar() {
     if (url === "/dashboard") {
       return location.pathname === "/" || location.pathname === "/dashboard";
     }
-    return location.pathname.startsWith(url);
+    
+    // Match exacto primero
+    if (location.pathname === url) return true;
+    
+    // Solo para rutas administrativas y presupuestos, permitir subrutas
+    if (url.startsWith("/admin") || url.startsWith("/budget")) {
+      return location.pathname.startsWith(url);
+    }
+    
+    return false;
   };
 
   const handleLogout = async () => {
