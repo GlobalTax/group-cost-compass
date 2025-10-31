@@ -40,6 +40,7 @@ const AdminRolesConfig = lazy(() => import("./pages/AdminRolesConfig"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const AdminImportHistory = lazy(() => import("./pages/AdminImportHistory"));
 const AdminOnboarding = lazy(() => import("./pages/AdminOnboarding"));
+const AdminDepartments = lazy(() => import("./pages/AdminDepartments"));
 
 // Loading fallback
 const PageLoader = () => (
@@ -74,6 +75,7 @@ const ProtectedAdminRolesConfig = withAuth(['super_admin'])(AdminRolesConfig);
 const ProtectedAdminSettings = withAuth(['super_admin'])(AdminSettings);
 const ProtectedAdminImportHistory = withAuth(['super_admin'])(AdminImportHistory);
 const ProtectedAdminOnboarding = withAuth(['admin', 'super_admin'])(AdminOnboarding);
+const ProtectedAdminDepartments = withAuth(['super_admin'])(AdminDepartments);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -155,6 +157,11 @@ const App = () => (
                 <Route path="/admin/onboarding" element={
                   <Suspense fallback={<PageLoader />}>
                     <ProtectedAdminOnboarding />
+                  </Suspense>
+                } />
+                <Route path="/admin/departments" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ProtectedAdminDepartments />
                   </Suspense>
                 } />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

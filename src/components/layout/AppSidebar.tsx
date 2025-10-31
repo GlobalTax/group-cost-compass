@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator, UserPlus, Briefcase, TrendingUp, Scale } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator, UserPlus, Briefcase, TrendingUp, Scale, Layers } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -64,6 +64,7 @@ const navigationItems = [
     section: "CONFIGURACIÓN",
     items: [
       { title: "Empresas", url: "/admin/companies", icon: Building2 },
+      { title: "Departamentos", url: "/admin/departments", icon: Layers },
       { title: "Roles Config", url: "/admin/roles-config", icon: Shield },
       { title: "Sistema", url: "/admin/settings", icon: Settings },
     ],

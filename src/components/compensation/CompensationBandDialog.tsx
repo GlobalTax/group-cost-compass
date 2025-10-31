@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useCreateCompensationBand, useUpdateCompensationBand } from "@/hooks/useCompensationBands";
+import { useDepartments } from "@/hooks/useDepartments";
 import {
   compensationBandSchema,
   type CompensationBandFormData,
@@ -57,6 +58,7 @@ export function CompensationBandDialog({
 }: CompensationBandDialogProps) {
   const createBand = useCreateCompensationBand();
   const updateBand = useUpdateCompensationBand();
+  const { data: departments = [], isLoading: loadingDepartments } = useDepartments();
 
   const form = useForm<CompensationBandFormData>({
     resolver: zodResolver(compensationBandSchema),
@@ -124,20 +126,30 @@ export function CompensationBandDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Departamento</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value}
+                      disabled={loadingDepartments}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecciona departamento" />
+                          <SelectValue placeholder={loadingDepartments ? "Cargando..." : "Selecciona departamento"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="M&A">M&A</SelectItem>
-                        <SelectItem value="Ventas">Ventas</SelectItem>
-                        <SelectItem value="Operaciones">Operaciones</SelectItem>
-                        <SelectItem value="Tech">Tech</SelectItem>
-                        <SelectItem value="Finanzas">Finanzas</SelectItem>
-                        <SelectItem value="RRHH">RRHH</SelectItem>
-                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        {departments
+                          .filter((dept) => dept.is_active)
+                          .map((dept) => (
+                            <SelectItem key={dept.id} value={dept.name}>
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: dept.color || '#6366f1' }}
+                                />
+                                {dept.name}
+                              </div>
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

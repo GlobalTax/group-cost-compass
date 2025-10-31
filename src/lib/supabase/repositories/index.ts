@@ -13,6 +13,9 @@ export * from './transfers.repo';
 // Audit
 export * from './audit.repo';
 
+// Departments
+export * from './departments.repo';
+
 // Role Configurations
 export * from './roleConfig.repo';
 
