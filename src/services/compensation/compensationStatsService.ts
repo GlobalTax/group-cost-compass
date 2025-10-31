@@ -4,6 +4,7 @@
  */
 
 import type { Database } from "@/integrations/supabase/types";
+import { COMPENSATION } from "@/lib/constants";
 
 type EmployeeCost = Database['public']['Tables']['hr_employee_costs']['Row'];
 type BonusPayment = Database['public']['Tables']['bonus_payments']['Row'];
@@ -40,7 +41,7 @@ export function calculateCompensationStats(
     employees,
     deals,
     currentYear,
-    variableThreshold = 15,
+    variableThreshold = COMPENSATION.VARIABLE_THRESHOLD_PERCENT,
   } = options;
 
   // Filtrar costes del año actual

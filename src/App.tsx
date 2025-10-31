@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Menu } from "lucide-react";
 import { AuthProvider, withAuth } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GlobalFiltersProvider } from "@/contexts/GlobalFiltersContext";
 
 // Core pages - eager loading
 import Index from "./pages/Index";
@@ -84,7 +85,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <SidebarProvider defaultOpen>
+          <GlobalFiltersProvider>
+            <SidebarProvider defaultOpen>
             <a 
               href="#main-content" 
               className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg"
@@ -171,6 +173,7 @@ const App = () => (
               </div>
             </div>
           </SidebarProvider>
+          </GlobalFiltersProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

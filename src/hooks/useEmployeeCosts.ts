@@ -15,6 +15,30 @@ type CostInsert = Database["public"]["Tables"]["hr_employee_costs"]["Insert"];
 // QUERIES
 // ============================================
 
+/**
+ * Hook para consultar costes de empleado(s) con filtros
+ * 
+ * @param {string} [employeeId] - ID de empleado específico (undefined = todos)
+ * @param {Object} [filters] - Filtros adicionales
+ * @param {number} [filters.year] - Año a filtrar
+ * @param {string} [filters.companyId] - ID de empresa
+ * 
+ * @returns {UseQueryResult} Query result con costes filtrados
+ * 
+ * @example
+ * // Costes de un empleado en 2025
+ * const { data: costs } = useEmployeeCosts("uuid-empleado", { year: 2025 });
+ * 
+ * @example
+ * // Todos los costes de una empresa
+ * const { data } = useEmployeeCosts(undefined, { companyId: "uuid-empresa" });
+ * 
+ * @remarks
+ * - Cache: 30s (costes pueden actualizarse frecuentemente)
+ * - Incluye relación: hr_employees
+ * 
+ * @see {@link src/lib/supabase/repositories/costs.repo.ts}
+ */
 export const useEmployeeCosts = (employeeId?: string, filters?: {
   year?: number;
   companyId?: string;

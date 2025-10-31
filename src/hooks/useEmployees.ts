@@ -6,6 +6,34 @@ import { toast } from "sonner";
 type EmployeeInsert = Database["public"]["Tables"]["hr_employees"]["Insert"];
 type EmployeeUpdate = Database["public"]["Tables"]["hr_employees"]["Update"];
 
+/**
+ * Hook para gestión de empleados con filtros y cache optimizado
+ * 
+ * @param {Object} [filters] - Filtros opcionales
+ * @param {string} [filters.companyId] - ID de empresa para filtrar
+ * @param {string} [filters.searchTerm] - Búsqueda por nombre o DNI
+ * @param {boolean} [filters.activeOnly] - true: solo activos, false: solo inactivos, undefined: todos
+ * 
+ * @returns {UseQueryResult} Query result con lista de empleados y relación a companies
+ * 
+ * @example
+ * // Empleados activos de una empresa
+ * const { data: employees, isLoading } = useEmployees({ 
+ *   companyId: "uuid", 
+ *   activeOnly: true 
+ * });
+ * 
+ * @example
+ * // Búsqueda por término
+ * const { data } = useEmployees({ searchTerm: "García" });
+ * 
+ * @remarks
+ * - Cache: definido por QueryClient global
+ * - Incluye relación: companies (id, name, nif)
+ * - Orden: alfabético por full_name
+ * 
+ * @see {@link src/lib/supabase/repositories/employees.repo.ts}
+ */
 export const useEmployees = (filters?: {
   companyId?: string;
   searchTerm?: string;

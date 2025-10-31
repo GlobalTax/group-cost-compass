@@ -29,17 +29,42 @@ export const PERIODS = {
 
 export const VALIDATION = {
   MIN_NAME_LENGTH: 3,
+  MIN_EMPLOYEE_NAME_LENGTH: 3,
   MAX_NAME_LENGTH: 200,
   MAX_ADDRESS_LENGTH: 500,
   MAX_NOTES_LENGTH: 1000,
   NSS_REGEX: /^(?:\d{11,12}|\d{2}\/\d{8}-\d{2})$/,
   NIF_REGEX: /^[0-9]{8}[A-Z]$|^[XYZ][0-9]{7}[A-Z]$/i,
   EMPLOYEE_CODE_REGEX: /^[A-Z0-9]{3,10}$/,
+  PERIOD_FORMAT_REGEX: /^\d{4}-\d{2}-\d{2}$/,
 } as const;
 
 export const IMPORT = {
   BATCH_SIZE: 50,
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+  MAX_FILE_SIZE_MB: 50,
+  SUPPORTED_FORMATS: [".xls", ".xlsx", ".txt", ".csv"] as const,
+  A3NOM_REQUIRED_COLUMNS: [
+    "Código Trabajador",
+    "Nombre Apellidos",
+    "NIF Empresa",
+    "Mes",
+    "Bruto",
+    "Coste Empresa",
+  ] as const,
+} as const;
+
+export const COMPENSATION = {
+  VARIABLE_THRESHOLD_PERCENT: 15,
+  MIN_BONUS_AMOUNT: 100,
+  MAX_BONUS_PERCENT: 200,
+} as const;
+
+export const DASHBOARD = {
+  DEFAULT_YEAR: new Date().getFullYear(),
+  HEATMAP_COLOR_SCALE: ["#10b981", "#f59e0b", "#ef4444"] as const,
+  MAX_COMPANIES_CHART: 10,
+  STALE_TIME_MS: 60000,
 } as const;
 
 export const QUERY = {
