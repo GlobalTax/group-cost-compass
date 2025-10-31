@@ -174,7 +174,23 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
                   <FormItem>
                     <FormLabel>Honorarios (€)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0;
+                          field.onChange(value);
+                          const poolValue = form.getValues("success_fee_pool");
+                          if (poolValue > value) {
+                            form.setError("success_fee_pool", {
+                              type: "manual",
+                              message: "El pool no puede superar los honorarios totales",
+                            });
+                          } else {
+                            form.clearErrors("success_fee_pool");
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -188,7 +204,23 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
                   <FormItem>
                     <FormLabel>Success Fee Pool (€)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0;
+                          field.onChange(value);
+                          const totalFees = form.getValues("total_fees");
+                          if (value > totalFees) {
+                            form.setError("success_fee_pool", {
+                              type: "manual",
+                              message: "El pool no puede superar los honorarios totales",
+                            });
+                          } else {
+                            form.clearErrors("success_fee_pool");
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
