@@ -5,8 +5,8 @@ import { Plus } from "lucide-react";
 import { BudgetKPIs } from "@/components/budget/BudgetKPIs";
 import { BudgetSummaryTable } from "@/components/budget/BudgetSummaryTable";
 import { BudgetComparisonChart } from "@/components/budget/BudgetComparisonChart";
+import { CreateBudgetPeriodDialog } from "@/components/budget/CreateBudgetPeriodDialog";
 import { useBudgetSummary } from "@/hooks/useBudgetSummary";
-import { useNavigate } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -18,12 +18,12 @@ import { useCompanies } from "@/hooks/useCompanies";
 import { formatPeriodShort } from "@/lib/formatters";
 
 export default function Budget() {
-  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
   
   const [year, setYear] = useState(currentYear);
   const [companyId, setCompanyId] = useState<string>("all");
   const [chartType, setChartType] = useState<'income' | 'expenses' | 'result' | 'all'>('all');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const { data: summaryData, isLoading } = useBudgetSummary({ 
     year, 
@@ -78,7 +78,7 @@ export default function Budget() {
         title="Presupuestos"
         subtitle="Gestión de presupuestos mensuales e ingresos/gastos"
         action={
-          <Button onClick={() => navigate('/budget/new')}>
+          <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Presupuesto
           </Button>
@@ -148,6 +148,11 @@ export default function Budget() {
           <BudgetSummaryTable data={summaryData || []} />
         </>
       )}
+
+      <CreateBudgetPeriodDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+      />
     </div>
   );
 }
