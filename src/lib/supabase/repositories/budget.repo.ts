@@ -205,3 +205,24 @@ export async function fetchBudgetSummary(filters?: {
   if (error) throw error;
   return data;
 }
+
+// ============================================
+// HELPERS
+// ============================================
+
+export async function findBudgetPeriodByPeriodAndCompany(period: string, companyId: string | null) {
+  let query = (supabase as any)
+    .from('budget_periods')
+    .select('*, companies(id, name)')
+    .eq('period', period);
+
+  if (companyId === null) {
+    query = query.is('company_id', null);
+  } else {
+    query = query.eq('company_id', companyId);
+  }
+
+  const { data, error } = await (query as any).maybeSingle();
+  if (error) throw error;
+  return data;
+}

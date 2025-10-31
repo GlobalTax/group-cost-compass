@@ -35,7 +35,8 @@ import { useCompanies } from "@/hooks/useCompanies";
 import { useCreateBudgetPeriod } from "@/hooks/useBudgetPeriods";
 import { budgetPeriodSchema, type BudgetPeriodInput } from "@/lib/validators/budgetSchema";
 import { cn } from "@/lib/utils";
-
+import { toast } from "sonner";
+import { findBudgetPeriodByPeriodAndCompany } from "@/lib/supabase/repositories/budget.repo";
 interface CreateBudgetPeriodDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,35 +48,59 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
   const createMutation = useCreateBudgetPeriod();
   const [date, setDate] = useState<Date>(new Date());
 
-  const form = useForm<BudgetPeriodInput>({
-    resolver: zodResolver(budgetPeriodSchema),
-    defaultValues: {
-      period: format(new Date(), "yyyy-MM-01"),
-      company_id: undefined,
-      status: "draft",
-      notes: "",
-    },
-  });
+const form = useForm<BudgetPeriodInput>({
+  resolver: zodResolver(budgetPeriodSchema),
+  mode: "onChange",
+  defaultValues: {
+    period: format(new Date(), "yyyy-MM-01"),
+    company_id: undefined,
+    status: "draft",
+    notes: "",
+  },
+});
 
-  const onSubmit = async (data: BudgetPeriodInput) => {
-    try {
-      // Normalizar company_id: convertir "__all__" o vacío a null
-      const cleanData: BudgetPeriodInput = {
-        ...data,
-        company_id: 
-          data.company_id === "__all__" || !data.company_id || data.company_id.trim() === ""
-            ? null
-            : data.company_id,
-      };
-      
-      const result = await createMutation.mutateAsync(cleanData);
+const onSubmit = async (data: BudgetPeriodInput) => {
+  try {
+    const normalizedCompanyId = data.company_id && data.company_id !== "__all__" && data.company_id.trim() !== ""
+      ? data.company_id
+      : null;
+    const period = data.period;
+
+    // Pre-chequeo de duplicados
+    const existing = await findBudgetPeriodByPeriodAndCompany(period, normalizedCompanyId);
+    if (existing) {
+      toast.info("Ya existe un presupuesto para ese período. Abriendo existente.");
       form.reset();
       onOpenChange(false);
-      navigate(`/budget/${result.id}`);
-    } catch (error) {
-      console.error("Error creating budget period:", error);
+      navigate(`/budget/${existing.id}`);
+      return;
     }
-  };
+
+    // Crear
+    const result = await createMutation.mutateAsync({
+      ...data,
+      company_id: normalizedCompanyId,
+    } as any);
+    form.reset();
+    onOpenChange(false);
+    navigate(`/budget/${result.id}`);
+  } catch (error: any) {
+    // Condición de carrera: si otro usuario lo creó entre el check y el insert
+    if (error?.code === "23505" || /duplicate key/i.test(error?.message ?? "")) {
+      try {
+        const fallback = await findBudgetPeriodByPeriodAndCompany(data.period, (data.company_id && data.company_id !== "__all__") ? data.company_id : null);
+        if (fallback) {
+          toast.info("Ese presupuesto ya existía. Abriendo existente.");
+          onOpenChange(false);
+          navigate(`/budget/${fallback.id}`);
+          return;
+        }
+      } catch {}
+    }
+    toast.error("No se pudo crear el presupuesto");
+    console.error("Error creating budget period:", error);
+  }
+};
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
