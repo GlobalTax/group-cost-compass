@@ -142,7 +142,7 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
                 <FormItem>
                   <FormLabel>Empresa</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(v) => field.onChange(v || undefined)}
                     value={field.value || ""}
                   >
                     <FormControl>
@@ -219,7 +219,10 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
+              <Button 
+                type="submit" 
+                disabled={createMutation.isPending || !form.formState.isValid}
+              >
                 {createMutation.isPending ? "Creando..." : "Crear Presupuesto"}
               </Button>
             </div>
