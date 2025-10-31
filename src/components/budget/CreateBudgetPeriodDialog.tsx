@@ -51,7 +51,7 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
     resolver: zodResolver(budgetPeriodSchema),
     defaultValues: {
       period: format(new Date(), "yyyy-MM-01"),
-      company_id: undefined,
+      company_id: "__all__",
       status: "draft",
       notes: "",
     },
@@ -59,10 +59,13 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
 
   const onSubmit = async (data: BudgetPeriodInput) => {
     try {
-      // Normalizar company_id: convertir string vacío a null
+      // Normalizar company_id: convertir "__all__" o vacío a null
       const cleanData: BudgetPeriodInput = {
         ...data,
-        company_id: data.company_id && data.company_id.trim() !== "" ? data.company_id : null,
+        company_id: 
+          data.company_id === "__all__" || !data.company_id || data.company_id.trim() === ""
+            ? null
+            : data.company_id,
       };
       
       const result = await createMutation.mutateAsync(cleanData);
@@ -142,8 +145,8 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
                 <FormItem>
                   <FormLabel>Empresa</FormLabel>
                   <Select
-                    onValueChange={(v) => field.onChange(v || undefined)}
-                    value={field.value || ""}
+                    onValueChange={field.onChange}
+                    value={field.value || "__all__"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -151,7 +154,7 @@ export function CreateBudgetPeriodDialog({ open, onOpenChange }: CreateBudgetPer
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Todas las empresas</SelectItem>
+                      <SelectItem value="__all__">Todas las empresas</SelectItem>
                       {companies?.map((company) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
