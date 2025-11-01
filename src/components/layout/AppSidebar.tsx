@@ -32,6 +32,7 @@ const navigationItems = [
       { title: "Empleados", url: "/costs-overview", icon: Users },
       { title: "Selección", url: "/recruitment", icon: Briefcase },
       { title: "Costes", url: "/costs", icon: DollarSign },
+      { title: "Costes por Empresa", url: "/costs-by-company", icon: Building2 },
       { title: "Traslados", url: "/transfers", icon: ArrowRightLeft },
       { title: "Onboarding", url: "/admin/onboarding", icon: UserPlus },
     ],

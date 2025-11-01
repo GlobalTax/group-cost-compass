@@ -1021,6 +1021,13 @@ export type Database = {
             foreignKeyName: "budget_periods_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "budget_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "vw_costs_by_company_year"
             referencedColumns: ["company_id"]
           },
@@ -5478,6 +5485,13 @@ export type Database = {
             foreignKeyName: "hr_employees_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "vw_costs_by_company_year"
             referencedColumns: ["company_id"]
           },
@@ -5602,6 +5616,13 @@ export type Database = {
             foreignKeyName: "hr_transfers_from_company_fkey"
             columns: ["from_company"]
             isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_from_company_fkey"
+            columns: ["from_company"]
+            isOneToOne: false
             referencedRelation: "vw_costs_by_company_year"
             referencedColumns: ["company_id"]
           },
@@ -5625,6 +5646,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_transfers_to_company_fkey"
+            columns: ["to_company"]
+            isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "hr_transfers_to_company_fkey"
@@ -10836,6 +10864,13 @@ export type Database = {
             foreignKeyName: "budget_periods_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "budget_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "vw_costs_by_company_year"
             referencedColumns: ["company_id"]
           },
@@ -10845,6 +10880,28 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_employee_annual"
             referencedColumns: ["company_id"]
+          },
+        ]
+      }
+      vw_company_costs_monthly: {
+        Row: {
+          bruto_mensual: number | null
+          company_id: string | null
+          company_name: string | null
+          coste_empresa_mensual: number | null
+          month: number | null
+          num_employees: number | null
+          org_id: string | null
+          period: string | null
+          year: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -10882,6 +10939,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "hr_employees_company_id_fkey"
@@ -10945,6 +11009,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "hr_employees_company_id_fkey"
