@@ -5364,6 +5364,7 @@ export type Database = {
       hr_employees: {
         Row: {
           address: string | null
+          annual_salary: number | null
           birth_date: string | null
           bonus_extra: number | null
           company_id: string | null
@@ -5391,6 +5392,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          annual_salary?: number | null
           birth_date?: string | null
           bonus_extra?: number | null
           company_id?: string | null
@@ -5418,6 +5420,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          annual_salary?: number | null
           birth_date?: string | null
           bonus_extra?: number | null
           company_id?: string | null
@@ -10826,6 +10829,7 @@ export type Database = {
           employee_id: string | null
           full_name: string | null
           org_id: string | null
+          salario_base_anual: number | null
           salario_mensual_promedio: number | null
           salario_neto_anual: number | null
           year: number | null

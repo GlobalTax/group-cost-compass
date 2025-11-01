@@ -10,6 +10,7 @@ interface EmployeeCostsSummaryFilters {
 interface EmployeeAnnualCost {
   employee_id: string;
   full_name: string;
+  salario_base_anual: number | null; // Salario negociado
   company: string;
   company_id: string;
   bruto_anual: number;

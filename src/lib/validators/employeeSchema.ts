@@ -18,6 +18,7 @@ export const employeeSchema = z.object({
   department: z.string().optional(),
   position: z.string().optional(),
   contract_type: z.string().optional(),
+  annual_salary: z.number().min(0, "El salario debe ser positivo").optional(),
 });
 
 export type EmployeeFormData = z.infer<typeof employeeSchema>;

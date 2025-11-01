@@ -69,6 +69,7 @@ export const EmployeeDialog = ({
           department: employee.department || "",
           position: employee.position || "",
           contract_type: employee.contract_type || "",
+          annual_salary: employee.annual_salary || undefined,
         }
       : {
           full_name: "",
@@ -88,6 +89,7 @@ export const EmployeeDialog = ({
           department: "",
           position: "",
           contract_type: "Laboral",
+          annual_salary: undefined,
         },
   });
 
@@ -119,6 +121,7 @@ export const EmployeeDialog = ({
       department: data.department || null,
       position: data.position || null,
       contract_type: data.contract_type || null,
+      annual_salary: data.annual_salary || null,
       // Añadir org_id solo para creación (RLS lo requiere)
       ...(employee ? {} : { org_id: selectedCompany?.org_id }),
     };
@@ -346,6 +349,29 @@ export const EmployeeDialog = ({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="annual_salary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Salario Base Anual (€)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="50000" 
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    Salario bruto anual negociado (sin bonus ni extras)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-3 gap-4">
               <FormField
