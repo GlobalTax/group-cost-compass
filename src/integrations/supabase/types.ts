@@ -10976,10 +10976,12 @@ export type Database = {
           department_name: string | null
           employee_id: string | null
           full_name: string | null
+          hire_date: string | null
           org_id: string | null
           salario_base_anual: number | null
           team_id: string | null
           team_name: string | null
+          termination_date: string | null
           year: number | null
         }
         Relationships: [

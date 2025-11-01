@@ -10,6 +10,8 @@ interface CostsOverviewFilters {
 export interface EmployeeAnnualCost {
   employee_id: string;
   full_name: string;
+  hire_date: string | null;
+  termination_date: string | null;
   company: string;
   company_id: string;
   year: number;
