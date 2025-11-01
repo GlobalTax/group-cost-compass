@@ -15,8 +15,13 @@ import type { EmployeeAnnualCost } from "@/hooks/useCostsOverview";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { EditableCell } from "@/components/ui/editable-cell";
+import { EditableSelectCell } from "@/components/ui/editable-select-cell";
 import { useUpdateEmployeeSalary } from "@/hooks/useUpdateEmployeeSalary";
+import { useUpdateEmployeeDepartment } from "@/hooks/useUpdateEmployeeDepartment";
+import { useUpdateEmployeeTeam } from "@/hooks/useUpdateEmployeeTeam";
 import { useCurrentUserRole } from "@/hooks/useCurrentUserRole";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useTeams } from "@/hooks/useTeams";
 import { Badge } from "@/components/ui/badge";
 
 interface CostsOverviewTableProps {
@@ -27,8 +32,24 @@ interface CostsOverviewTableProps {
 export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const { mutateAsync: updateSalary } = useUpdateEmployeeSalary();
+  const { mutateAsync: updateDepartment } = useUpdateEmployeeDepartment();
+  const { mutateAsync: updateTeam } = useUpdateEmployeeTeam();
   const { data: userRole } = useCurrentUserRole();
   const canEdit = userRole?.canEdit || false;
+
+  const { data: departments } = useDepartments();
+  const { data: teams } = useTeams();
+
+  const departmentOptions = departments?.map((d) => ({
+    id: d.id,
+    label: d.name,
+    color: d.color,
+  })) || [];
+
+  const teamOptions = teams?.map((t) => ({
+    id: t.id,
+    label: t.name,
+  })) || [];
 
   // Filtrar por nombre
   const filteredData = data.filter((employee) =>
@@ -108,23 +129,46 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
                         {employee.company}
                       </TableCell>
                       <TableCell>
-                        {employee.department_name ? (
-                          <Badge 
-                            style={{ 
-                              backgroundColor: employee.department_color || '#6366f1',
-                              color: 'white'
-                            }}
-                          >
-                            {employee.department_name}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
+                        <EditableSelectCell
+                          value={employee.department_id}
+                          displayValue={employee.department_name}
+                          options={departmentOptions}
+                          onSave={async (newDepartmentId) => {
+                            await updateDepartment({
+                              employeeId: employee.employee_id,
+                              newDepartmentId,
+                              oldDepartmentId: employee.department_id,
+                            });
+                          }}
+                          disabled={!canEdit}
+                          placeholder="Sin departamento"
+                          renderDisplay={(option) => (
+                            <Badge
+                              style={{
+                                backgroundColor: option.color || "#6366f1",
+                                color: "white",
+                              }}
+                            >
+                              {option.label}
+                            </Badge>
+                          )}
+                        />
                       </TableCell>
                       <TableCell>
-                        {employee.team_name || (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
+                        <EditableSelectCell
+                          value={employee.team_id}
+                          displayValue={employee.team_name}
+                          options={teamOptions}
+                          onSave={async (newTeamId) => {
+                            await updateTeam({
+                              employeeId: employee.employee_id,
+                              newTeamId,
+                              oldTeamId: employee.team_id,
+                            });
+                          }}
+                          disabled={!canEdit}
+                          placeholder="Sin equipo"
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         <EditableCell
