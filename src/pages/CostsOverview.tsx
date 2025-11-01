@@ -19,7 +19,7 @@ import { Calculator } from "lucide-react";
 
 const CostsOverview = () => {
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedYear, setSelectedYear] = useState(2024);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("all");
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("all");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
