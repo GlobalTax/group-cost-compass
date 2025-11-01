@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { UserPlus, UserMinus, Users } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useUpdateEmployeeTeam } from "@/hooks/useUpdateEmployeeTeam";
+import { useCompanies } from "@/hooks/useCompanies";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -47,7 +48,15 @@ export const TeamMembersManager = ({
     activeOnly: true,
   });
 
+  const { data: companies = [] } = useCompanies();
+  
   const updateEmployeeTeam = useUpdateEmployeeTeam();
+
+  // Mapa de ID empresa → nombre para resolver en currentMembers
+  const companyNameById = useMemo(
+    () => new Map(companies.map((c) => [c.id, c.name])),
+    [companies]
+  );
 
   // Excluir empleados que ya están en el equipo actual
   const currentMemberIds = new Set(currentMembers.map((m) => m.id));
@@ -190,7 +199,7 @@ export const TeamMembersManager = ({
                     {member.position || "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {member.company_id || "—"}
+                    {member.company_id ? (companyNameById.get(member.company_id) || "—") : "—"}
                   </TableCell>
                   <TableCell>
                     <Button
@@ -285,7 +294,7 @@ export const TeamMembersManager = ({
                           {employee.position || "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {employee.company_id || "—"}
+                          {employee.companies?.name || "—"}
                         </TableCell>
                       </TableRow>
                     ))}
