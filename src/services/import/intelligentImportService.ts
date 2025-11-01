@@ -61,12 +61,27 @@ export const importFromAIResult = async (
 
   // Detectar tipo y delegar a servicio correspondiente
   if (aiResult.detected_type === "employees") {
+    // Mapear a estructura ParsedEmployee esperada por importEmployees
+    const parsedEmployees = transformedData.map((d: any) => ({
+      full_name: d.employee_name ?? d.name ?? "",
+      company_name: d.company ?? "",
+      hire_date: d.hire_date ?? "",
+      dni: d.nif ?? d.employee_nif ?? undefined,
+      termination_date: d.termination_date ?? undefined,
+      seniority_date: d.seniority_date ?? undefined,
+    })).filter((e: any) => e.full_name && e.company_name && e.hire_date);
+
+    if (parsedEmployees.length === 0) {
+      throw new Error("No hay filas válidas para empleados (faltan nombre/empresa/fecha de alta)");
+    }
+
     const result = await importEmployees({
-      employees: transformedData as any[],
+      employees: parsedEmployees as any[],
       companies: companies as any[],
       onProgress,
     });
     employeesCreated = result.created;
+    console.info("Empleados importados:", { empleados: employeesCreated, total: fullDataset.length });
   } else if (aiResult.detected_type === "costs" || aiResult.detected_type === "payroll") {
     // Preparar validación mock (ya que los datos vienen validados por IA)
     const mockValidation = {
