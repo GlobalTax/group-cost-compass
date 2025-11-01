@@ -204,8 +204,13 @@ export const TeamMembersManager = ({
         </div>
       )}
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} modal={false}>
+        <DialogContent 
+          className="max-w-2xl"
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.stopPropagation()}
+        >
           <DialogHeader>
             <DialogTitle>Añadir Miembros al Equipo</DialogTitle>
             <DialogDescription>
@@ -219,6 +224,7 @@ export const TeamMembersManager = ({
               placeholder="Buscar empleados..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
             />
 
             {filteredEmployees.length === 0 ? (
