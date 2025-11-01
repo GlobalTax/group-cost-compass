@@ -32,6 +32,7 @@ interface TeamMembersManagerProps {
   departmentId: string;
   currentMembers: Employee[];
   onMembersChange?: () => void;
+  orgId: string;
 }
 
 export const TeamMembersManager = ({
@@ -39,6 +40,7 @@ export const TeamMembersManager = ({
   departmentId,
   currentMembers,
   onMembersChange,
+  orgId,
 }: TeamMembersManagerProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
@@ -62,6 +64,7 @@ export const TeamMembersManager = ({
   const currentMemberIds = new Set(currentMembers.map((m) => m.id));
   
   const filteredEmployees = availableEmployees.filter((emp) =>
+    emp.org_id === orgId &&
     !currentMemberIds.has(emp.id) &&
     emp.full_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -245,7 +248,7 @@ export const TeamMembersManager = ({
             {filteredEmployees.length === 0 ? (
               <div className="rounded-lg border border-dashed p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  No hay empleados disponibles en este departamento.
+                  No hay empleados disponibles en esta organización.
                 </p>
               </div>
             ) : (

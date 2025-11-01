@@ -225,6 +225,7 @@ export const TeamDialog = ({ open, onOpenChange, team }: TeamDialogProps) => {
                     departmentId={selectedDepartmentId}
                     currentMembers={teamMembers}
                     onMembersChange={refetchMembers}
+                    orgId={team.org_id}
                   />
                 </div>
               )}
