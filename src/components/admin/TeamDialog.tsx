@@ -217,7 +217,7 @@ export const TeamDialog = ({ open, onOpenChange, team }: TeamDialogProps) => {
               {team && selectedDepartmentId && (
                 <div className="space-y-4">
                   <TeamMembersManager
-                    teamId={team.id}
+                    teamId={team?.id || null}
                     departmentId={selectedDepartmentId}
                     currentMembers={teamMembers}
                     onMembersChange={refetchMembers}

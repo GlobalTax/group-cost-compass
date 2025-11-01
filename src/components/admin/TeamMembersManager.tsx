@@ -27,7 +27,7 @@ import type { Database } from "@/integrations/supabase/types";
 type Employee = Database["public"]["Tables"]["hr_employees"]["Row"];
 
 interface TeamMembersManagerProps {
-  teamId: string;
+  teamId: string | null;
   departmentId: string;
   currentMembers: Employee[];
   onMembersChange?: () => void;
@@ -64,56 +64,77 @@ export const TeamMembersManager = ({
   };
 
   const handleAddMembers = async () => {
-    const results = await Promise.allSettled(
-      selectedEmployeeIds.map((employeeId) =>
-        updateEmployeeTeam.mutateAsync({
-          employeeId,
-          newTeamId: teamId,
-          oldTeamId: null,
-        })
-      )
-    );
+    if (!teamId) {
+      toast.error("Error: No se ha guardado el equipo todavía");
+      return;
+    }
 
-    const successful = results.filter((r) => r.status === "fulfilled").length;
-    const failed = results.filter((r) => r.status === "rejected").length;
-
-    if (successful > 0) {
-      toast.success(
-        `${successful} miembro${successful > 1 ? "s" : ""} añadido${
-          successful > 1 ? "s" : ""
-        } correctamente`
+    try {
+      const results = await Promise.allSettled(
+        selectedEmployeeIds.map((employeeId) =>
+          updateEmployeeTeam.mutateAsync({
+            employeeId,
+            newTeamId: teamId,
+            oldTeamId: null,
+          })
+        )
       );
+
+      const successful = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
+
+      if (successful > 0) {
+        toast.success(
+          `${successful} miembro${successful > 1 ? "s" : ""} añadido${
+            successful > 1 ? "s" : ""
+          } correctamente`
+        );
+      }
+
+      if (failed > 0) {
+        const errors = results
+          .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+          .map((r) => r.reason?.message || "Error desconocido");
+
+        toast.error(
+          `${failed} empleado${
+            failed > 1 ? "s" : ""
+          } no pudieron ser añadidos: ${errors[0]}`
+        );
+      }
+
+      // Solo cerrar y refrescar si todos fueron exitosos
+      if (failed === 0 && successful > 0) {
+        onMembersChange?.();
+        setSelectedEmployeeIds([]);
+        setIsAddDialogOpen(false);
+        setSearchTerm("");
+      }
+    } catch (error) {
+      console.error("Error crítico al añadir miembros:", error);
+      toast.error("Error inesperado al añadir miembros");
     }
-
-    if (failed > 0) {
-      const errors = results
-        .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-        .map((r) => r.reason?.message || "Error desconocido");
-
-      toast.error(
-        `${failed} empleado${
-          failed > 1 ? "s" : ""
-        } no pudieron ser añadidos: ${errors[0]}`
-      );
-    }
-
-    // Solo cerrar si todos fueron exitosos
-    if (failed === 0) {
-      setSelectedEmployeeIds([]);
-      setIsAddDialogOpen(false);
-      setSearchTerm("");
-    }
-
-    onMembersChange?.();
   };
 
   const handleRemoveMember = async (employeeId: string) => {
-    await updateEmployeeTeam.mutateAsync({
-      employeeId,
-      newTeamId: null,
-      oldTeamId: teamId,
-    });
-    onMembersChange?.();
+    if (!teamId) {
+      toast.error("Error: El equipo no está guardado");
+      return;
+    }
+
+    try {
+      await updateEmployeeTeam.mutateAsync({
+        employeeId,
+        newTeamId: null,
+        oldTeamId: teamId,
+      });
+      
+      toast.success("Miembro removido correctamente");
+      onMembersChange?.();
+    } catch (error: any) {
+      console.error("Error al remover miembro:", error);
+      toast.error(`No se pudo remover el miembro: ${error.message || "Error desconocido"}`);
+    }
   };
 
   return (
