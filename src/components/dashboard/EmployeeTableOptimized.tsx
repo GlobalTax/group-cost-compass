@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight } from "lucide-react";
-import { useEmployeeCostsSummary } from "@/hooks/useEmployeeCostsSummary";
+import { ArrowUpRight, AlertCircle } from "lucide-react";
+import { useEmployeesWithCosts } from "@/hooks/useEmployeesWithCosts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters";
 
@@ -19,6 +19,8 @@ interface EmployeeTableOptimizedProps {
   filters?: {
     companyId?: string;
     year?: number;
+    searchTerm?: string;
+    activeOnly?: boolean;
   };
 }
 
@@ -28,7 +30,7 @@ interface EmployeeTableOptimizedProps {
  * - Sin cálculos en frontend, todo en SQL
  */
 export const EmployeeTableOptimized = memo(({ filters }: EmployeeTableOptimizedProps) => {
-  const { data: employees, isLoading } = useEmployeeCostsSummary(filters);
+  const { data: employees, isLoading } = useEmployeesWithCosts(filters);
 
   if (isLoading) {
     return (
@@ -44,9 +46,9 @@ export const EmployeeTableOptimized = memo(({ filters }: EmployeeTableOptimizedP
   if (!employees || employees.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <p>No hay empleados con costes registrados para este año</p>
+        <p>No hay empleados registrados</p>
         <p className="text-sm mt-2">
-          Importa datos desde A3Nom
+          Crea un empleado o importa datos desde A3Nom
         </p>
       </div>
     );
@@ -67,43 +69,57 @@ export const EmployeeTableOptimized = memo(({ filters }: EmployeeTableOptimizedP
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employees.map((employee) => (
-            <Link 
-              key={employee.employee_id}
-              to={`/employees/${employee.employee_id}`}
-              className="contents"
-            >
-              <TableRow className="group cursor-pointer hover:bg-muted/50">
-                <TableCell className="font-medium">{employee.full_name}</TableCell>
-                <TableCell>
-                  <span className="text-sm text-foreground">
-                    {employee.company || "—"}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {employee.salario_base_anual ? formatCurrency(employee.salario_base_anual) : "—"}
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {employee.bruto_cobrado_anual > 0 ? formatCurrency(employee.bruto_cobrado_anual) : "—"}
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {employee.bonus_pagado_anual > 0 ? formatCurrency(employee.bonus_pagado_anual) : "—"}
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {employee.coste_ss_anual > 0 ? formatCurrency(employee.coste_ss_anual) : "—"}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <ArrowUpRight className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            </Link>
-          ))}
+          {employees.map((employee) => {
+            const hasCostData = employee.bruto_cobrado_anual !== null;
+
+            return (
+              <Link 
+                key={employee.employee_id}
+                to={`/employees/${employee.employee_id}`}
+                className="contents"
+              >
+                <TableRow className="group cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {employee.full_name}
+                      {!hasCostData && (
+                        <Badge variant="outline" className="text-xs">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          Sin datos
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-foreground">
+                      {employee.company}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {employee.salario_base_anual ? formatCurrency(employee.salario_base_anual) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {employee.bruto_cobrado_anual ? formatCurrency(employee.bruto_cobrado_anual) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {employee.bonus_pagado_anual ? formatCurrency(employee.bonus_pagado_anual) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {employee.coste_ss_anual ? formatCurrency(employee.coste_ss_anual) : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </Link>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

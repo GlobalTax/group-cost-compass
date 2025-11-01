@@ -109,7 +109,9 @@ const Employees = () => {
             <EmployeeTableOptimized 
               filters={{ 
                 companyId: companyFilter !== "all" ? companyFilter : undefined, 
-                year: new Date().getFullYear() 
+                year: new Date().getFullYear(),
+                searchTerm: searchTerm,
+                activeOnly: statusFilter === "active" ? true : statusFilter === "inactive" ? false : undefined
               }} 
             />
           </Card>
