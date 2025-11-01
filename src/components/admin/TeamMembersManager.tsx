@@ -45,7 +45,6 @@ export const TeamMembersManager = ({
 
   const { data: availableEmployees = [] } = useEmployees({
     activeOnly: true,
-    departmentId,
   });
 
   const updateEmployeeTeam = useUpdateEmployeeTeam();
