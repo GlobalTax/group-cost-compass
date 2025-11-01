@@ -23,15 +23,38 @@ export const CompanyCostsComparisonTable = ({
   const { data, isLoading } = useCompanyCostsComparison({ year, month, companyId });
 
   const totals = useMemo(() => {
-    if (!data) return null;
-    
+    if (!data || data.length === 0) return null;
+
+    const totalEmployeesCurrent = data.reduce((sum, c) => sum + c.num_employees_current, 0);
+    const totalEmployeesPrevious = data.reduce((sum, c) => sum + c.num_employees_previous, 0);
+    const totalCosteMensual = data.reduce((sum, c) => sum + c.coste_mensual_actual, 0);
+    const totalCosteMensualAnterior = data.reduce((sum, c) => sum + c.coste_mensual_anterior, 0);
+    const totalCosteAcumuladoYTD = data.reduce((sum, c) => sum + c.coste_acumulado_ytd, 0);
+    const totalCosteAcumuladoAnterior = data.reduce((sum, c) => sum + c.coste_acumulado_year_anterior, 0);
+    const totalVariacionEuros = totalCosteAcumuladoYTD - totalCosteAcumuladoAnterior;
+    const totalVariacionMensualEuros = totalCosteMensual - totalCosteMensualAnterior;
+
+    const empDiff = totalEmployeesCurrent - totalEmployeesPrevious;
+    const empPercent = totalEmployeesPrevious > 0
+      ? (empDiff / totalEmployeesPrevious) * 100
+      : 0;
+
+    const totalVariacionPercent = totalCosteAcumuladoAnterior > 0
+      ? ((totalVariacionEuros / totalCosteAcumuladoAnterior) * 100)
+      : 0;
+
     return {
-      num_employees_current: data.reduce((sum, c) => sum + c.num_employees_current, 0),
-      num_employees_previous: data.reduce((sum, c) => sum + c.num_employees_previous, 0),
-      coste_mensual: data.reduce((sum, c) => sum + c.coste_mensual_actual, 0),
-      coste_acumulado_ytd: data.reduce((sum, c) => sum + c.coste_acumulado_ytd, 0),
-      coste_acumulado_anterior: data.reduce((sum, c) => sum + c.coste_acumulado_year_anterior, 0),
-      variacion_euros: data.reduce((sum, c) => sum + c.variacion_euros, 0),
+      totalEmployeesCurrent,
+      totalEmployeesPrevious,
+      totalCosteMensual,
+      totalCosteMensualAnterior,
+      totalCosteAcumuladoYTD,
+      totalCosteAcumuladoAnterior,
+      totalVariacionEuros,
+      totalVariacionMensualEuros,
+      totalVariacionPercent,
+      empDiff,
+      empPercent,
     };
   }, [data]);
 
@@ -89,12 +112,16 @@ export const CompanyCostsComparisonTable = ({
               <TableHead>Empresa</TableHead>
               <TableHead className="text-right">Nº Empleados {year}</TableHead>
               <TableHead className="text-right">Variación Empleados</TableHead>
-              <TableHead className="text-right">Coste Mes Actual</TableHead>
+              <TableHead className="text-right">Coste Mes {month ? `${month}/${year}` : year}</TableHead>
+              <TableHead className="text-right text-muted-foreground">
+                Coste Mes {month ? `${month}/${year - 1}` : year - 1}
+              </TableHead>
+              <TableHead className="text-right">Variación Mensual</TableHead>
               <TableHead className="text-right">Acumulado {year}</TableHead>
               <TableHead className="text-right text-muted-foreground">
                 Acumulado {year - 1}
               </TableHead>
-              <TableHead className="text-right">Variación Costes</TableHead>
+              <TableHead className="text-right">Variación Acumulado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -133,9 +160,51 @@ export const CompanyCostsComparisonTable = ({
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
+
+                {/* Coste Mensual Actual */}
                 <TableCell className="text-right font-medium">
                   {formatCurrency(company.coste_mensual_actual)}
                 </TableCell>
+
+                {/* Coste Mensual Año Anterior */}
+                <TableCell className="text-right text-muted-foreground">
+                  {company.coste_mensual_anterior > 0
+                    ? formatCurrency(company.coste_mensual_anterior)
+                    : "—"}
+                </TableCell>
+
+                {/* Variación Mensual */}
+                <TableCell className="text-right">
+                  {company.coste_mensual_anterior > 0 ? (
+                    <div className="flex items-center justify-end gap-2">
+                      {company.variacion_mensual_absoluta > 0 ? (
+                        <TrendingUp className="h-4 w-4 text-destructive" />
+                      ) : company.variacion_mensual_absoluta < 0 ? (
+                        <TrendingDown className="h-4 w-4 text-success" />
+                      ) : null}
+                      <div className="flex flex-col items-end">
+                        <span
+                          className={cn(
+                            "font-medium",
+                            company.variacion_mensual_absoluta > 0 && "text-destructive",
+                            company.variacion_mensual_absoluta < 0 && "text-success"
+                          )}
+                        >
+                          {company.variacion_mensual_percent > 0 ? "+" : ""}
+                          {company.variacion_mensual_percent.toFixed(1)}%
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {company.variacion_mensual_absoluta > 0 ? "+" : ""}
+                          {formatCurrency(Math.abs(company.variacion_mensual_absoluta))}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+
+                {/* Acumulado YTD */}
                 <TableCell className="text-right font-semibold">
                   {formatCurrency(company.coste_acumulado_ytd)}
                 </TableCell>
@@ -181,60 +250,109 @@ export const CompanyCostsComparisonTable = ({
               <TableRow className="bg-primary/5 font-bold border-t-2">
                 <TableCell className="font-bold">TOTAL GRUPO</TableCell>
                 <TableCell className="text-right">
-                  {totals.num_employees_current}
+                  {totals.totalEmployeesCurrent}
                 </TableCell>
                 <TableCell className="text-right">
-                  {totals.num_employees_previous > 0 ? (
+                  {totals.totalEmployeesPrevious > 0 ? (
                     <div className="flex items-center justify-end gap-2">
-                      {(totals.num_employees_current - totals.num_employees_previous) > 0 ? (
+                      {totals.empDiff > 0 ? (
                         <TrendingUp className="h-4 w-4 text-blue-600" />
-                      ) : (totals.num_employees_current - totals.num_employees_previous) < 0 ? (
+                      ) : totals.empDiff < 0 ? (
                         <TrendingDown className="h-4 w-4 text-orange-600" />
                       ) : (
                         <span className="w-4" />
                       )}
                       <span className={cn(
                         "font-bold",
-                        (totals.num_employees_current - totals.num_employees_previous) > 0 && "text-blue-600",
-                        (totals.num_employees_current - totals.num_employees_previous) < 0 && "text-orange-600"
+                        totals.empDiff > 0 && "text-blue-600",
+                        totals.empDiff < 0 && "text-orange-600"
                       )}>
-                        {(totals.num_employees_current - totals.num_employees_previous) > 0 ? "+" : ""}
-                        {totals.num_employees_current - totals.num_employees_previous}
+                        {totals.empDiff > 0 ? "+" : ""}
+                        {totals.empDiff}
                       </span>
                     </div>
                   ) : (
                     <span>—</span>
                   )}
                 </TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(totals.coste_mensual)}
+
+                {/* Coste Mensual Actual Total */}
+                <TableCell className="text-right font-bold">
+                  {formatCurrency(totals.totalCosteMensual)}
                 </TableCell>
-                <TableCell className="text-right">
-                  {formatCurrency(totals.coste_acumulado_ytd)}
+
+                {/* Coste Mensual Año Anterior Total */}
+                <TableCell className="text-right text-muted-foreground font-semibold">
+                  {totals.totalCosteMensualAnterior > 0
+                    ? formatCurrency(totals.totalCosteMensualAnterior)
+                    : "—"}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground">
-                  {totals.coste_acumulado_anterior > 0 
-                    ? formatCurrency(totals.coste_acumulado_anterior)
+
+                {/* Variación Mensual Total */}
+                <TableCell className="text-right">
+                  {totals.totalCosteMensualAnterior > 0 ? (
+                    <div className="flex items-center justify-end gap-2">
+                      {totals.totalVariacionMensualEuros > 0 ? (
+                        <TrendingUp className="h-4 w-4 text-destructive" />
+                      ) : totals.totalVariacionMensualEuros < 0 ? (
+                        <TrendingDown className="h-4 w-4 text-success" />
+                      ) : null}
+                      <div className="flex flex-col items-end">
+                        <span
+                          className={cn(
+                            "font-bold",
+                            totals.totalVariacionMensualEuros > 0 && "text-destructive",
+                            totals.totalVariacionMensualEuros < 0 && "text-success"
+                          )}
+                        >
+                          {totals.totalCosteMensualAnterior > 0
+                            ? `${((totals.totalVariacionMensualEuros / totals.totalCosteMensualAnterior) * 100).toFixed(1)}%`
+                            : "—"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {totals.totalVariacionMensualEuros > 0 ? "+" : ""}
+                          {formatCurrency(Math.abs(totals.totalVariacionMensualEuros))}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+
+                {/* Acumulado YTD Total */}
+                <TableCell className="text-right font-bold">
+                  {formatCurrency(totals.totalCosteAcumuladoYTD)}
+                </TableCell>
+                <TableCell className="text-right text-muted-foreground font-semibold">
+                  {totals.totalCosteAcumuladoAnterior > 0 
+                    ? formatCurrency(totals.totalCosteAcumuladoAnterior)
                     : "—"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {totals.coste_acumulado_anterior > 0 ? (
+                  {totals.totalCosteAcumuladoAnterior > 0 ? (
                     <div className="flex items-center justify-end gap-2">
-                      {totals.variacion_euros > 0 ? (
+                      {totals.totalVariacionEuros > 0 ? (
                         <TrendingUp className="h-4 w-4 text-destructive" />
                       ) : (
                         <TrendingDown className="h-4 w-4 text-success" />
                       )}
-                      <span
-                        className={
-                          totals.variacion_euros > 0
-                            ? "text-destructive"
-                            : "text-success"
-                        }
-                      >
-                        {totals.variacion_euros > 0 ? "+" : ""}
-                        {formatCurrency(totals.variacion_euros)}
-                      </span>
+                      <div className="flex flex-col items-end">
+                        <span
+                          className={cn(
+                            "font-bold",
+                            totals.totalVariacionEuros > 0 && "text-destructive",
+                            totals.totalVariacionEuros < 0 && "text-success"
+                          )}
+                        >
+                          {totals.totalVariacionPercent > 0 ? "+" : ""}
+                          {totals.totalVariacionPercent.toFixed(1)}%
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {totals.totalVariacionEuros > 0 ? "+" : ""}
+                          {formatCurrency(Math.abs(totals.totalVariacionEuros))}
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <span>—</span>

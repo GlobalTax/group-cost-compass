@@ -17,11 +17,14 @@ export const exportCompanyCostsToCSV = (
     `Nº Empleados ${year - 1}`,
     "Var. Empleados",
     "Var. Empleados %",
-    "Coste Mensual (€)",
+    `Coste Mes ${month ? `${month}/${year}` : year} (€)`,
+    `Coste Mes ${month ? `${month}/${year - 1}` : year - 1} (€)`,
+    "Var. Mensual %",
+    "Var. Mensual €",
     `Acumulado ${year} (€)`,
     `Acumulado ${year - 1} (€)`,
-    "Variación Costes %",
-    "Variación Costes €",
+    "Variación Acumulado %",
+    "Variación Acumulado €",
   ].join(";");
 
   const rows = data.map((company) => [
@@ -31,6 +34,9 @@ export const exportCompanyCostsToCSV = (
     company.variacion_empleados_absoluta,
     company.variacion_empleados_percent.toFixed(1) + "%",
     company.coste_mensual_actual.toFixed(2),
+    company.coste_mensual_anterior > 0 ? company.coste_mensual_anterior.toFixed(2) : "0.00",
+    company.variacion_mensual_percent.toFixed(1) + "%",
+    company.variacion_mensual_absoluta.toFixed(2),
     company.coste_acumulado_ytd.toFixed(2),
     company.coste_acumulado_year_anterior.toFixed(2),
     company.variacion_percent.toFixed(2) + "%",
@@ -42,14 +48,24 @@ export const exportCompanyCostsToCSV = (
     num_employees_current: data.reduce((sum, c) => sum + c.num_employees_current, 0),
     num_employees_previous: data.reduce((sum, c) => sum + c.num_employees_previous, 0),
     coste_mensual: data.reduce((sum, c) => sum + c.coste_mensual_actual, 0),
+    coste_mensual_anterior: data.reduce((sum, c) => sum + c.coste_mensual_anterior, 0),
     coste_acumulado_ytd: data.reduce((sum, c) => sum + c.coste_acumulado_ytd, 0),
     coste_acumulado_anterior: data.reduce((sum, c) => sum + c.coste_acumulado_year_anterior, 0),
     variacion_euros: data.reduce((sum, c) => sum + c.variacion_euros, 0),
+    variacion_mensual_euros: data.reduce((sum, c) => sum + c.variacion_mensual_absoluta, 0),
   };
 
   const empDiff = totals.num_employees_current - totals.num_employees_previous;
   const empPercent = totals.num_employees_previous > 0
     ? ((empDiff / totals.num_employees_previous) * 100).toFixed(1) + "%"
+    : "-";
+  
+  const variacionMensualPercent = totals.coste_mensual_anterior > 0
+    ? ((totals.variacion_mensual_euros / totals.coste_mensual_anterior) * 100).toFixed(1) + "%"
+    : "-";
+  
+  const variacionAcumuladoPercent = totals.coste_acumulado_anterior > 0
+    ? ((totals.variacion_euros / totals.coste_acumulado_anterior) * 100).toFixed(1) + "%"
     : "-";
 
   const totalRow = [
@@ -59,9 +75,12 @@ export const exportCompanyCostsToCSV = (
     empDiff,
     empPercent,
     totals.coste_mensual.toFixed(2),
+    totals.coste_mensual_anterior.toFixed(2),
+    variacionMensualPercent,
+    totals.variacion_mensual_euros.toFixed(2),
     totals.coste_acumulado_ytd.toFixed(2),
     totals.coste_acumulado_anterior.toFixed(2),
-    "-",
+    variacionAcumuladoPercent,
     totals.variacion_euros.toFixed(2),
   ].join(";");
 

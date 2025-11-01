@@ -8,6 +8,9 @@ export interface CompanyCostsSummary {
   num_employees_current: number;
   num_employees_previous: number;
   coste_mensual_actual: number;
+  coste_mensual_anterior: number;
+  variacion_mensual_absoluta: number;
+  variacion_mensual_percent: number;
   coste_acumulado_ytd: number;
   coste_acumulado_year_anterior: number;
   variacion_percent: number;
@@ -89,6 +92,10 @@ export const useCompanyCostsComparison = (filters: CompanyCostsFilters) => {
 
       // 3. Agrupar por empresa
       const companies = new Map<string, CompanyCostsSummary>();
+      
+      // Mapas auxiliares para costes mensuales por empresa
+      const monthlyCostsCurrentYear = new Map<string, Map<number, number>>();
+      const monthlyCostsPreviousYear = new Map<string, Map<number, number>>();
 
       // Procesar datos año actual
       (currentData as MonthlyData[] || []).forEach((row) => {
@@ -99,6 +106,9 @@ export const useCompanyCostsComparison = (filters: CompanyCostsFilters) => {
             num_employees_current: 0,
             num_employees_previous: 0,
             coste_mensual_actual: 0,
+            coste_mensual_anterior: 0,
+            variacion_mensual_absoluta: 0,
+            variacion_mensual_percent: 0,
             coste_acumulado_ytd: 0,
             coste_acumulado_year_anterior: 0,
             variacion_percent: 0,
@@ -106,21 +116,49 @@ export const useCompanyCostsComparison = (filters: CompanyCostsFilters) => {
             variacion_empleados_absoluta: 0,
             variacion_empleados_percent: 0,
           });
+          monthlyCostsCurrentYear.set(row.company_id, new Map());
         }
 
         const company = companies.get(row.company_id)!;
+        const monthlyMap = monthlyCostsCurrentYear.get(row.company_id)!;
+        
         company.num_employees_current = Math.max(company.num_employees_current, row.num_employees);
-        company.coste_mensual_actual += row.coste_empresa_mensual || 0;
         company.coste_acumulado_ytd += row.coste_empresa_mensual || 0;
+        
+        // Almacenar coste mensual
+        const currentMonthCost = (monthlyMap.get(row.month) || 0) + (row.coste_empresa_mensual || 0);
+        monthlyMap.set(row.month, currentMonthCost);
       });
 
       // Procesar datos año anterior
       (previousData as MonthlyData[] || []).forEach((row) => {
         if (companies.has(row.company_id)) {
           const company = companies.get(row.company_id)!;
+          
+          if (!monthlyCostsPreviousYear.has(row.company_id)) {
+            monthlyCostsPreviousYear.set(row.company_id, new Map());
+          }
+          const monthlyMap = monthlyCostsPreviousYear.get(row.company_id)!;
+          
           company.num_employees_previous = Math.max(company.num_employees_previous, row.num_employees);
           company.coste_acumulado_year_anterior += row.coste_empresa_mensual || 0;
+          
+          // Almacenar coste mensual
+          const previousMonthCost = (monthlyMap.get(row.month) || 0) + (row.coste_empresa_mensual || 0);
+          monthlyMap.set(row.month, previousMonthCost);
         }
+      });
+      
+      // Determinar el mes a comparar
+      const targetMonth = month || new Date().getMonth() + 1;
+      
+      // Calcular costes mensuales específicos
+      companies.forEach((company, companyId) => {
+        const currentMonthMap = monthlyCostsCurrentYear.get(companyId);
+        const previousMonthMap = monthlyCostsPreviousYear.get(companyId);
+        
+        company.coste_mensual_actual = currentMonthMap?.get(targetMonth) || 0;
+        company.coste_mensual_anterior = previousMonthMap?.get(targetMonth) || 0;
       });
 
       // 4. Calcular variaciones
@@ -130,8 +168,15 @@ export const useCompanyCostsComparison = (filters: CompanyCostsFilters) => {
           ? (empDiff / company.num_employees_previous) * 100
           : 0;
 
+        const variacionMensualAbsoluta = company.coste_mensual_actual - company.coste_mensual_anterior;
+        const variacionMensualPercent = company.coste_mensual_anterior > 0
+          ? (variacionMensualAbsoluta / company.coste_mensual_anterior) * 100
+          : 0;
+
         return {
           ...company,
+          variacion_mensual_absoluta: variacionMensualAbsoluta,
+          variacion_mensual_percent: variacionMensualPercent,
           variacion_euros: company.coste_acumulado_ytd - company.coste_acumulado_year_anterior,
           variacion_percent: calculatePercentageChange(
             company.coste_acumulado_ytd,
