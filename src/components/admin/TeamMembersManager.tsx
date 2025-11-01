@@ -18,6 +18,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { UserPlus, UserMinus, Users } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useUpdateEmployeeTeam } from "@/hooks/useUpdateEmployeeTeam";
@@ -63,11 +69,14 @@ export const TeamMembersManager = ({
   // Excluir empleados que ya están en el equipo actual
   const currentMemberIds = new Set(currentMembers.map((m) => m.id));
   
+  // Mostrar todos los empleados activos, pero indicar cuáles no pueden ser seleccionados
   const filteredEmployees = availableEmployees.filter((emp) =>
-    emp.org_id === orgId &&
     !currentMemberIds.has(emp.id) &&
     emp.full_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Empleados seleccionables (misma organización)
+  const selectableEmployees = filteredEmployees.filter(emp => emp.org_id === orgId);
 
   const handleToggleEmployee = (employeeId: string) => {
     setSelectedEmployeeIds((prev) =>
@@ -248,61 +257,95 @@ export const TeamMembersManager = ({
             {filteredEmployees.length === 0 ? (
               <div className="rounded-lg border border-dashed p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  No hay empleados disponibles en esta organización.
+                  No hay empleados disponibles.
                 </p>
               </div>
             ) : (
-              <div className="max-h-[400px] overflow-y-auto rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[50px]">
-                        <Checkbox
-                          checked={
-                            selectedEmployeeIds.length ===
-                              filteredEmployees.length &&
-                            filteredEmployees.length > 0
-                          }
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedEmployeeIds(
-                                filteredEmployees.map((e) => e.id)
-                              );
-                            } else {
-                              setSelectedEmployeeIds([]);
-                            }
-                          }}
-                        />
-                      </TableHead>
-                      <TableHead>Nombre</TableHead>
-                      <TableHead>Posición</TableHead>
-                      <TableHead>Empresa</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredEmployees.map((employee) => (
-                      <TableRow key={employee.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedEmployeeIds.includes(employee.id)}
-                            onCheckedChange={() =>
-                              handleToggleEmployee(employee.id)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {employee.full_name}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {employee.position || "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {employee.companies?.name || "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-sm text-muted-foreground">
+                    Mostrando {filteredEmployees.length} empleado{filteredEmployees.length !== 1 ? 's' : ''} activo{filteredEmployees.length !== 1 ? 's' : ''}
+                  </p>
+                  {selectableEmployees.length < filteredEmployees.length && (
+                    <p className="text-xs text-muted-foreground">
+                      {filteredEmployees.length - selectableEmployees.length} de otra organización
+                    </p>
+                  )}
+                </div>
+                
+                <div className="max-h-[400px] overflow-y-auto rounded-lg border">
+                  <TooltipProvider>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[50px]">
+                            <Checkbox
+                              checked={
+                                selectedEmployeeIds.length === selectableEmployees.length &&
+                                selectableEmployees.length > 0
+                              }
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedEmployeeIds(selectableEmployees.map((e) => e.id));
+                                } else {
+                                  setSelectedEmployeeIds([]);
+                                }
+                              }}
+                            />
+                          </TableHead>
+                          <TableHead>Nombre</TableHead>
+                          <TableHead>Posición</TableHead>
+                          <TableHead>Empresa</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredEmployees.map((employee) => {
+                          const isSameOrg = employee.org_id === orgId;
+                          const isSelectable = isSameOrg;
+                          
+                          return (
+                            <TableRow key={employee.id} className={!isSelectable ? "opacity-60" : ""}>
+                              <TableCell>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div>
+                                      <Checkbox
+                                        checked={selectedEmployeeIds.includes(employee.id)}
+                                        onCheckedChange={() => handleToggleEmployee(employee.id)}
+                                        disabled={!isSelectable}
+                                      />
+                                    </div>
+                                  </TooltipTrigger>
+                                  {!isSelectable && (
+                                    <TooltipContent>
+                                      <p>El empleado pertenece a otra organización</p>
+                                    </TooltipContent>
+                                  )}
+                                </Tooltip>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                <div className="flex items-center gap-2">
+                                  {employee.full_name}
+                                  {!isSelectable && (
+                                    <Badge variant="outline" className="text-xs">
+                                      Otra org.
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {employee.position || "—"}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {employee.companies?.name || "—"}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TooltipProvider>
+                </div>
               </div>
             )}
 
