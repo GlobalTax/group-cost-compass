@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { EditableCell } from "@/components/ui/editable-cell";
 import { useUpdateEmployeeSalary } from "@/hooks/useUpdateEmployeeSalary";
 import { useCurrentUserRole } from "@/hooks/useCurrentUserRole";
+import { Badge } from "@/components/ui/badge";
 
 interface CostsOverviewTableProps {
   data: EmployeeAnnualCost[];
@@ -92,7 +93,7 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
             <TableBody>
               {filteredData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
                     No se encontraron empleados
                   </TableCell>
                 </TableRow>
@@ -105,6 +106,25 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {employee.company}
+                      </TableCell>
+                      <TableCell>
+                        {employee.department_name ? (
+                          <Badge 
+                            style={{ 
+                              backgroundColor: employee.department_color || '#6366f1',
+                              color: 'white'
+                            }}
+                          >
+                            {employee.department_name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {employee.team_name || (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <EditableCell
@@ -147,7 +167,7 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
                   ))}
                   {/* Fila de totales */}
                   <TableRow className="bg-muted/50 font-bold">
-                    <TableCell colSpan={2}>TOTAL</TableCell>
+                    <TableCell colSpan={4}>TOTAL</TableCell>
                     <TableCell className="text-right">
                       {new Intl.NumberFormat("es-ES", {
                         style: "currency",
