@@ -15,19 +15,29 @@ export const useDashboardKPIs = (filters?: DashboardFilters) => {
       const currentYear = filters?.year || new Date().getFullYear();
       const prevYear = currentYear - 1;
 
-      // Construir filtros base
-      const baseFilters: any = {
-        period: {
-          gte: `${currentYear}-01-01`,
-          lte: `${currentYear}-12-31`,
-        },
-      };
+      // Determinar rango de fechas según filtro de mes
+      let currentStartDate: string;
+      let currentEndDate: string;
+      let prevStartDate: string;
+      let prevEndDate: string;
 
-      if (filters?.companyId) {
-        baseFilters.company_id = filters.companyId;
+      if (filters?.month) {
+        // Filtro por mes específico
+        currentStartDate = `${filters.month}-01`;
+        currentEndDate = `${filters.month}-31`;
+        // Mes anterior del año anterior
+        const [year, monthNum] = filters.month.split("-");
+        prevStartDate = `${prevYear}-${monthNum}-01`;
+        prevEndDate = `${prevYear}-${monthNum}-31`;
+      } else {
+        // Filtro por año completo
+        currentStartDate = `${currentYear}-01-01`;
+        currentEndDate = `${currentYear}-12-31`;
+        prevStartDate = `${prevYear}-01-01`;
+        prevEndDate = `${prevYear}-12-31`;
       }
 
-      // Query actual year con join a employees
+      // Query actual period con join a employees
       const { data: currentCosts, error: currentError } = await supabase
         .from("hr_employee_costs")
         .select(
@@ -41,8 +51,8 @@ export const useDashboardKPIs = (filters?: DashboardFilters) => {
           )
         `
         )
-        .gte("period", `${currentYear}-01-01`)
-        .lte("period", `${currentYear}-12-31`);
+        .gte("period", currentStartDate)
+        .lte("period", currentEndDate);
 
       if (currentError) throw currentError;
 
@@ -51,7 +61,7 @@ export const useDashboardKPIs = (filters?: DashboardFilters) => {
         ? currentCosts?.filter((c) => c.hr_employees?.company_id === filters.companyId)
         : currentCosts;
 
-      // Query previous year
+      // Query previous period
       const { data: prevCosts, error: prevError } = await supabase
         .from("hr_employee_costs")
         .select(
@@ -62,8 +72,8 @@ export const useDashboardKPIs = (filters?: DashboardFilters) => {
           )
         `
         )
-        .gte("period", `${prevYear}-01-01`)
-        .lte("period", `${prevYear}-12-31`);
+        .gte("period", prevStartDate)
+        .lte("period", prevEndDate);
 
       if (prevError) throw prevError;
 

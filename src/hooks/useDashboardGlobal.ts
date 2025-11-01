@@ -5,6 +5,7 @@ import { useDashboardHeatmap } from "./useDashboardHeatmap";
 export interface DashboardFilters {
   year?: number;
   companyId?: string;
+  month?: string; // "YYYY-MM" or "all"
 }
 
 /**

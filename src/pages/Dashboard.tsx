@@ -14,10 +14,17 @@ const Dashboard = () => {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [companyId, setCompanyId] = useState<string>("all");
+  const [month, setMonth] = useState<string>("all");
+
+  const handleYearChange = (newYear: number) => {
+    setYear(newYear);
+    setMonth("all"); // Reset month when year changes
+  };
 
   const { data, isLoading, error } = useDashboardGlobal({
     year,
     companyId: companyId === "all" ? undefined : companyId,
+    month: month === "all" ? undefined : month,
   });
 
   const handleCompanyClick = (id: string) => {
@@ -50,8 +57,10 @@ const Dashboard = () => {
         <DashboardFilters
           year={year}
           companyId={companyId}
-          onYearChange={setYear}
+          month={month}
+          onYearChange={handleYearChange}
           onCompanyChange={setCompanyId}
+          onMonthChange={setMonth}
         />
       </div>
 
@@ -85,7 +94,7 @@ const Dashboard = () => {
               data={data?.companiesData || []}
               onCompanyClick={handleCompanyClick}
             />
-            <DashboardHeatmap data={data?.heatmapData || []} />
+            {month === "all" && <DashboardHeatmap data={data?.heatmapData || []} />}
           </>
         )}
       </div>

@@ -14,12 +14,26 @@ export const useDashboardCompanies = (filters?: DashboardFilters) => {
     queryFn: async () => {
       const currentYear = filters?.year || new Date().getFullYear();
 
+      // Determinar rango de fechas según filtro de mes
+      let startDate: string;
+      let endDate: string;
+
+      if (filters?.month) {
+        // Filtro por mes específico
+        startDate = `${filters.month}-01`;
+        endDate = `${filters.month}-31`;
+      } else {
+        // Filtro por año completo
+        startDate = `${currentYear}-01-01`;
+        endDate = `${currentYear}-12-31`;
+      }
+
       // Usar vista optimizada vw_dashboard_monthly (tipado como any mientras se regeneran tipos)
       let query = supabase
         .from("vw_dashboard_monthly" as any)
         .select("*")
-        .gte("month", `${currentYear}-01-01`)
-        .lte("month", `${currentYear}-12-31`);
+        .gte("month", startDate)
+        .lte("month", endDate);
 
       if (filters?.companyId) {
         query = query.eq("company_id", filters.companyId);

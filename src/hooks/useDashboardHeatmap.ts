@@ -12,6 +12,11 @@ export const useDashboardHeatmap = (filters?: DashboardFilters) => {
   return useQuery({
     queryKey: ["dashboard-heatmap", filters],
     queryFn: async () => {
+      // Si hay filtro de mes, retornar array vacío (heatmap se oculta)
+      if (filters?.month) {
+        return [];
+      }
+
       const currentYear = filters?.year || new Date().getFullYear();
 
       // Usar vista optimizada vw_dashboard_monthly (tipado como any mientras se regeneran tipos)
