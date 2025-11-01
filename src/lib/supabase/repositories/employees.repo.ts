@@ -157,3 +157,23 @@ export const checkEmployeeCanBeDeleted = async (
 
   return { canDelete: true };
 };
+
+/**
+ * Actualiza el salario anual de un empleado
+ */
+export const updateEmployeeSalary = async (
+  employeeId: string,
+  newSalary: number
+): Promise<Employee> => {
+  const { data, error } = await supabase
+    .from("hr_employees")
+    .update({ annual_salary: newSalary })
+    .eq("id", employeeId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  if (!data) throw new Error("No se pudo actualizar el salario");
+
+  return data;
+};

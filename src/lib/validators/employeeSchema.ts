@@ -26,3 +26,15 @@ export type EmployeeFormData = z.infer<typeof employeeSchema>;
 export const validateEmployee = (data: unknown) => {
   return employeeSchema.safeParse(data);
 };
+
+// Schema para actualización de salario
+export const salaryUpdateSchema = z.object({
+  employeeId: z.string().uuid("ID de empleado inválido"),
+  newSalary: z
+    .number()
+    .min(0, "El salario no puede ser negativo")
+    .max(500000, "El salario excede el límite permitido (500.000€)")
+    .int("El salario debe ser un número entero"),
+});
+
+export type SalaryUpdateData = z.infer<typeof salaryUpdateSchema>;

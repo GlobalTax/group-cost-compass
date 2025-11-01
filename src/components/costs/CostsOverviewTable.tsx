@@ -14,6 +14,9 @@ import { exportCostsOverview } from "@/lib/exporters/costsOverviewExporter";
 import type { EmployeeAnnualCost } from "@/hooks/useCostsOverview";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { EditableCell } from "@/components/ui/editable-cell";
+import { useUpdateEmployeeSalary } from "@/hooks/useUpdateEmployeeSalary";
+import { useCurrentUserRole } from "@/hooks/useCurrentUserRole";
 
 interface CostsOverviewTableProps {
   data: EmployeeAnnualCost[];
@@ -22,6 +25,9 @@ interface CostsOverviewTableProps {
 
 export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { mutateAsync: updateSalary } = useUpdateEmployeeSalary();
+  const { data: userRole } = useCurrentUserRole();
+  const canEdit = userRole?.canEdit || false;
 
   // Filtrar por nombre
   const filteredData = data.filter((employee) =>
@@ -99,11 +105,20 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
                         {employee.company}
                       </TableCell>
                       <TableCell className="text-right">
-                        {new Intl.NumberFormat("es-ES", {
-                          style: "currency",
-                          currency: "EUR",
-                          minimumFractionDigits: 0,
-                        }).format(employee.salario_base_anual || 0)}
+                        <EditableCell
+                          value={employee.salario_base_anual}
+                          onSave={async (newValue) => {
+                            await updateSalary({
+                              employeeId: employee.employee_id,
+                              newSalary: newValue,
+                              oldSalary: employee.salario_base_anual,
+                            });
+                          }}
+                          format="currency"
+                          min={0}
+                          max={500000}
+                          disabled={!canEdit}
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         {new Intl.NumberFormat("es-ES", {
