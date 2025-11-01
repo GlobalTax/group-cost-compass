@@ -30,14 +30,20 @@ export const importFromAIResult = async (
   aiResult: AIParseResponse,
   userAdjustments: Record<string, string>,
   period: string,
+  fullDataset: Array<Record<string, any>>, // ✅ Dataset completo
   onProgress?: (current: number, total: number) => void
 ): Promise<{ employeesCreated: number; costsImported: number }> => {
   
+  // Validar que hay datos
+  if (!fullDataset || fullDataset.length === 0) {
+    throw new Error("No hay datos para importar");
+  }
+
   // Aplicar ajustes del usuario al mapeo
   const finalMapping = { ...aiResult.column_mapping, ...userAdjustments };
 
-  // Transformar preview a formato estándar
-  const transformedData = aiResult.preview.map((row) =>
+  // ✅ Transformar dataset COMPLETO (no solo preview)
+  const transformedData = fullDataset.map((row) =>
     transformRowWithMapping(row, finalMapping)
   );
 

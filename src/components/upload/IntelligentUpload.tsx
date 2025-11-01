@@ -68,6 +68,7 @@ export const IntelligentUpload = () => {
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const [period, setPeriod] = useState<string>("");
+  const [fullDataset, setFullDataset] = useState<Array<Record<string, any>>>([]);
 
   const { data: companies } = useCompanies();
 
@@ -96,6 +97,7 @@ export const IntelligentUpload = () => {
   const handleAnalyzeData = async (rows: Array<Record<string, any>>, sourceName: string) => {
     setAiResult(null);
     setUserAdjustments({});
+    setFullDataset(rows); // ✅ Guardar dataset completo
     setAnalyzing(true);
 
     try {
@@ -105,9 +107,12 @@ export const IntelligentUpload = () => {
         return;
       }
 
+      // ✅ Enviar solo muestra de 25 filas a la IA para análisis
+      const sampleRows = rows.slice(0, 25);
+
       const { data, error } = await supabase.functions.invoke("ai-parse-upload", {
         body: {
-          rows,
+          rows: sampleRows,
           fileName: sourceName,
           companyCatalog: companies || [],
         },
@@ -158,11 +163,16 @@ export const IntelligentUpload = () => {
       return;
     }
 
+    if (fullDataset.length === 0) {
+      toast.error("No hay datos para importar");
+      return;
+    }
+
     setImporting(true);
-    setImportProgress({ current: 0, total: aiResult.preview.length });
+    setImportProgress({ current: 0, total: fullDataset.length });
 
     try {
-      const result = await importFromAIResult(aiResult, userAdjustments, period, (current, total) => {
+      const result = await importFromAIResult(aiResult, userAdjustments, period, fullDataset, (current, total) => {
         setImportProgress({ current, total });
       });
 
@@ -173,6 +183,7 @@ export const IntelligentUpload = () => {
       setAiResult(null);
       setUserAdjustments({});
       setPeriod("");
+      setFullDataset([]);
     } catch (error: any) {
       toast.error(`Error en importación: ${error.message}`);
     } finally {
@@ -438,7 +449,7 @@ export const IntelligentUpload = () => {
                   onClick={handleImport}
                 >
                   <CheckCircle2 className="w-5 h-5 mr-2" />
-                  Importar {aiResult.preview.length} Registros
+                  Importar {fullDataset.length} Registros
                 </Button>
               </CardContent>
             </Card>
