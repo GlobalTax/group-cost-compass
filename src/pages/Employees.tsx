@@ -16,6 +16,7 @@ const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [yearFilter, setYearFilter] = useState<number>(2024);
 
   const { data: companies } = useCompanies();
 
@@ -83,6 +84,16 @@ const Employees = () => {
               <SelectItem value="inactive">Inactivos</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={yearFilter.toString()} onValueChange={(val) => setYearFilter(Number(val))}>
+            <SelectTrigger className="w-full sm:w-[120px]">
+              <SelectValue placeholder="Año" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Employee Counter */}
@@ -109,7 +120,7 @@ const Employees = () => {
             <EmployeeTableOptimized 
               filters={{ 
                 companyId: companyFilter !== "all" ? companyFilter : undefined, 
-                year: new Date().getFullYear(),
+                year: yearFilter,
                 searchTerm: searchTerm,
                 activeOnly: statusFilter === "active" ? true : statusFilter === "inactive" ? false : undefined
               }} 
