@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { CostsOverviewKPIs } from "@/components/costs/CostsOverviewKPIs";
 import { CostsOverviewTable } from "@/components/costs/CostsOverviewTable";
 import { useCostsOverview } from "@/hooks/useCostsOverview";
 import { useCompanies } from "@/hooks/useCompanies";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useTeams } from "@/hooks/useTeams";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -18,12 +20,32 @@ const CostsOverview = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("all");
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("all");
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
 
   const { data: companies } = useCompanies();
+  const { data: departments } = useDepartments();
+  const { data: teams } = useTeams({ 
+    departmentId: selectedDepartmentId !== "all" ? selectedDepartmentId : undefined 
+  });
   const { data: costsData, isLoading } = useCostsOverview({
     year: selectedYear,
     companyId: selectedCompanyId,
   });
+
+  const filteredData = useMemo(() => {
+    let filtered = costsData || [];
+    
+    if (selectedDepartmentId !== "all") {
+      filtered = filtered.filter(e => e.department_id === selectedDepartmentId);
+    }
+    
+    if (selectedTeamId !== "all") {
+      filtered = filtered.filter(e => e.team_id === selectedTeamId);
+    }
+    
+    return filtered;
+  }, [costsData, selectedDepartmentId, selectedTeamId]);
 
   // Generar lista de años (actual - 3 años hacia atrás)
   const years = Array.from({ length: 4 }, (_, i) => currentYear - i);
@@ -66,6 +88,34 @@ const CostsOverview = () => {
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={selectedDepartmentId} onValueChange={setSelectedDepartmentId}>
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="Todos los departamentos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los departamentos</SelectItem>
+            {departments?.map((dept) => (
+              <SelectItem key={dept.id} value={dept.id}>
+                {dept.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="Todos los equipos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los equipos</SelectItem>
+            {teams?.map((team) => (
+              <SelectItem key={team.id} value={team.id}>
+                {team.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* KPIs */}
@@ -83,8 +133,8 @@ const CostsOverview = () => {
       {isLoading ? (
         <Skeleton className="h-96" />
       ) : (
-        costsData && (
-          <CostsOverviewTable data={costsData} year={selectedYear} />
+        filteredData && (
+          <CostsOverviewTable data={filteredData} year={selectedYear} />
         )
       )}
     </div>

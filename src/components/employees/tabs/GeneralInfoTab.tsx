@@ -4,6 +4,8 @@ import { EditableSection, FieldDefinition } from "./EditableSection";
 import { useEmployeeUpdate } from "@/hooks/useEmployeeUpdate";
 import { useUpdateEmployeeCost } from "@/hooks/useEmployeeCosts";
 import { formatCurrency } from "@/lib/formatters";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useTeams } from "@/hooks/useTeams";
 
 interface GeneralInfoTabProps {
   employee: any;
@@ -31,6 +33,8 @@ const InfoField = ({ label, value }: { label: string; value: string | null | und
 export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfoTabProps) => {
   const { updateFields, isUpdating } = useEmployeeUpdate(employee.id);
   const { mutateAsync: updateCost, isPending: isUpdatingCost } = useUpdateEmployeeCost();
+  const { data: departments } = useDepartments();
+  const { data: teams } = useTeams({ departmentId: employee.department_id || undefined });
 
   const formatDate = (date: string | null) => {
     if (!date) return "—";
@@ -51,7 +55,20 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
   ];
 
   const organizationalDataFields: FieldDefinition[] = [
-    { name: "department", label: "Departamento", value: employee.department, type: "text", placeholder: "Recursos Humanos" },
+    { 
+      name: "department_id", 
+      label: "Departamento", 
+      value: employee.department_id, 
+      type: "select",
+      options: departments?.map(d => ({ value: d.id, label: d.name })) || []
+    },
+    { 
+      name: "team_id", 
+      label: "Equipo", 
+      value: employee.team_id, 
+      type: "select",
+      options: teams?.map(t => ({ value: t.id, label: t.name })) || []
+    },
     { name: "position", label: "Puesto", value: employee.position, type: "text", placeholder: "Analista" },
     { name: "contract_type", label: "Tipo de Contrato", value: employee.contract_type, type: "text", placeholder: "Laboral" },
     { name: "hire_date", label: "Fecha de Alta", value: employee.hire_date, type: "date" },

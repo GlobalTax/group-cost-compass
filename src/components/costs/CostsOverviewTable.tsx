@@ -79,9 +79,11 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Empresa</TableHead>
-                <TableHead className="text-right">Salario Anual</TableHead>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Empresa</TableHead>
+            <TableHead>Departamento</TableHead>
+            <TableHead>Equipo</TableHead>
+            <TableHead className="text-right">Salario Anual</TableHead>
                 <TableHead className="text-right">Coste SS</TableHead>
                 <TableHead className="text-right">Bonus Pagado</TableHead>
                 <TableHead className="text-right font-bold">TOTAL</TableHead>

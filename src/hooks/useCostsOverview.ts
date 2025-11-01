@@ -18,6 +18,11 @@ export interface EmployeeAnnualCost {
   coste_ss_anual: number;
   bonus_pagado_anual: number;
   coste_total_anual: number;
+  department_id: string | null;
+  department_name: string | null;
+  department_color: string | null;
+  team_id: string | null;
+  team_name: string | null;
 }
 
 /**

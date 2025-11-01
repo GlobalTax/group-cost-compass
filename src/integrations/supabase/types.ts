@@ -3970,6 +3970,13 @@ export type Database = {
             referencedColumns: ["department_id"]
           },
           {
+            foreignKeyName: "employee_contracts_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["department_id"]
+          },
+          {
             foreignKeyName: "employee_contracts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -4273,6 +4280,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "v_department_org_chart"
+            referencedColumns: ["department_id"]
+          },
+          {
+            foreignKeyName: "employee_onboarding_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
             referencedColumns: ["department_id"]
           },
           {
@@ -5372,6 +5386,7 @@ export type Database = {
           contract_type: string | null
           created_at: string | null
           department: string | null
+          department_id: string | null
           dni: string | null
           email: string | null
           employee_code: string | null
@@ -5386,6 +5401,7 @@ export type Database = {
           seniority_date: string | null
           success_fee_pct: number | null
           target_bonus_pct: number | null
+          team_id: string | null
           termination_date: string | null
           transfer_group: boolean | null
           updated_at: string | null
@@ -5400,6 +5416,7 @@ export type Database = {
           contract_type?: string | null
           created_at?: string | null
           department?: string | null
+          department_id?: string | null
           dni?: string | null
           email?: string | null
           employee_code?: string | null
@@ -5414,6 +5431,7 @@ export type Database = {
           seniority_date?: string | null
           success_fee_pct?: number | null
           target_bonus_pct?: number | null
+          team_id?: string | null
           termination_date?: string | null
           transfer_group?: boolean | null
           updated_at?: string | null
@@ -5428,6 +5446,7 @@ export type Database = {
           contract_type?: string | null
           created_at?: string | null
           department?: string | null
+          department_id?: string | null
           dni?: string | null
           email?: string | null
           employee_code?: string | null
@@ -5442,6 +5461,7 @@ export type Database = {
           seniority_date?: string | null
           success_fee_pct?: number | null
           target_bonus_pct?: number | null
+          team_id?: string | null
           termination_date?: string | null
           transfer_group?: boolean | null
           updated_at?: string | null
@@ -5469,11 +5489,46 @@ export type Database = {
             referencedColumns: ["company_id"]
           },
           {
+            foreignKeyName: "hr_employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "v_department_org_chart"
+            referencedColumns: ["department_id"]
+          },
+          {
+            foreignKeyName: "hr_employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["department_id"]
+          },
+          {
             foreignKeyName: "hr_employees_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employees_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employees_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["team_id"]
           },
         ]
       }
@@ -6885,6 +6940,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "v_department_org_chart"
+            referencedColumns: ["department_id"]
+          },
+          {
+            foreignKeyName: "outgoing_subscriptions_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
             referencedColumns: ["department_id"]
           },
         ]
@@ -9797,6 +9859,13 @@ export type Database = {
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "team_memberships_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["team_id"]
+          },
         ]
       }
       teams: {
@@ -9849,6 +9918,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "v_department_org_chart"
+            referencedColumns: ["department_id"]
+          },
+          {
+            foreignKeyName: "teams_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
             referencedColumns: ["department_id"]
           },
         ]
@@ -10363,6 +10439,13 @@ export type Database = {
             referencedColumns: ["department_id"]
           },
           {
+            foreignKeyName: "users_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["department_id"]
+          },
+          {
             foreignKeyName: "users_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
@@ -10824,10 +10907,15 @@ export type Database = {
           company_id: string | null
           coste_ss_anual: number | null
           coste_total_anual: number | null
+          department_color: string | null
+          department_id: string | null
+          department_name: string | null
           employee_id: string | null
           full_name: string | null
           org_id: string | null
           salario_base_anual: number | null
+          team_id: string | null
+          team_name: string | null
           year: number | null
         }
         Relationships: [
