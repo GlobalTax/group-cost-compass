@@ -45,13 +45,16 @@ export const TeamMembersManager = ({
 
   const { data: availableEmployees = [] } = useEmployees({
     activeOnly: true,
-    withoutTeam: true,
     departmentId,
   });
 
   const updateEmployeeTeam = useUpdateEmployeeTeam();
 
+  // Excluir empleados que ya están en el equipo actual
+  const currentMemberIds = new Set(currentMembers.map((m) => m.id));
+  
   const filteredEmployees = availableEmployees.filter((emp) =>
+    !currentMemberIds.has(emp.id) &&
     emp.full_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -71,13 +74,17 @@ export const TeamMembersManager = ({
 
     try {
       const results = await Promise.allSettled(
-        selectedEmployeeIds.map((employeeId) =>
-          updateEmployeeTeam.mutateAsync({
+        selectedEmployeeIds.map((employeeId) => {
+          // Obtener el team_id actual del empleado para auditoría correcta
+          const employee = availableEmployees.find((e) => e.id === employeeId);
+          const oldTeamId = employee?.team_id ?? null;
+          
+          return updateEmployeeTeam.mutateAsync({
             employeeId,
             newTeamId: teamId,
-            oldTeamId: null,
-          })
-        )
+            oldTeamId,
+          });
+        })
       );
 
       const successful = results.filter((r) => r.status === "fulfilled").length;
