@@ -346,6 +346,8 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
                             min={0}
                             max={500000}
                             disabled={!canEdit}
+                            placeholder="Clic para establecer"
+                            className={!employee.salario_base_anual ? "text-muted-foreground italic" : ""}
                           />
                         </TableCell>
                       )}

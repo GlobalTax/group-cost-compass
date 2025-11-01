@@ -226,6 +226,41 @@ export async function importA3NomData(
     // 7. Importar costes
     await bulkInsertCosts(preparationResult.costs, bulkCreateCostsFn, onProgress);
 
+    // 8. Calcular annual_salary para empleados sin salario base
+    const uniqueEmployeeIds = Array.from(new Set(preparationResult.costs.map(c => c.employee_id).filter(Boolean))) as string[];
+    
+    const { data: employeesWithoutSalary } = await supabase
+      .from("hr_employees")
+      .select("id")
+      .is("annual_salary", null)
+      .in("id", uniqueEmployeeIds);
+    
+    if (employeesWithoutSalary && employeesWithoutSalary.length > 0) {
+      console.log("[A3Nom][Import] Calculando salario anual para empleados:", employeesWithoutSalary.length);
+      
+      for (const emp of employeesWithoutSalary) {
+        // Obtener bruto promedio de los últimos 3 meses
+        const { data: recentCosts } = await supabase
+          .from("hr_employee_costs")
+          .select("bruto")
+          .eq("employee_id", emp.id)
+          .order("period", { ascending: false })
+          .limit(3);
+        
+        if (recentCosts && recentCosts.length > 0) {
+          const avgMonthlyBruto = recentCosts.reduce((sum, c) => sum + (c.bruto || 0), 0) / recentCosts.length;
+          const estimatedAnnualSalary = Math.round(avgMonthlyBruto * 12);
+          
+          if (estimatedAnnualSalary > 0) {
+            await supabase
+              .from("hr_employees")
+              .update({ annual_salary: estimatedAnnualSalary })
+              .eq("id", emp.id);
+          }
+        }
+      }
+    }
+
     console.groupEnd();
 
     return {

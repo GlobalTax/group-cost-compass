@@ -9,6 +9,7 @@ interface EditableCellProps {
   min?: number;
   max?: number;
   disabled?: boolean;
+  placeholder?: string;
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export const EditableCell = ({
   min = 0,
   max = 1000000,
   disabled = false,
+  placeholder,
   className,
 }: EditableCellProps) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -35,7 +37,9 @@ export const EditableCell = ({
   }, [isEditing]);
 
   const formatDisplay = (num: number | null): string => {
-    if (num === null) return "—";
+    if (num === null) {
+      return placeholder || "—";
+    }
     
     if (format === "currency") {
       return new Intl.NumberFormat("es-ES", {

@@ -81,6 +81,38 @@ export const importFromAIResult = async (
       onProgress,
     });
     employeesCreated = result.created;
+    
+    // Actualizar annual_salary si la IA detectó el campo
+    if (result.created > 0) {
+      for (let i = 0; i < transformedData.length; i++) {
+        const d = transformedData[i];
+        const salaryValue = d.salary ?? d.annual_salary ?? d.salario_anual ?? d.salario;
+        
+        if (salaryValue) {
+          const annualSalary = parseFloat(salaryValue);
+          if (!isNaN(annualSalary) && annualSalary > 0) {
+            const employeeName = d.employee_name ?? d.name;
+            const companyName = d.company;
+            
+            // Buscar el employee_id creado
+            const { data: employee } = await supabase
+              .from("hr_employees")
+              .select("id")
+              .eq("full_name", employeeName)
+              .eq("company_id", companies.find((c: any) => c.name === companyName)?.id)
+              .maybeSingle();
+            
+            if (employee) {
+              await supabase
+                .from("hr_employees")
+                .update({ annual_salary: annualSalary })
+                .eq("id", employee.id);
+            }
+          }
+        }
+      }
+    }
+    
     console.info("Empleados importados:", { empleados: employeesCreated, total: fullDataset.length });
   } else if (aiResult.detected_type === "costs" || aiResult.detected_type === "payroll") {
     // Preparar validación mock (ya que los datos vienen validados por IA)
