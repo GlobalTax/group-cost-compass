@@ -1,1 +1,4 @@
 project_id = "jzbbbwfnzpwxmuhpbdya"
+
+[functions.ai-parse-upload]
+verify_jwt = false

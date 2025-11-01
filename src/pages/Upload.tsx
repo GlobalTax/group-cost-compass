@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, AlertCircle, CheckCircle2, Info, Download } from "lucide-react";
+import { FileSpreadsheet, AlertCircle, CheckCircle2, Info, Download, Sparkles } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileDropzone } from "@/components/upload/FileDropzone";
 import { ValidationResults } from "@/components/upload/ValidationResults";
 import { ImportProgress } from "@/components/upload/ImportProgress";
 import { A3NomCostsUpload } from "@/components/upload/A3NomCostsUpload";
+import { IntelligentUpload } from "@/components/upload/IntelligentUpload";
 import { CostsPreviewTable } from "@/components/upload/CostsPreviewTable";
 import { parseEmployeesFile, type ParsedEmployee } from "@/lib/parsers/employeeParser";
 import { parseCostsFile, type ParsedCost } from "@/lib/parsers/costsParser";
@@ -149,11 +150,20 @@ const Upload = () => {
       </div>
 
       {/* Tabs for different import methods */}
-      <Tabs defaultValue="csv" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+      <Tabs defaultValue="intelligent" className="space-y-6">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
+          <TabsTrigger value="intelligent">
+            <Sparkles className="w-4 h-4 mr-2" />
+            IA Universal
+          </TabsTrigger>
           <TabsTrigger value="csv">CSV Simple</TabsTrigger>
           <TabsTrigger value="a3nom">A3Nom Excel</TabsTrigger>
         </TabsList>
+
+        {/* IA Universal Import Tab */}
+        <TabsContent value="intelligent">
+          <IntelligentUpload />
+        </TabsContent>
 
         {/* CSV Import Tab */}
         <TabsContent value="csv" className="space-y-6">
