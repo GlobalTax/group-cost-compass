@@ -66,6 +66,7 @@ const navigationItems = [
     items: [
       { title: "Empresas", url: "/admin/companies", icon: Building2 },
       { title: "Departamentos", url: "/admin/departments", icon: Layers },
+      { title: "Equipos", url: "/admin/teams", icon: Users },
       { title: "Roles Config", url: "/admin/roles-config", icon: Shield },
       { title: "Sistema", url: "/admin/settings", icon: Settings },
     ],
