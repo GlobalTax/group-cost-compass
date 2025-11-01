@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, Briefcase, Calculator } from "lucide-react";
+import { DollarSign, TrendingUp, Briefcase, Calculator, Receipt } from "lucide-react";
 import type { EmployeeAnnualCost } from "@/hooks/useCostsOverview";
 
 interface CostsOverviewKPIsProps {
@@ -9,6 +9,7 @@ interface CostsOverviewKPIsProps {
 export const CostsOverviewKPIs = ({ data }: CostsOverviewKPIsProps) => {
   // Calcular totales
   const totalSalarios = data.reduce((sum, e) => sum + (e.salario_base_anual || 0), 0);
+  const totalBrutoCobrado = data.reduce((sum, e) => sum + e.bruto_cobrado_anual, 0);
   const totalSS = data.reduce((sum, e) => sum + e.coste_ss_anual, 0);
   const totalBonus = data.reduce((sum, e) => sum + e.bonus_pagado_anual, 0);
   const totalCoste = data.reduce((sum, e) => sum + e.coste_total_anual, 0);
@@ -21,7 +22,13 @@ export const CostsOverviewKPIs = ({ data }: CostsOverviewKPIsProps) => {
       description: "Salarios base negociados",
     },
     {
-      title: "Coste Seguridad Social",
+      title: "Bruto Cobrado",
+      value: totalBrutoCobrado,
+      icon: Receipt,
+      description: "Total pagado en nóminas",
+    },
+    {
+      title: "Coste SS",
       value: totalSS,
       icon: TrendingUp,
       description: "Costes SS empresa",
@@ -42,7 +49,7 @@ export const CostsOverviewKPIs = ({ data }: CostsOverviewKPIsProps) => {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
       {kpis.map((kpi) => {
         const Icon = kpi.icon;
         return (

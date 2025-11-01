@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { CostsOverviewKPIs } from "@/components/costs/CostsOverviewKPIs";
 import { CostsOverviewTable } from "@/components/costs/CostsOverviewTable";
 import { useCostsOverview } from "@/hooks/useCostsOverview";
+import { useEmployees } from "@/hooks/useEmployees";
 import { useCompanies } from "@/hooks/useCompanies";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useTeams } from "@/hooks/useTeams";
@@ -22,6 +23,8 @@ const CostsOverview = () => {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("all");
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("all");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: companies } = useCompanies();
   const { data: departments } = useDepartments();
@@ -32,9 +35,20 @@ const CostsOverview = () => {
     year: selectedYear,
     companyId: selectedCompanyId,
   });
+  
+  // Obtener empleados con estado activo
+  const { data: employees } = useEmployees({
+    activeOnly: statusFilter === "active" ? true : statusFilter === "inactive" ? false : undefined
+  });
 
   const filteredData = useMemo(() => {
     let filtered = costsData || [];
+    
+    // Filtrar por estado activo/inactivo
+    if (statusFilter !== "all" && employees) {
+      const activeEmployeeIds = new Set(employees.map(e => e.id));
+      filtered = filtered.filter(e => activeEmployeeIds.has(e.employee_id));
+    }
     
     if (selectedDepartmentId !== "all") {
       filtered = filtered.filter(e => e.department_id === selectedDepartmentId);
@@ -44,8 +58,14 @@ const CostsOverview = () => {
       filtered = filtered.filter(e => e.team_id === selectedTeamId);
     }
     
+    if (searchTerm) {
+      filtered = filtered.filter(e => 
+        e.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
     return filtered;
-  }, [costsData, selectedDepartmentId, selectedTeamId]);
+  }, [costsData, selectedDepartmentId, selectedTeamId, searchTerm, statusFilter, employees]);
 
   // Generar lista de años (actual - 3 años hacia atrás)
   const years = Array.from({ length: 4 }, (_, i) => currentYear - i);
@@ -58,7 +78,7 @@ const CostsOverview = () => {
       />
 
       {/* Filtros */}
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-4">
         <Select
           value={selectedYear.toString()}
           onValueChange={(value) => setSelectedYear(parseInt(value))}
@@ -116,12 +136,34 @@ const CostsOverview = () => {
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="active">Activos</SelectItem>
+            <SelectItem value="inactive">Inactivos</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Búsqueda */}
+      <div>
+        <input
+          type="text"
+          placeholder="Buscar empleado..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full sm:w-96 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        />
       </div>
 
       {/* KPIs */}
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
@@ -134,7 +176,7 @@ const CostsOverview = () => {
         <Skeleton className="h-96" />
       ) : (
         filteredData && (
-          <CostsOverviewTable data={filteredData} year={selectedYear} />
+          <CostsOverviewTable data={filteredData} year={selectedYear} searchTerm={searchTerm} />
         )
       )}
     </div>

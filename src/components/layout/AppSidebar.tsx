@@ -29,10 +29,9 @@ const navigationItems = [
   {
     section: "EMPLEADOS",
     items: [
-      { title: "Empleados", url: "/employees", icon: Users },
+      { title: "Empleados", url: "/costs-overview", icon: Users },
       { title: "Selección", url: "/recruitment", icon: Briefcase },
       { title: "Costes", url: "/costs", icon: DollarSign },
-      { title: "Coste Plantilla", url: "/costs-overview", icon: Calculator },
       { title: "Traslados", url: "/transfers", icon: ArrowRightLeft },
       { title: "Onboarding", url: "/admin/onboarding", icon: UserPlus },
     ],

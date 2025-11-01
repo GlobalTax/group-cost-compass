@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 interface CostsOverviewFilters {
   year?: number;
   companyId?: string;
+  activeOnly?: boolean;
 }
 
 export interface EmployeeAnnualCost {
@@ -52,7 +53,7 @@ export const useCostsOverview = (filters?: CostsOverviewFilters) => {
         throw error;
       }
 
-      return data as EmployeeAnnualCost[];
+      return (data || []) as EmployeeAnnualCost[];
     },
     staleTime: 60000,
     refetchOnWindowFocus: false,

@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -9,11 +9,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, ArrowUpRight } from "lucide-react";
 import { exportCostsOverview } from "@/lib/exporters/costsOverviewExporter";
 import type { EmployeeAnnualCost } from "@/hooks/useCostsOverview";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
 import { EditableCell } from "@/components/ui/editable-cell";
 import { EditableSelectCell } from "@/components/ui/editable-select-cell";
 import { useUpdateEmployeeSalary } from "@/hooks/useUpdateEmployeeSalary";
@@ -27,10 +26,10 @@ import { Badge } from "@/components/ui/badge";
 interface CostsOverviewTableProps {
   data: EmployeeAnnualCost[];
   year: number;
+  searchTerm?: string;
 }
 
-export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
+export const CostsOverviewTable = ({ data, year, searchTerm = "" }: CostsOverviewTableProps) => {
   const { mutateAsync: updateSalary } = useUpdateEmployeeSalary();
   const { mutateAsync: updateDepartment } = useUpdateEmployeeDepartment();
   const { mutateAsync: updateTeam } = useUpdateEmployeeTeam();
@@ -51,22 +50,18 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
     label: t.name,
   })) || [];
 
-  // Filtrar por nombre
-  const filteredData = data.filter((employee) =>
-    employee.full_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // Calcular totales
   const totals = {
-    salario: filteredData.reduce((sum, e) => sum + (e.salario_base_anual || 0), 0),
-    ss: filteredData.reduce((sum, e) => sum + e.coste_ss_anual, 0),
-    bonus: filteredData.reduce((sum, e) => sum + e.bonus_pagado_anual, 0),
-    total: filteredData.reduce((sum, e) => sum + e.coste_total_anual, 0),
+    salario: data.reduce((sum, e) => sum + (e.salario_base_anual || 0), 0),
+    brutoCobrado: data.reduce((sum, e) => sum + e.bruto_cobrado_anual, 0),
+    ss: data.reduce((sum, e) => sum + e.coste_ss_anual, 0),
+    bonus: data.reduce((sum, e) => sum + e.bonus_pagado_anual, 0),
+    total: data.reduce((sum, e) => sum + e.coste_total_anual, 0),
   };
 
   const handleExport = () => {
     try {
-      exportCostsOverview(filteredData, year);
+      exportCostsOverview(data, year);
       toast.success("Exportación completada");
     } catch (error) {
       toast.error("Error al exportar datos");
@@ -80,50 +75,49 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
         <div className="flex-1">
           <CardTitle>Detalle por Empleado</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            {filteredData.length} empleados
+            {data.length} empleados
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <Input
-            placeholder="Buscar empleado..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64"
-          />
-          <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar CSV
-          </Button>
-        </div>
+        <Button onClick={handleExport} variant="outline" size="sm">
+          <Download className="h-4 w-4 mr-2" />
+          Exportar CSV
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Empresa</TableHead>
-            <TableHead>Departamento</TableHead>
-            <TableHead>Equipo</TableHead>
-            <TableHead className="text-right">Salario Anual</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Empresa</TableHead>
+                <TableHead>Departamento</TableHead>
+                <TableHead>Equipo</TableHead>
+                <TableHead className="text-right">Salario Anual</TableHead>
+                <TableHead className="text-right">Bruto Cobrado</TableHead>
                 <TableHead className="text-right">Coste SS</TableHead>
                 <TableHead className="text-right">Bonus Pagado</TableHead>
                 <TableHead className="text-right font-bold">TOTAL</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.length === 0 ? (
+              {data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground">
                     No se encontraron empleados
                   </TableCell>
                 </TableRow>
               ) : (
                 <>
-                  {filteredData.map((employee) => (
-                    <TableRow key={employee.employee_id}>
+                  {data.map((employee) => (
+                    <TableRow key={employee.employee_id} className="group">
                       <TableCell className="font-medium">
-                        {employee.full_name}
+                        <Link 
+                          to={`/employees/${employee.employee_id}`}
+                          className="flex items-center gap-2 hover:text-primary transition-colors"
+                        >
+                          {employee.full_name}
+                          <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </Link>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {employee.company}
@@ -191,6 +185,13 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
                           style: "currency",
                           currency: "EUR",
                           minimumFractionDigits: 0,
+                        }).format(employee.bruto_cobrado_anual)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {new Intl.NumberFormat("es-ES", {
+                          style: "currency",
+                          currency: "EUR",
+                          minimumFractionDigits: 0,
                         }).format(employee.coste_ss_anual)}
                       </TableCell>
                       <TableCell className="text-right">
@@ -218,6 +219,13 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
                         currency: "EUR",
                         minimumFractionDigits: 0,
                       }).format(totals.salario)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {new Intl.NumberFormat("es-ES", {
+                        style: "currency",
+                        currency: "EUR",
+                        minimumFractionDigits: 0,
+                      }).format(totals.brutoCobrado)}
                     </TableCell>
                     <TableCell className="text-right">
                       {new Intl.NumberFormat("es-ES", {

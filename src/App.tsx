@@ -33,6 +33,7 @@ import Compensation from "./pages/Compensation";
 import DealsTracker from "./pages/DealsTracker";
 import CompensationScales from "./pages/CompensationScales";
 import CostsOverview from "./pages/CostsOverview";
+import { Navigate } from "react-router-dom";
 
 // Admin pages - lazy loading (code splitting)
 const AdminRoles = lazy(() => import("./pages/AdminRoles"));
@@ -115,8 +116,8 @@ const App = () => (
                     <Route path="/onboarding/:token" element={<PublicOnboarding />} />
                     <Route path="/" element={<ProtectedDashboard />} />
                     <Route path="/dashboard" element={<ProtectedDashboard />} />
-              <Route path="/employees" element={<ProtectedEmployees />} />
-              <Route path="/employees/:id" element={<ProtectedEmployeeDetail />} />
+                    <Route path="/employees" element={<Navigate to="/costs-overview" replace />} />
+                    <Route path="/employees/:id" element={<ProtectedEmployeeDetail />} />
               <Route path="/recruitment" element={<ProtectedRecruitment />} />
               <Route path="/companies" element={<ProtectedCompanies />} />
               <Route path="/companies/:id" element={<ProtectedCompanyDetail />} />
