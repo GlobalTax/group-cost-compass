@@ -54,9 +54,9 @@ export const useUpdateEmployeeTeam = () => {
           throw new Error("El empleado pertenece a otra organización");
         }
 
-        // Advertencia si es de otro departamento (no bloquear)
+        // Advertencia si es de otro departamento (no bloquear asignaciones transversales)
         if (employee.department_id !== team.department_id) {
-          console.warn(`Empleado ${validated.employeeId} es de otro departamento`);
+          console.warn(`Equipo ${validated.newTeamId} es de otro departamento`);
         }
       }
 
@@ -78,9 +78,12 @@ export const useUpdateEmployeeTeam = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members"] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["costs-overview"] });
+      toast.success("Equipo actualizado correctamente");
     },
     onError: (error: Error) => {
       console.error("Error updating team:", error);
+      toast.error(`Error al asignar equipo: ${error.message}`);
       throw error;
     },
   });
