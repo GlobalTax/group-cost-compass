@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Users } from "lucide-react";
 import { TeamDialog } from "./TeamDialog";
 import { useTeams, useDeleteTeam } from "@/hooks/useTeams";
 import type { TeamWithDepartment } from "@/lib/supabase/repositories/teams.repo";
@@ -67,16 +67,17 @@ export const TeamsTable = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Departamento</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Departamento</TableHead>
+            <TableHead>Miembros</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {teams?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
                   No hay equipos registrados
                 </TableCell>
               </TableRow>
@@ -85,6 +86,14 @@ export const TeamsTable = () => {
                 <TableRow key={team.id}>
                   <TableCell className="font-medium">{team.name}</TableCell>
                   <TableCell>{team.departments?.name || "—"}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {(team as any).hr_employees?.[0]?.count || 0}
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={team.is_active ? "success" : "secondary"}>
                       {team.is_active ? "Activo" : "Inactivo"}

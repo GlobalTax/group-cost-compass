@@ -36,8 +36,11 @@ type EmployeeUpdate = Database["public"]["Tables"]["hr_employees"]["Update"];
  */
 export const useEmployees = (filters?: {
   companyId?: string;
+  departmentId?: string;
+  teamId?: string;
   searchTerm?: string;
   activeOnly?: boolean;
+  withoutTeam?: boolean;
 }) => {
   return useQuery({
     queryKey: ["employees", filters],
@@ -56,6 +59,18 @@ export const useEmployees = (filters?: {
 
       if (filters?.companyId) {
         query = query.eq("company_id", filters.companyId);
+      }
+
+      if (filters?.departmentId) {
+        query = query.eq("department_id", filters.departmentId);
+      }
+
+      if (filters?.teamId) {
+        query = query.eq("team_id", filters.teamId);
+      }
+
+      if (filters?.withoutTeam) {
+        query = query.is("team_id", null);
       }
 
       if (filters?.searchTerm) {

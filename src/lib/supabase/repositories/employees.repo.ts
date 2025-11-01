@@ -15,8 +15,11 @@ type EmployeeUpdate = Database["public"]["Tables"]["hr_employees"]["Update"];
  */
 export const fetchEmployees = async (filters?: {
   companyId?: string;
+  departmentId?: string;
+  teamId?: string;
   searchTerm?: string;
   activeOnly?: boolean;
+  withoutTeam?: boolean;
 }): Promise<Employee[]> => {
   let query = supabase
     .from("hr_employees")
@@ -34,6 +37,18 @@ export const fetchEmployees = async (filters?: {
 
   if (filters?.companyId) {
     query = query.eq("company_id", filters.companyId);
+  }
+
+  if (filters?.departmentId) {
+    query = query.eq("department_id", filters.departmentId);
+  }
+
+  if (filters?.teamId) {
+    query = query.eq("team_id", filters.teamId);
+  }
+
+  if (filters?.withoutTeam) {
+    query = query.is("team_id", null);
   }
 
   if (filters?.searchTerm) {

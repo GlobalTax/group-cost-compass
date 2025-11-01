@@ -12,7 +12,11 @@ export interface TeamWithDepartment extends Team {
 export async function fetchTeams(filters?: { departmentId?: string }): Promise<TeamWithDepartment[]> {
   let query = supabase
     .from('teams')
-    .select('*, departments(name)')
+    .select(`
+      *,
+      departments(name),
+      hr_employees!team_id(count)
+    `)
     .eq('is_active', true)
     .order('name');
 
