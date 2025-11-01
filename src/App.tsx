@@ -16,7 +16,6 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
-import Companies from "./pages/Companies";
 import CompanyDetail from "./pages/CompanyDetail";
 import Upload from "./pages/Upload";
 import Transfers from "./pages/Transfers";
@@ -67,7 +66,6 @@ const ProtectedBudget = withAuth(['admin', 'finance', 'super_admin'])(Budget);
 const ProtectedBudgetDetail = withAuth(['admin', 'finance', 'super_admin'])(BudgetDetail);
 const ProtectedEmployees = withAuth(['admin', 'manager', 'super_admin'])(Employees);
 const ProtectedEmployeeDetail = withAuth(['admin', 'manager', 'super_admin'])(EmployeeDetail);
-const ProtectedCompanies = withAuth(['admin', 'finance', 'super_admin'])(Companies);
 const ProtectedCompanyDetail = withAuth(['admin', 'finance', 'super_admin'])(CompanyDetail);
 const ProtectedUpload = withAuth(['admin', 'super_admin'])(Upload);
 const ProtectedTransfers = withAuth(['admin', 'manager', 'super_admin'])(Transfers);
@@ -121,7 +119,6 @@ const App = () => (
                     <Route path="/employees" element={<Navigate to="/costs-overview" replace />} />
                     <Route path="/employees/:id" element={<ProtectedEmployeeDetail />} />
               <Route path="/recruitment" element={<ProtectedRecruitment />} />
-              <Route path="/companies" element={<ProtectedCompanies />} />
               <Route path="/companies/:id" element={<ProtectedCompanyDetail />} />
               <Route path="/upload" element={<ProtectedUpload />} />
               <Route path="/transfers" element={<ProtectedTransfers />} />

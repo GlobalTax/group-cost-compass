@@ -23,7 +23,6 @@ const navigationItems = [
     section: "PANEL",
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      { title: "Empresas", url: "/companies", icon: Building2 },
     ],
   },
   {
