@@ -28,7 +28,7 @@ export function OutOfBandAlert() {
       if (!band) return null;
 
       const employeeCosts = costsSummary?.find((c) => c.employee_id === emp.id);
-      const annualSalary = employeeCosts?.bruto_anual || 0;
+      const annualSalary = employeeCosts?.bruto_cobrado_anual || 0;
 
       if (annualSalary === 0) return null;
 

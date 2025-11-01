@@ -6,23 +6,21 @@ interface EmployeeCostsSummaryFilters {
   companyId?: string;
 }
 
-// Estructura real de vw_employee_annual (actualizada con campos detallados)
+// Estructura actualizada de vw_employee_annual con campos simplificados
 interface EmployeeAnnualCost {
   employee_id: string;
   full_name: string;
-  salario_base_anual: number | null; // Salario negociado
   company: string;
   company_id: string;
-  bruto_anual: number;
-  coste_anual: number;
-  salario_neto_anual: number;
-  coste_ss_anual: number;
-  bonus_anual: number;
-  salario_mensual_promedio: number;
-  coste_ss_mensual_promedio: number;
-  bonus_pagado: number;
   year: number;
   org_id: string;
+  
+  // CAMPOS CLAVE PARA CUADRO DE MANDO
+  salario_base_anual: number | null;  // Salario negociado
+  bruto_cobrado_anual: number;        // Total cobrado en nóminas
+  coste_ss_anual: number;             // Seguridad Social calculado
+  bonus_pagado_anual: number;         // Bonus pagado
+  coste_total_anual: number;          // TOTAL empresa
 }
 
 /**

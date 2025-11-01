@@ -61,7 +61,6 @@ export const EmployeeTableOptimized = memo(({ filters }: EmployeeTableOptimizedP
             <TableHead className="font-semibold">Empresa</TableHead>
             <TableHead className="font-semibold text-right">Salario Base Anual</TableHead>
             <TableHead className="font-semibold text-right">Total Cobrado</TableHead>
-            <TableHead className="font-semibold text-right">Bonus Anual</TableHead>
             <TableHead className="font-semibold text-right">Bonus Pagado</TableHead>
             <TableHead className="font-semibold text-right">Coste SS</TableHead>
             <TableHead className="w-[60px]"></TableHead>
@@ -85,13 +84,10 @@ export const EmployeeTableOptimized = memo(({ filters }: EmployeeTableOptimizedP
                   {employee.salario_base_anual ? formatCurrency(employee.salario_base_anual) : "—"}
                 </TableCell>
                 <TableCell className="text-right font-medium">
-                  {employee.bruto_anual > 0 ? formatCurrency(employee.bruto_anual) : "—"}
+                  {employee.bruto_cobrado_anual > 0 ? formatCurrency(employee.bruto_cobrado_anual) : "—"}
                 </TableCell>
                 <TableCell className="text-right font-medium">
-                  {employee.bonus_anual > 0 ? formatCurrency(employee.bonus_anual) : "—"}
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {employee.bonus_pagado > 0 ? formatCurrency(employee.bonus_pagado) : "—"}
+                  {employee.bonus_pagado_anual > 0 ? formatCurrency(employee.bonus_pagado_anual) : "—"}
                 </TableCell>
                 <TableCell className="text-right font-medium">
                   {employee.coste_ss_anual > 0 ? formatCurrency(employee.coste_ss_anual) : "—"}

@@ -32,6 +32,7 @@ import Recruitment from "./pages/Recruitment";
 import Compensation from "./pages/Compensation";
 import DealsTracker from "./pages/DealsTracker";
 import CompensationScales from "./pages/CompensationScales";
+import CostsOverview from "./pages/CostsOverview";
 
 // Admin pages - lazy loading (code splitting)
 const AdminRoles = lazy(() => import("./pages/AdminRoles"));
@@ -56,6 +57,7 @@ const queryClient = new QueryClient();
 // Protected routes
 const ProtectedDashboard = withAuth(['admin', 'finance', 'super_admin'])(Dashboard);
 const ProtectedCosts = withAuth(['admin', 'finance', 'super_admin'])(Costs);
+const ProtectedCostsOverview = withAuth(['admin', 'finance', 'super_admin'])(CostsOverview);
 const ProtectedAudit = withAuth(['admin', 'super_admin'])(Audit);
 const ProtectedBudget = withAuth(['admin', 'finance', 'super_admin'])(Budget);
 const ProtectedBudgetDetail = withAuth(['admin', 'finance', 'super_admin'])(BudgetDetail);
@@ -117,8 +119,9 @@ const App = () => (
               <Route path="/companies" element={<ProtectedCompanies />} />
               <Route path="/companies/:id" element={<ProtectedCompanyDetail />} />
               <Route path="/upload" element={<ProtectedUpload />} />
-                    <Route path="/transfers" element={<ProtectedTransfers />} />
+              <Route path="/transfers" element={<ProtectedTransfers />} />
                     <Route path="/costs" element={<ProtectedCosts />} />
+                    <Route path="/costs-overview" element={<ProtectedCostsOverview />} />
                     <Route path="/budget" element={<ProtectedBudget />} />
                     <Route path="/budget/new" element={<ProtectedBudgetDetail />} />
                     <Route path="/budget/:id" element={<ProtectedBudgetDetail />} />
