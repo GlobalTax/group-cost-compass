@@ -82,7 +82,7 @@ export async function checkDepartmentCanBeDeleted(
   const bandResult = await supabase
     .from('compensation_bands')
     .select('id')
-    .eq('department_id', id)
+    .eq('department', department.name)
     .eq('is_active', true);
 
   if (bandResult.error) throw new Error(`Error al verificar bandas salariales: ${bandResult.error.message}`);
