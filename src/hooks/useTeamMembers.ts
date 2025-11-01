@@ -42,7 +42,6 @@ export const useAddTeamMember = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members"] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   });
 };
@@ -71,7 +70,6 @@ export const useRemoveTeamMember = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members"] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   });
 };

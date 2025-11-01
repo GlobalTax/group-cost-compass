@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -132,6 +133,9 @@ export const TeamDialog = ({ open, onOpenChange, team }: TeamDialogProps) => {
       <DialogContent className={team ? "max-w-5xl" : "max-w-md"}>
         <DialogHeader>
           <DialogTitle>{team ? 'Editar Equipo' : 'Nuevo Equipo'}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {team ? "Modifica la información del equipo" : "Completa el formulario para crear un nuevo equipo"}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

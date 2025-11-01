@@ -146,6 +146,7 @@ export const TeamMembersManager = ({
           <Badge variant="outline">{currentMembers.length}</Badge>
         </div>
         <Button
+          type="button"
           size="sm"
           onClick={() => setIsAddDialogOpen(true)}
           disabled={!departmentId}
@@ -187,6 +188,7 @@ export const TeamMembersManager = ({
                   </TableCell>
                   <TableCell>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveMember(member.id)}
@@ -282,6 +284,7 @@ export const TeamMembersManager = ({
 
             <div className="flex justify-end gap-2">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setIsAddDialogOpen(false);
@@ -292,6 +295,7 @@ export const TeamMembersManager = ({
                 Cancelar
               </Button>
               <Button
+                type="button"
                 onClick={handleAddMembers}
                 disabled={
                   selectedEmployeeIds.length === 0 ||

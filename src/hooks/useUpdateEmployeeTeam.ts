@@ -78,7 +78,6 @@ export const useUpdateEmployeeTeam = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members"] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
     onError: (error: Error) => {
       console.error("Error updating team:", error);
