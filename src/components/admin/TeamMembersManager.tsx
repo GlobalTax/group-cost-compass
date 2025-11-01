@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { UserPlus, UserMinus, Users } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useUpdateEmployeeTeam } from "@/hooks/useUpdateEmployeeTeam";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Employee = Database["public"]["Tables"]["hr_employees"]["Row"];
@@ -63,16 +64,46 @@ export const TeamMembersManager = ({
   };
 
   const handleAddMembers = async () => {
-    for (const employeeId of selectedEmployeeIds) {
-      await updateEmployeeTeam.mutateAsync({
-        employeeId,
-        newTeamId: teamId,
-        oldTeamId: null,
-      });
+    const results = await Promise.allSettled(
+      selectedEmployeeIds.map((employeeId) =>
+        updateEmployeeTeam.mutateAsync({
+          employeeId,
+          newTeamId: teamId,
+          oldTeamId: null,
+        })
+      )
+    );
+
+    const successful = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.filter((r) => r.status === "rejected").length;
+
+    if (successful > 0) {
+      toast.success(
+        `${successful} miembro${successful > 1 ? "s" : ""} añadido${
+          successful > 1 ? "s" : ""
+        } correctamente`
+      );
     }
-    setSelectedEmployeeIds([]);
-    setIsAddDialogOpen(false);
-    setSearchTerm("");
+
+    if (failed > 0) {
+      const errors = results
+        .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+        .map((r) => r.reason?.message || "Error desconocido");
+
+      toast.error(
+        `${failed} empleado${
+          failed > 1 ? "s" : ""
+        } no pudieron ser añadidos: ${errors[0]}`
+      );
+    }
+
+    // Solo cerrar si todos fueron exitosos
+    if (failed === 0) {
+      setSelectedEmployeeIds([]);
+      setIsAddDialogOpen(false);
+      setSearchTerm("");
+    }
+
     onMembersChange?.();
   };
 
