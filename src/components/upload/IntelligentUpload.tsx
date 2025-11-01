@@ -10,8 +10,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileDropzone } from "./FileDropzone";
+import { PasteArea } from "./PasteArea";
 import { ImportProgress } from "./ImportProgress";
-import { Sparkles, AlertTriangle, Loader2, RefreshCw, CheckCircle2, Settings } from "lucide-react";
+import { Sparkles, AlertTriangle, Loader2, RefreshCw, CheckCircle2, Settings, Upload, Clipboard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanies } from "@/hooks/useCompanies";
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ const FIELD_OPTIONS = {
 };
 
 export const IntelligentUpload = () => {
+  const [uploadMode, setUploadMode] = useState<"file" | "paste">("file");
   const [file, setFile] = useState<File | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiResult, setAiResult] = useState<AIParseResponse | null>(null);
@@ -91,17 +93,14 @@ export const IntelligentUpload = () => {
     }
   };
 
-  const handleFileSelect = async (selectedFile: File) => {
-    setFile(selectedFile);
+  const handleAnalyzeData = async (rows: Array<Record<string, any>>, sourceName: string) => {
     setAiResult(null);
     setUserAdjustments({});
     setAnalyzing(true);
 
     try {
-      const rows = await parseFile(selectedFile);
-
       if (rows.length === 0) {
-        toast.error("El archivo está vacío");
+        toast.error("No hay datos para analizar");
         setAnalyzing(false);
         return;
       }
@@ -109,7 +108,7 @@ export const IntelligentUpload = () => {
       const { data, error } = await supabase.functions.invoke("ai-parse-upload", {
         body: {
           rows,
-          fileName: selectedFile.name,
+          fileName: sourceName,
           companyCatalog: companies || [],
         },
       });
@@ -126,10 +125,21 @@ export const IntelligentUpload = () => {
 
       toast.success(`Análisis completado: ${result.detected_type} (${(result.confidence * 100).toFixed(0)}% confianza)`);
     } catch (error: any) {
-      toast.error(`Error al analizar archivo: ${error.message}`);
+      toast.error(`Error al analizar: ${error.message}`);
     } finally {
       setAnalyzing(false);
     }
+  };
+
+  const handleFileSelect = async (selectedFile: File) => {
+    setFile(selectedFile);
+    const rows = await parseFile(selectedFile);
+    await handleAnalyzeData(rows, selectedFile.name);
+  };
+
+  const handlePastedData = async (rows: Array<Record<string, any>>) => {
+    setFile(null);
+    await handleAnalyzeData(rows, "Datos Pegados");
   };
 
   const handleAdjustMapping = (originalColumn: string, newField: string) => {
@@ -178,9 +188,9 @@ export const IntelligentUpload = () => {
       <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-950">
         <Sparkles className="h-4 w-4 text-purple-600" />
         <AlertDescription>
-          <strong>Importación Inteligente con IA:</strong> Sube cualquier Excel/CSV. 
-          La IA detectará automáticamente la estructura, tipo de datos, y mapeará columnas. 
-          Puedes ajustar el mapeo antes de confirmar.
+          <strong>Importación Inteligente con IA:</strong> Sube un archivo Excel/CSV o copia 
+          y pega datos directamente desde tu hoja de cálculo. La IA detectará automáticamente 
+          la estructura, tipo de datos, y mapeará columnas.
         </AlertDescription>
       </Alert>
 
@@ -195,13 +205,43 @@ export const IntelligentUpload = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Subir Archivo</CardTitle>
+          <CardTitle>Método de Importación</CardTitle>
           <CardDescription>
-            Formatos soportados: Excel (.xls, .xlsx), CSV (.csv), o archivos de texto con tabs (.txt)
+            Elige cómo quieres importar los datos
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <FileDropzone onFileSelect={handleFileSelect} accept=".xls,.xlsx,.csv,.txt" />
+        <CardContent className="space-y-4">
+          {/* Toggle entre modos */}
+          <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
+            <Button
+              variant={uploadMode === "file" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setUploadMode("file")}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Subir Archivo
+            </Button>
+            <Button
+              variant={uploadMode === "paste" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setUploadMode("paste")}
+            >
+              <Clipboard className="h-4 w-4 mr-2" />
+              Copiar y Pegar
+            </Button>
+          </div>
+
+          {/* Zona de entrada según modo */}
+          {uploadMode === "file" ? (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Formatos soportados: Excel (.xls, .xlsx), CSV (.csv), o archivos de texto con tabs (.txt)
+              </p>
+              <FileDropzone onFileSelect={handleFileSelect} accept=".xls,.xlsx,.csv,.txt" />
+            </div>
+          ) : (
+            <PasteArea onParsedData={handlePastedData} disabled={analyzing} />
+          )}
         </CardContent>
       </Card>
 
