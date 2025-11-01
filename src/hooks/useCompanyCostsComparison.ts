@@ -12,6 +12,8 @@ export interface CompanyCostsSummary {
   coste_acumulado_year_anterior: number;
   variacion_percent: number;
   variacion_euros: number;
+  variacion_empleados_absoluta: number;
+  variacion_empleados_percent: number;
 }
 
 interface MonthlyData {
@@ -101,6 +103,8 @@ export const useCompanyCostsComparison = (filters: CompanyCostsFilters) => {
             coste_acumulado_year_anterior: 0,
             variacion_percent: 0,
             variacion_euros: 0,
+            variacion_empleados_absoluta: 0,
+            variacion_empleados_percent: 0,
           });
         }
 
@@ -120,14 +124,23 @@ export const useCompanyCostsComparison = (filters: CompanyCostsFilters) => {
       });
 
       // 4. Calcular variaciones
-      const result = Array.from(companies.values()).map((company) => ({
-        ...company,
-        variacion_euros: company.coste_acumulado_ytd - company.coste_acumulado_year_anterior,
-        variacion_percent: calculatePercentageChange(
-          company.coste_acumulado_ytd,
-          company.coste_acumulado_year_anterior
-        ),
-      }));
+      const result = Array.from(companies.values()).map((company) => {
+        const empDiff = company.num_employees_current - company.num_employees_previous;
+        const empPercent = company.num_employees_previous > 0
+          ? (empDiff / company.num_employees_previous) * 100
+          : 0;
+
+        return {
+          ...company,
+          variacion_euros: company.coste_acumulado_ytd - company.coste_acumulado_year_anterior,
+          variacion_percent: calculatePercentageChange(
+            company.coste_acumulado_ytd,
+            company.coste_acumulado_year_anterior
+          ),
+          variacion_empleados_absoluta: empDiff,
+          variacion_empleados_percent: empPercent,
+        };
+      });
 
       return result.sort((a, b) => b.coste_acumulado_ytd - a.coste_acumulado_ytd);
     },

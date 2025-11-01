@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCompanyCostsComparison } from "@/hooks/useCompanyCostsComparison";
 import { formatCurrency } from "@/lib/formatters";
 import { exportCompanyCostsToCSV } from "@/lib/exporters/companyCostsExporter";
+import { cn } from "@/lib/utils";
 
 interface CompanyCostsComparisonTableProps {
   year: number;
@@ -86,13 +87,14 @@ export const CompanyCostsComparisonTable = ({
           <TableHeader>
             <TableRow>
               <TableHead>Empresa</TableHead>
-              <TableHead className="text-right">Nº Empleados</TableHead>
+              <TableHead className="text-right">Nº Empleados {year}</TableHead>
+              <TableHead className="text-right">Variación Empleados</TableHead>
               <TableHead className="text-right">Coste Mes Actual</TableHead>
               <TableHead className="text-right">Acumulado {year}</TableHead>
               <TableHead className="text-right text-muted-foreground">
                 Acumulado {year - 1}
               </TableHead>
-              <TableHead className="text-right">Variación</TableHead>
+              <TableHead className="text-right">Variación Costes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -100,14 +102,36 @@ export const CompanyCostsComparisonTable = ({
               <TableRow key={company.company_id}>
                 <TableCell className="font-medium">{company.company_name}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex flex-col items-end">
-                    <span>{company.num_employees_current}</span>
-                    {company.num_employees_previous > 0 && company.num_employees_previous !== company.num_employees_current && (
-                      <span className="text-xs text-muted-foreground">
-                        ({year - 1}: {company.num_employees_previous})
-                      </span>
-                    )}
-                  </div>
+                  {company.num_employees_current}
+                </TableCell>
+                <TableCell className="text-right">
+                  {company.num_employees_previous > 0 ? (
+                    <div className="flex items-center justify-end gap-2">
+                      {company.variacion_empleados_absoluta > 0 ? (
+                        <TrendingUp className="h-4 w-4 text-blue-600" />
+                      ) : company.variacion_empleados_absoluta < 0 ? (
+                        <TrendingDown className="h-4 w-4 text-orange-600" />
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <div className="flex flex-col items-end">
+                        <span className={cn(
+                          "font-medium",
+                          company.variacion_empleados_absoluta > 0 && "text-blue-600",
+                          company.variacion_empleados_absoluta < 0 && "text-orange-600"
+                        )}>
+                          {company.variacion_empleados_absoluta > 0 ? "+" : ""}
+                          {company.variacion_empleados_absoluta}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {company.variacion_empleados_percent > 0 ? "+" : ""}
+                          {company.variacion_empleados_percent.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right font-medium">
                   {formatCurrency(company.coste_mensual_actual)}
@@ -157,14 +181,30 @@ export const CompanyCostsComparisonTable = ({
               <TableRow className="bg-primary/5 font-bold border-t-2">
                 <TableCell className="font-bold">TOTAL GRUPO</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex flex-col items-end">
-                    <span>{totals.num_employees_current} empleados</span>
-                    {totals.num_employees_previous > 0 && totals.num_employees_previous !== totals.num_employees_current && (
-                      <span className="text-xs font-normal text-muted-foreground">
-                        ({year - 1}: {totals.num_employees_previous})
+                  {totals.num_employees_current}
+                </TableCell>
+                <TableCell className="text-right">
+                  {totals.num_employees_previous > 0 ? (
+                    <div className="flex items-center justify-end gap-2">
+                      {(totals.num_employees_current - totals.num_employees_previous) > 0 ? (
+                        <TrendingUp className="h-4 w-4 text-blue-600" />
+                      ) : (totals.num_employees_current - totals.num_employees_previous) < 0 ? (
+                        <TrendingDown className="h-4 w-4 text-orange-600" />
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <span className={cn(
+                        "font-bold",
+                        (totals.num_employees_current - totals.num_employees_previous) > 0 && "text-blue-600",
+                        (totals.num_employees_current - totals.num_employees_previous) < 0 && "text-orange-600"
+                      )}>
+                        {(totals.num_employees_current - totals.num_employees_previous) > 0 ? "+" : ""}
+                        {totals.num_employees_current - totals.num_employees_previous}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <span>—</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   {formatCurrency(totals.coste_mensual)}

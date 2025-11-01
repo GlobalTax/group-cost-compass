@@ -13,23 +13,27 @@ export const exportCompanyCostsToCSV = (
   
   const headers = [
     "Empresa",
-    "Nº Empleados Actual",
-    "Nº Empleados Anterior",
+    `Nº Empleados ${year}`,
+    `Nº Empleados ${year - 1}`,
+    "Var. Empleados",
+    "Var. Empleados %",
     "Coste Mensual (€)",
     `Acumulado ${year} (€)`,
     `Acumulado ${year - 1} (€)`,
-    "Variación %",
-    "Variación €",
+    "Variación Costes %",
+    "Variación Costes €",
   ].join(";");
 
   const rows = data.map((company) => [
     company.company_name,
     company.num_employees_current,
     company.num_employees_previous,
+    company.variacion_empleados_absoluta,
+    company.variacion_empleados_percent.toFixed(1) + "%",
     company.coste_mensual_actual.toFixed(2),
     company.coste_acumulado_ytd.toFixed(2),
     company.coste_acumulado_year_anterior.toFixed(2),
-    company.variacion_percent.toFixed(2),
+    company.variacion_percent.toFixed(2) + "%",
     company.variacion_euros.toFixed(2),
   ].join(";"));
 
@@ -43,10 +47,17 @@ export const exportCompanyCostsToCSV = (
     variacion_euros: data.reduce((sum, c) => sum + c.variacion_euros, 0),
   };
 
+  const empDiff = totals.num_employees_current - totals.num_employees_previous;
+  const empPercent = totals.num_employees_previous > 0
+    ? ((empDiff / totals.num_employees_previous) * 100).toFixed(1) + "%"
+    : "-";
+
   const totalRow = [
     "TOTAL GRUPO",
     totals.num_employees_current,
     totals.num_employees_previous,
+    empDiff,
+    empPercent,
     totals.coste_mensual.toFixed(2),
     totals.coste_acumulado_ytd.toFixed(2),
     totals.coste_acumulado_anterior.toFixed(2),
