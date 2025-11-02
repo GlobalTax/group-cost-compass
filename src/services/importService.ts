@@ -213,17 +213,132 @@ export const importCosts = async ({
     throw new Error("No hay datos válidos para importar");
   }
 
+  // Mapa de empresa (nombre→id)
+  const companyByName = new Map<string, string>(
+    companies.map((c) => [c.name.toLowerCase().trim(), c.id])
+  );
+
+  // Soporte de código de empleado (employee_id/employee_code)
+  const hasCode = validRows.some(
+    (r) => typeof (r as any).employee_id === "string" && ((r as any).employee_id || "").trim() !== ""
+  );
+
+  if (hasCode) {
+    console.log("🔍 Debug importCosts (codes) - Primera fila:", validRows[0]);
+    const codes = Array.from(
+      new Set(
+        validRows
+          .map((r) => ((((r as any).employee_id as string) || "").trim()))
+          .filter(Boolean)
+      )
+    );
+
+    if (codes.length === 0) {
+      throw new Error("Ningún código de empleado válido detectado en el archivo (columna vacía)");
+    }
+
+    const { data: emps, error: empErr } = await supabase
+      .from("hr_employees")
+      .select("id, employee_code, company_id")
+      .in("employee_code", codes);
+
+    if (empErr) throw empErr;
+
+    const byCode = new Map<string, Array<{ id: string; company_id: string }>>();
+    const byCodeAndCompany = new Map<string, string>(); // code|companyId -> employeeId
+
+    emps?.forEach((e: any) => {
+      const code = (e.employee_code || "").trim();
+      const comp = (e.company_id as string) || "";
+      if (!code) return;
+      const arr = byCode.get(code) || [];
+      arr.push({ id: e.id, company_id: comp });
+      byCode.set(code, arr);
+      if (comp) byCodeAndCompany.set(`${code}|${comp}`, e.id);
+    });
+
+    const matchedCodes = new Set<string>();
+
+    const costsToImportCode = validRows
+      .map((r) => {
+        const code = ((((r as any).employee_id as string) || "").trim());
+        if (!code) return null;
+        const compName = (r.company as string | undefined)?.toLowerCase().trim();
+        const compId = compName ? companyByName.get(compName) : undefined;
+
+        if (compId) {
+          const eid = byCodeAndCompany.get(`${code}|${compId}`);
+          if (eid) {
+            matchedCodes.add(code);
+            return {
+              employee_id: eid,
+              period: `${r.date}-01`,
+              bruto: r.bruto,
+              coste_empresa: r.coste_empresa,
+            };
+          }
+        }
+        const matches = byCode.get(code) || [];
+        if (matches.length === 1) {
+          matchedCodes.add(code);
+          return {
+            employee_id: matches[0].id,
+            period: `${r.date}-01`,
+            bruto: r.bruto,
+            coste_empresa: r.coste_empresa,
+          };
+        }
+        return null; // 0 o ambiguo
+      })
+      .filter(Boolean) as Array<{ employee_id: string; period: string; bruto: number; coste_empresa: number }>;
+
+    if (costsToImportCode.length === 0) {
+      const sampleMissing = codes.filter((c) => !matchedCodes.has(c)).slice(0, 5);
+      const diagnostic = sampleMissing.length
+        ? ` Ejemplos: ${sampleMissing.join(" | ")}`
+        : " (los códigos llegan vacíos o no coinciden con employee_code en BD)";
+      throw new Error(
+        `Ningún empleado encontrado con los códigos proporcionados.${diagnostic} \nSugerencia: verifica que la columna 'Código empleado' esté mapeada a employee_id y que 'Empresa' coincida con el catálogo.`
+      );
+    }
+
+    // Verificar duplicados
+    const periods = [...new Set(costsToImportCode.map((c) => c.period))];
+    const hasDuplicates = await checkDuplicatePeriods(periods);
+
+    if (hasDuplicates) {
+      const confirmed = window.confirm(
+        "Ya existen costes para algunos períodos. ¿Desea sobrescribir?"
+      );
+      if (!confirmed) {
+        throw new Error("Importación cancelada por el usuario");
+      }
+
+      await supabase
+        .from("hr_employee_costs")
+        .delete()
+        .in("period", periods);
+    }
+
+    const { BATCH_SIZE } = IMPORT;
+    for (let i = 0; i < costsToImportCode.length; i += BATCH_SIZE) {
+      const batch = costsToImportCode.slice(i, i + BATCH_SIZE);
+      const { error } = await supabase.from("hr_employee_costs").insert(batch);
+      if (error) throw error;
+      onProgress?.(Math.min(i + BATCH_SIZE, costsToImportCode.length), costsToImportCode.length);
+    }
+
+    return { imported: costsToImportCode.length, total: validRows.length };
+  }
+
   // Detectar si tenemos NIFs o solo nombres
   const hasNif = validRows.some((r) => r.nif && typeof r.nif === "string" && r.nif.trim() !== "");
   const useNames = !hasNif;
 
   console.log("🔍 Debug importCosts - Primera fila:", validRows[0]);
-  console.log("🔍 hasNif:", hasNif, "useNames:", useNames);
+  console.log("🔍 hasCode:", hasCode, "hasNif:", hasNif, "useNames:", useNames);
 
-  // Mapa de empresa (nombre→id) y de identificador→empresaId cuando usemos nombres
-  const companyByName = new Map<string, string>(
-    companies.map((c) => [c.name.toLowerCase().trim(), c.id])
-  );
+  // Mapa de identificador→empresaId cuando usemos nombres
   const companyByIdentifier = new Map<string, string>();
   if (useNames) {
     validRows.forEach((r) => {
@@ -256,11 +371,18 @@ export const importCosts = async ({
     });
 
   if (costsToImport.length === 0) {
-    const sampleMissing = identifiers.filter((id) => !employeeMap.has(id)).slice(0, 5);
-    const diagnostic = sampleMissing.length ? ` Ejemplos: ${sampleMissing.join(" | ")}` : "";
+    const nonEmptyMissing = identifiers
+      .filter((id) => (id ?? "").toString().trim() !== "" && !employeeMap.has(id))
+      .slice(0, 5);
+    const hadAnyNonEmpty = identifiers.some((id) => (id ?? "").toString().trim() !== "");
+    const diagnostic = nonEmptyMissing.length
+      ? ` Ejemplos: ${nonEmptyMissing.join(" | ")}`
+      : hadAnyNonEmpty
+      ? ""
+      : " (los identificadores llegan vacíos; revisa el mapeo de columnas)";
     const errorMsg = useNames
-      ? `Ningún empleado encontrado con los nombres proporcionados.${diagnostic}`
-      : "Ningún empleado encontrado con los NIFs proporcionados";
+      ? `Ningún empleado encontrado con los nombres proporcionados.${diagnostic} \nSugerencia: asigna la columna de nombres correctamente o mapea 'Código empleado' / NIF.`
+      : `Ningún empleado encontrado con los NIFs proporcionados${diagnostic}`;
     throw new Error(errorMsg);
   }
 

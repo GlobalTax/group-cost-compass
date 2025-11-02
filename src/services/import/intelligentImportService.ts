@@ -120,7 +120,7 @@ export const importFromAIResult = async (
       rows: transformedData.map((data, i) => ({
         rowNumber: i + 1,
         data: {
-          employee_id: data.employee_code || undefined,
+          employee_id: data.employee_id ?? data.employee_code ?? data.codigo ?? data.codigo_empleado ?? undefined,
           nif: data.employee_nif || data.nif || undefined,
           name: data.employee_name || data.name || "",
           company: data.company || "",
@@ -167,7 +167,7 @@ export const importFromAIResult = async (
         rows: costs.map((data, i) => ({
           rowNumber: i + 1,
           data: {
-            employee_id: data.employee_code || undefined,
+            employee_id: data.employee_id ?? data.employee_code ?? data.codigo ?? data.codigo_empleado ?? undefined,
             nif: data.employee_nif || data.nif || undefined,
             name: data.employee_name || data.name || "",
             company: data.company || "",
