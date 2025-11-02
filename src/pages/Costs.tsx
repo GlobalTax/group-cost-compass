@@ -10,10 +10,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { CostsChart } from "@/components/costs/CostsChart";
 import { CostsDetailTable } from "@/components/costs/CostsDetailTable";
 import { EmptyState } from "@/components/costs/EmptyState";
+import { ManualPayrollTable } from "@/components/costs/ManualPayrollTable";
 import { Card } from "@/components/ui/card";
 import { useCompanies } from "@/hooks/useCompanies";
 import { useCostsAnalysis } from "@/hooks/useCostsAnalysis";
@@ -126,44 +128,62 @@ const Costs = () => {
         </Button>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KPICard
-          title="Coste Total"
-          value={analysis.totalCost}
-          format="currency"
-        />
-        <KPICard
-          title="Empleados Activos"
-          value={analysis.activeEmployees}
-          format="number"
-        />
-        <KPICard
-          title="Coste Medio/Empleado"
-          value={analysis.avgCostPerEmployee}
-          format="currency"
-        />
-        <KPICard
-          title="Variación vs Mes Anterior"
-          value={analysis.variationVsPreviousMonth}
-          format="percentage"
-        />
-      </div>
+      {/* Tabs */}
+      <Tabs defaultValue="analysis" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="analysis">Análisis</TabsTrigger>
+          <TabsTrigger value="manual">Entrada manual</TabsTrigger>
+        </TabsList>
 
-      {/* Gráfico */}
-      {analysis.hasData ? (
-        <CostsChart data={analysis.chartData} />
-      ) : (
-        <Card className="p-6">
-          <EmptyState message="Aún no hay costes para este mes" />
-        </Card>
-      )}
+        <TabsContent value="analysis" className="space-y-6">
+          {/* KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <KPICard
+              title="Coste Total"
+              value={analysis.totalCost}
+              format="currency"
+            />
+            <KPICard
+              title="Empleados Activos"
+              value={analysis.activeEmployees}
+              format="number"
+            />
+            <KPICard
+              title="Coste Medio/Empleado"
+              value={analysis.avgCostPerEmployee}
+              format="currency"
+            />
+            <KPICard
+              title="Variación vs Mes Anterior"
+              value={analysis.variationVsPreviousMonth}
+              format="percentage"
+            />
+          </div>
 
-      {/* Tabla de detalle */}
-      <CostsDetailTable
-        employees={analysis.employeeDetails}
-        isLoading={analysis.isLoading}
-      />
+          {/* Gráfico */}
+          {analysis.hasData ? (
+            <CostsChart data={analysis.chartData} />
+          ) : (
+            <Card className="p-6">
+              <EmptyState message="Aún no hay costes para este mes" />
+            </Card>
+          )}
+
+          {/* Tabla de detalle */}
+          <CostsDetailTable
+            employees={analysis.employeeDetails}
+            isLoading={analysis.isLoading}
+          />
+        </TabsContent>
+
+        <TabsContent value="manual">
+          <ManualPayrollTable 
+            companyId={companyId} 
+            year={year} 
+            month={month} 
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

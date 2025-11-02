@@ -5,6 +5,8 @@ import {
   createCost, 
   bulkCreateCosts,
   updateCost,
+  upsertCost,
+  bulkUpsertCosts,
   type CostsFilters 
 } from "@/lib/supabase/repositories/costs.repo";
 import type { Database } from "@/integrations/supabase/types";
@@ -126,6 +128,47 @@ export const useUpdateEmployeeCost = () => {
     },
     onError: (error: Error) => {
       toast.error(`Error al actualizar coste: ${error.message}`);
+    },
+  });
+};
+
+/**
+ * Upsert (create or update) employee cost
+ * Usado en entrada manual de nóminas
+ */
+export const useUpsertEmployeeCost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: upsertCost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employee-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["costs-by-period"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success("Guardado");
+    },
+    onError: (error: Error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+};
+
+/**
+ * Bulk upsert employee costs
+ */
+export const useBulkUpsertEmployeeCosts = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: bulkUpsertCosts,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["employee-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["costs-by-period"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success(`${data.length} costes guardados correctamente`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Error al guardar costes: ${error.message}`);
     },
   });
 };

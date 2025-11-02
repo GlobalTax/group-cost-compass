@@ -178,6 +178,34 @@ export const updateCost = async (costId: string, updates: Partial<CostInsert>) =
   return data;
 };
 
+/**
+ * Upsert a cost record (create or update)
+ * Usado en entrada manual de nóminas
+ */
+export const upsertCost = async (cost: CostInsert) => {
+  const { data, error } = await supabase
+    .from('hr_employee_costs')
+    .upsert(cost, { onConflict: 'employee_id,period' })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Bulk upsert costs (create or update multiple)
+ */
+export const bulkUpsertCosts = async (costs: CostInsert[]) => {
+  const { data, error } = await supabase
+    .from('hr_employee_costs')
+    .upsert(costs, { onConflict: 'employee_id,period' })
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
 // ============================================
 // 4. TRANSFORMATIONS (lógica de negocio)
 // ============================================
