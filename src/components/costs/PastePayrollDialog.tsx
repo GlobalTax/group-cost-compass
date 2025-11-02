@@ -305,7 +305,7 @@ export const PastePayrollDialog = ({
         newEmployeeData: {
           full_name: fullName,
           company_id: companyId !== 'all' ? companyId : undefined,
-          hire_date: `${period}-01`,
+          hire_date: period,
         },
       };
       return updated;
