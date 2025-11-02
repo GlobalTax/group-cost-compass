@@ -182,6 +182,19 @@ export const useDeleteEmployee = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Verificar si tiene costes asociados
+      const { count: costsCount } = await supabase
+        .from("hr_employee_costs")
+        .select("*", { count: "exact", head: true })
+        .eq("employee_id", id);
+
+      if (costsCount && costsCount > 0) {
+        throw new Error(
+          `No se puede eliminar. El empleado tiene ${costsCount} registro(s) de nómina asociados.`
+        );
+      }
+
+      // Si no tiene costes, proceder con la eliminación
       const { error } = await supabase
         .from("hr_employees")
         .delete()
@@ -191,10 +204,12 @@ export const useDeleteEmployee = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["employees-with-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       toast.success("Empleado eliminado correctamente");
     },
     onError: (error: Error) => {
-      toast.error(`Error al eliminar empleado: ${error.message}`);
+      toast.error(`Error al eliminar: ${error.message}`);
     },
   });
 };
