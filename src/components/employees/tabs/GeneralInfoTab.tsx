@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { EditableSection, FieldDefinition } from "./EditableSection";
@@ -6,6 +7,8 @@ import { useUpdateEmployeeCost } from "@/hooks/useEmployeeCosts";
 import { formatCurrency } from "@/lib/formatters";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useTeams } from "@/hooks/useTeams";
+import { useCompanies } from "@/hooks/useCompanies";
+import { ConfirmCompanyChangeDialog } from "../ConfirmCompanyChangeDialog";
 
 interface GeneralInfoTabProps {
   employee: any;
@@ -35,6 +38,14 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
   const { mutateAsync: updateCost, isPending: isUpdatingCost } = useUpdateEmployeeCost();
   const { data: departments } = useDepartments();
   const { data: teams } = useTeams({ departmentId: employee.department_id || undefined });
+  const { data: companies } = useCompanies();
+  
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingCompanyChange, setPendingCompanyChange] = useState<{
+    fromCompanyId: string;
+    toCompanyId: string;
+    resolver: (confirmed: boolean) => void;
+  } | null>(null);
 
   const formatDate = (date: string | null) => {
     if (!date) return "—";
@@ -55,6 +66,15 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
   ];
 
   const organizationalDataFields: FieldDefinition[] = [
+    { 
+      name: "company_id", 
+      label: "Empresa", 
+      value: employee.company_id, 
+      type: "select",
+      options: companies?.map(c => ({ value: c.id, label: c.name })) || [],
+      requiresConfirmation: true,
+      description: "⚠️ Cambiar solo para correcciones administrativas. Para traslados formales usa la pestaña 'Traslados'."
+    },
     { 
       name: "department_id", 
       label: "Departamento", 
@@ -113,6 +133,24 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
     return await updateFields(data);
   };
 
+  const handleConfirmationRequired = async (
+    fieldName: string,
+    oldValue: any,
+    newValue: any
+  ): Promise<boolean> => {
+    if (fieldName === "company_id") {
+      return new Promise((resolve) => {
+        setPendingCompanyChange({
+          fromCompanyId: oldValue,
+          toCompanyId: newValue,
+          resolver: resolve,
+        });
+        setConfirmDialogOpen(true);
+      });
+    }
+    return true;
+  };
+
   const handleSaveOrganizationalData = async (data: Record<string, any>) => {
     return await updateFields(data);
   };
@@ -143,6 +181,7 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
         title="Datos Organizativos"
         fields={organizationalDataFields}
         onSave={handleSaveOrganizationalData}
+        onConfirmationRequired={handleConfirmationRequired}
         isLoading={isUpdating}
       />
 
@@ -169,6 +208,33 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
           ]}
           onSave={async (data) => await updateFields(data)}
           isLoading={isUpdating}
+        />
+      )}
+
+      {/* Diálogo de confirmación de cambio de empresa */}
+      {pendingCompanyChange && (
+        <ConfirmCompanyChangeDialog
+          open={confirmDialogOpen}
+          onOpenChange={(open) => {
+            if (!open && pendingCompanyChange) {
+              pendingCompanyChange.resolver(false);
+              setPendingCompanyChange(null);
+            }
+            setConfirmDialogOpen(open);
+          }}
+          employeeName={employee.full_name}
+          fromCompanyName={
+            companies?.find(c => c.id === pendingCompanyChange.fromCompanyId)?.name || "Desconocida"
+          }
+          toCompanyName={
+            companies?.find(c => c.id === pendingCompanyChange.toCompanyId)?.name || "Desconocida"
+          }
+          onConfirm={(reason) => {
+            // Guardar motivo para usar en auditoría
+            (window as any).__companyChangeReason = reason;
+            pendingCompanyChange.resolver(true);
+            setPendingCompanyChange(null);
+          }}
         />
       )}
     </div>

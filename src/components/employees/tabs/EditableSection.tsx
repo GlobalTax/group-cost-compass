@@ -16,6 +16,8 @@ export interface FieldDefinition {
   options?: { value: string; label: string }[];
   placeholder?: string;
   disabled?: boolean;
+  description?: string;
+  requiresConfirmation?: boolean;
 }
 
 interface EditableSectionProps {
@@ -24,6 +26,7 @@ interface EditableSectionProps {
   onSave: (data: Record<string, any>) => Promise<boolean>;
   isLoading?: boolean;
   className?: string;
+  onConfirmationRequired?: (fieldName: string, oldValue: any, newValue: any) => Promise<boolean>;
 }
 
 export const EditableSection = ({ 
@@ -31,7 +34,8 @@ export const EditableSection = ({
   fields, 
   onSave, 
   isLoading = false,
-  className 
+  className,
+  onConfirmationRequired
 }: EditableSectionProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -70,6 +74,21 @@ export const EditableSection = ({
       setFormData({});
       setInitialData({});
       return;
+    }
+
+    // Verificar si algún campo requiere confirmación
+    for (const fieldName of Object.keys(changes)) {
+      const field = fields.find(f => f.name === fieldName);
+      if (field?.requiresConfirmation && onConfirmationRequired) {
+        const confirmed = await onConfirmationRequired(
+          fieldName,
+          initialData[fieldName],
+          changes[fieldName]
+        );
+        if (!confirmed) {
+          return; // Usuario canceló
+        }
+      }
     }
 
     setIsSaving(true);
@@ -181,6 +200,11 @@ export const EditableSection = ({
                     disabled={field.disabled}
                     className="mt-1.5"
                   />
+                )}
+                {field.description && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {field.description}
+                  </p>
                 )}
               </div>
             ))}

@@ -1,6 +1,8 @@
 import { useUpdateEmployee } from "./useEmployees";
 import { employeeSchema } from "@/lib/validators/employeeSchema";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase/client";
+import { createAuditLog } from "@/lib/supabase/repositories/audit.repo";
 
 // Sanear campos: convertir strings vacíos a null para campos opcionales
 const sanitizeFields = (fields: Record<string, any>): Record<string, any> => {
@@ -45,6 +47,48 @@ export const useEmployeeUpdate = (employeeId: string) => {
           variant: "destructive",
         });
         return false;
+      }
+
+      // Si cambia company_id, registrar en auditoría
+      if (cleanFields.company_id) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: employee } = await supabase
+          .from("hr_employees")
+          .select("company_id, full_name, org_id")
+          .eq("id", employeeId)
+          .single();
+
+        if (employee && employee.company_id !== cleanFields.company_id) {
+          const reason = (window as any).__companyChangeReason || "Corrección administrativa";
+          
+          // Obtener nombres de empresas
+          const { data: companies } = await supabase
+            .from("companies")
+            .select("id, name")
+            .in("id", [employee.company_id, cleanFields.company_id]);
+          
+          const fromCompany = companies?.find(c => c.id === employee.company_id)?.name;
+          const toCompany = companies?.find(c => c.id === cleanFields.company_id)?.name;
+
+          await createAuditLog({
+            user_id: user?.id || null,
+            table_name: "hr_employees",
+            record_id: employeeId,
+            action: "update",
+            old_data: { 
+              company_id: employee.company_id,
+              company_name: fromCompany 
+            },
+            new_data: { 
+              company_id: cleanFields.company_id,
+              company_name: toCompany,
+              reason: reason
+            },
+          });
+
+          // Limpiar motivo temporal
+          delete (window as any).__companyChangeReason;
+        }
       }
 
       // Actualizar en BD
