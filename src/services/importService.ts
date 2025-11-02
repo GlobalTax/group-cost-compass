@@ -82,31 +82,93 @@ const normalizeEmployeeName = (name: string): string => {
     .replace(/[\u0300-\u036f]/g, "");
 };
 
+// Tokeniza un nombre eliminando signos, acentos y stopwords comunes; colapsa espacios
+const tokenizeName = (name: string): string[] => {
+  const STOPWORDS = new Set(["de", "del", "la", "las", "el", "los", "y", "da", "do", "das", "dos"]);
+  const cleaned = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // quitar acentos
+    .replace(/[.,;:()"'`]/g, " ") // quitar puntuación
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned
+    .split(" ")
+    .filter(Boolean)
+    .filter((t) => !STOPWORDS.has(t));
+};
+
+// Canonicaliza el nombre para matching insensible a orden y acentos
+const canonicalizeName = (name: string): string => {
+  // Reordenar si viene como "Apellidos, Nombre"
+  let base = name.trim();
+  if (base.includes(',')) {
+    const [last, first] = base.split(',').map((s) => s.trim());
+    base = `${first} ${last}`;
+  }
+  const tokens = tokenizeName(base);
+  return tokens.sort().join(" ");
+};
+
 /**
  * Mapea NIFs o nombres a employee_ids desde la base de datos
  */
 export const mapEmployeeIdentifier = async (
   identifiers: string[],
-  useNames = false
+  useNames = false,
+  options?: { companyByIdentifier?: Map<string, string> }
 ): Promise<Map<string, string>> => {
   if (useNames) {
-    // Buscar por nombre
-    const normalizedIdentifiers = identifiers.map(normalizeEmployeeName);
-    
+    // Buscar por nombre con canonicalización y posible scope por empresa
+    const canonicalByIdentifier = new Map<string, string>();
+    identifiers.forEach((id) => canonicalByIdentifier.set(id, canonicalizeName(id)));
+
     const { data: employees } = await supabase
       .from("hr_employees")
-      .select("id, full_name");
+      .select("id, full_name, company_id");
 
-    // Mapear con nombres normalizados
-    const map = new Map<string, string>();
+    const byCanonicalAndCompany = new Map<string, string>(); // key: canonical|companyId -> employeeId
+    const byCanonical = new Map<string, Array<{ id: string; company_id: string }>>();
+
     employees?.forEach((e) => {
-      const normalizedName = normalizeEmployeeName(e.full_name);
-      const matchIndex = normalizedIdentifiers.indexOf(normalizedName);
-      if (matchIndex !== -1) {
-        map.set(identifiers[matchIndex], e.id);
-      }
+      const canon = canonicalizeName(e.full_name);
+      const comp = e.company_id as unknown as string;
+      if (comp) byCanonicalAndCompany.set(`${canon}|${comp}`, e.id);
+      const arr = byCanonical.get(canon) || [];
+      arr.push({ id: e.id, company_id: comp });
+      byCanonical.set(canon, arr);
     });
-    
+
+    const map = new Map<string, string>();
+    let exactScoped = 0;
+    let uniqueGlobal = 0;
+
+    identifiers.forEach((original) => {
+      const canon = canonicalByIdentifier.get(original)!;
+      const companyId = options?.companyByIdentifier?.get(original);
+
+      if (companyId) {
+        const key = `${canon}|${companyId}`;
+        const eid = byCanonicalAndCompany.get(key);
+        if (eid) {
+          map.set(original, eid);
+          exactScoped++;
+          return;
+        }
+      }
+
+      const matches = byCanonical.get(canon) || [];
+      if (matches.length === 1) {
+        map.set(original, matches[0].id);
+        uniqueGlobal++;
+      }
+      // si >1, ambigüo; si 0, no encontrado → no mapear
+    });
+
+    console.log(
+      `🔎 Matching nombres → scoped: ${exactScoped}, unicos global: ${uniqueGlobal}, total identifiers: ${identifiers.length}`
+    );
+
     return map;
   } else {
     // Buscar por NIF (comportamiento original)
@@ -139,6 +201,7 @@ export const checkDuplicatePeriods = async (
  */
 export const importCosts = async ({
   validation,
+  companies,
   onProgress,
 }: ImportCostsOptions) => {
   // Filtrar solo filas válidas
@@ -157,9 +220,24 @@ export const importCosts = async ({
   console.log("🔍 Debug importCosts - Primera fila:", validRows[0]);
   console.log("🔍 hasNif:", hasNif, "useNames:", useNames);
 
+  // Mapa de empresa (nombre→id) y de identificador→empresaId cuando usemos nombres
+  const companyByName = new Map<string, string>(
+    companies.map((c) => [c.name.toLowerCase().trim(), c.id])
+  );
+  const companyByIdentifier = new Map<string, string>();
+  if (useNames) {
+    validRows.forEach((r) => {
+      const compName = (r.company as string | undefined)?.toLowerCase().trim();
+      const identifier = (r.name as string) || "";
+      if (identifier && compName && companyByName.has(compName)) {
+        companyByIdentifier.set(identifier, companyByName.get(compName)!);
+      }
+    });
+  }
+
   // Obtener identificadores (NIFs o nombres)
   const identifiers = validRows.map((r) => (useNames ? (r.name || "") : (r.nif || "")));
-  const employeeMap = await mapEmployeeIdentifier(identifiers, useNames);
+  const employeeMap = await mapEmployeeIdentifier(identifiers, useNames, { companyByIdentifier });
 
   // Preparar costes
   const costsToImport = validRows
@@ -178,8 +256,10 @@ export const importCosts = async ({
     });
 
   if (costsToImport.length === 0) {
+    const sampleMissing = identifiers.filter((id) => !employeeMap.has(id)).slice(0, 5);
+    const diagnostic = sampleMissing.length ? ` Ejemplos: ${sampleMissing.join(" | ")}` : "";
     const errorMsg = useNames
-      ? "Ningún empleado encontrado con los nombres proporcionados. Verifica que los nombres coincidan exactamente con los registrados."
+      ? `Ningún empleado encontrado con los nombres proporcionados.${diagnostic}`
       : "Ningún empleado encontrado con los NIFs proporcionados";
     throw new Error(errorMsg);
   }
