@@ -75,7 +75,8 @@ const findBestCompanyMatch = (
 
 export const parseUploadCostsFile = async (
   file: File,
-  companies: Company[]
+  companies: Company[],
+  mapping?: Record<string, string>
 ): Promise<UploadValidationResult<UploadCostRow>> => {
   return new Promise((resolve) => {
     const rows: ParsedRow<UploadCostRow>[] = [];
@@ -92,7 +93,27 @@ export const parseUploadCostsFile = async (
       skipEmptyLines: true,
       transformHeader: normalizeColumnName,
       complete: (results) => {
-        const headers = results.meta.fields || [];
+        let headers = results.meta.fields || [];
+        
+        // Aplicar mapeo si existe
+        let processedData = results.data;
+        if (mapping && Object.keys(mapping).length > 0) {
+          processedData = results.data.map((row: any) => {
+            const mappedRow: any = {};
+            Object.entries(mapping).forEach(([targetField, sourceHeader]) => {
+              if (sourceHeader && row[sourceHeader] !== undefined) {
+                mappedRow[targetField] = row[sourceHeader];
+              }
+            });
+            // Preservar campos no mapeados
+            Object.keys(row).forEach(key => {
+              if (!mappedRow[key]) mappedRow[key] = row[key];
+            });
+            return mappedRow;
+          });
+          // Actualizar headers con los campos mapeados
+          headers = Array.from(new Set([...headers, ...Object.keys(mapping).filter(k => mapping[k])]));
+        }
         
         // Validar cabeceras requeridas (reducidas: solo obligatorias)
         const requiredHeaders = ["company", "date", "bruto", "coste_empresa"];
@@ -111,8 +132,8 @@ export const parseUploadCostsFile = async (
           return;
         }
 
-        // Procesar cada fila
-        results.data.forEach((row: any, index: number) => {
+        // Procesar cada fila (usar processedData si hay mapeo)
+        processedData.forEach((row: any, index: number) => {
           const rowNumber = index + 2;
           const errors: Array<{ field: string; message: string }> = [];
           const warnings: string[] = [];

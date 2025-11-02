@@ -10,6 +10,8 @@ import { ImportProgress } from "@/components/upload/ImportProgress";
 import { A3NomCostsUpload } from "@/components/upload/A3NomCostsUpload";
 import { IntelligentUpload } from "@/components/upload/IntelligentUpload";
 import { CostsPreviewTable } from "@/components/upload/CostsPreviewTable";
+import { ColumnMapper } from "@/components/upload/ColumnMapper";
+import { MatchingPreview } from "@/components/upload/MatchingPreview";
 import { parseEmployeesFile, type ParsedEmployee } from "@/lib/parsers/employeeParser";
 import { parseCostsFile, type ParsedCost } from "@/lib/parsers/costsParser";
 import { parseUploadCostsFile } from "@/lib/parsers/uploadCostsParser";
@@ -20,6 +22,7 @@ import { useBulkCreateEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { downloadCSV, generateEmployeeTemplate } from "@/lib/utils";
+import Papa from "papaparse";
 
 const Upload = () => {
   const [employeesFile, setEmployeesFile] = useState<File | null>(null);
@@ -30,6 +33,8 @@ const Upload = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [importStatus, setImportStatus] = useState<"idle" | "processing" | "uploading" | "complete">("idle");
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
   const { data: companies } = useCompanies();
   const { data: existingEmployees } = useEmployees();
@@ -66,7 +71,17 @@ const Upload = () => {
         return;
       }
 
-      const result = await parseUploadCostsFile(file, companies);
+      // Detectar cabeceras primero
+      Papa.parse(file, {
+        header: true,
+        preview: 1,
+        complete: (results) => {
+          const headers = results.meta.fields || [];
+          setCsvHeaders(headers);
+        },
+      });
+
+      const result = await parseUploadCostsFile(file, companies, columnMapping);
       setCostsValidationZod(result);
       
       if (result.errorCount > 0) {
@@ -250,6 +265,13 @@ const Upload = () => {
               accept=".csv"
             />
 
+            {csvHeaders.length > 0 && (
+              <ColumnMapper
+                headers={csvHeaders}
+                onMappingChange={setColumnMapping}
+              />
+            )}
+
             <div className="space-y-2 text-xs text-muted-foreground">
               <p className="font-medium">Columnas requeridas:</p>
               <ul className="space-y-1 ml-4">
@@ -269,6 +291,15 @@ const Upload = () => {
           {/* Preview de costes con validación Zod */}
           {costsValidationZod && (
             <>
+              {costsValidationZod.validCount > 0 && (
+                <MatchingPreview
+                  rows={costsValidationZod.rows
+                    .filter(r => r.data)
+                    .map(r => r.data!)}
+                  companies={companies || []}
+                />
+              )}
+
               <Card className="apollo-card p-6">
                 <div className="space-y-4">
                   <h3 className="font-bold text-lg">Preview de Datos</h3>

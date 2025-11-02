@@ -225,6 +225,8 @@ export const importCosts = async ({
 
   if (hasCode) {
     console.log("🔍 Debug importCosts (codes) - Primera fila:", validRows[0]);
+    console.log("🔍 Cabeceras detectadas:", Object.keys(validRows[0] || {}));
+    
     const codes = Array.from(
       new Set(
         validRows
@@ -234,7 +236,13 @@ export const importCosts = async ({
     );
 
     if (codes.length === 0) {
-      throw new Error("Ningún código de empleado válido detectado en el archivo (columna vacía)");
+      const sampleRows = validRows.slice(0, 3).map(r => JSON.stringify(r, null, 2)).join("\n");
+      throw new Error(
+        `Ningún código de empleado válido detectado en el archivo.\n\n` +
+        `Cabeceras detectadas: ${Object.keys(validRows[0] || {}).join(", ")}\n\n` +
+        `Primeras filas de ejemplo:\n${sampleRows}\n\n` +
+        `Sugerencia: Verifica que la columna 'Código empleado' esté correctamente mapeada a 'employee_id' usando el mapeo de columnas.`
+      );
     }
 
     const { data: emps, error: empErr } = await supabase
@@ -336,6 +344,7 @@ export const importCosts = async ({
   const useNames = !hasNif;
 
   console.log("🔍 Debug importCosts - Primera fila:", validRows[0]);
+  console.log("🔍 Cabeceras detectadas:", Object.keys(validRows[0] || {}));
   console.log("🔍 hasCode:", hasCode, "hasNif:", hasNif, "useNames:", useNames);
 
   // Mapa de identificador→empresaId cuando usemos nombres
@@ -375,14 +384,20 @@ export const importCosts = async ({
       .filter((id) => (id ?? "").toString().trim() !== "" && !employeeMap.has(id))
       .slice(0, 5);
     const hadAnyNonEmpty = identifiers.some((id) => (id ?? "").toString().trim() !== "");
-    const diagnostic = nonEmptyMissing.length
-      ? ` Ejemplos: ${nonEmptyMissing.join(" | ")}`
-      : hadAnyNonEmpty
-      ? ""
-      : " (los identificadores llegan vacíos; revisa el mapeo de columnas)";
+    
+    let diagnostic = "";
+    if (!hadAnyNonEmpty) {
+      diagnostic = "\n\n❌ TODAS las columnas de identificadores (employee_id, nif, name) están VACÍAS.";
+      diagnostic += `\n\nCabeceras detectadas en CSV: ${Object.keys(validRows[0] || {}).join(", ")}`;
+      diagnostic += "\n\nSolución: Usa el 'Mapeo de Columnas' para indicar qué columna de tu CSV corresponde a cada campo requerido.";
+    } else if (nonEmptyMissing.length > 0) {
+      diagnostic = `\n\nEjemplos de identificadores no encontrados:\n${nonEmptyMissing.join("\n")}`;
+      diagnostic += `\n\nTotal: ${identifiers.length} identificadores, ${employeeMap.size} mapeados.`;
+    }
+    
     const errorMsg = useNames
-      ? `Ningún empleado encontrado con los nombres proporcionados.${diagnostic} \nSugerencia: asigna la columna de nombres correctamente o mapea 'Código empleado' / NIF.`
-      : `Ningún empleado encontrado con los NIFs proporcionados${diagnostic}`;
+      ? `Ningún empleado encontrado con los nombres proporcionados.${diagnostic}\n\n💡 Sugerencia: Verifica el mapeo de columnas o usa 'Código empleado' / NIF para mayor precisión.`
+      : `Ningún empleado encontrado con los NIFs proporcionados.${diagnostic}`;
     throw new Error(errorMsg);
   }
 
