@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -17,8 +17,19 @@ import { CostsDetailTable } from "@/components/costs/CostsDetailTable";
 import { EmptyState } from "@/components/costs/EmptyState";
 import { ManualPayrollTable } from "@/components/costs/ManualPayrollTable";
 import { Card } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useCompanies } from "@/hooks/useCompanies";
 import { useCostsAnalysis } from "@/hooks/useCostsAnalysis";
+import { useDeleteCostsByPeriod } from "@/hooks/useEmployeeCosts";
 import { exportCostsToCSV } from "@/lib/exporters/costsExporter";
 import { toast } from "sonner";
 
@@ -27,9 +38,11 @@ const Costs = () => {
   const [year, setYear] = useState(currentDate.getFullYear());
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
   const [companyId, setCompanyId] = useState<string>("all");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: companies } = useCompanies();
   const analysis = useCostsAnalysis({ year, month, companyId });
+  const deleteMutation = useDeleteCostsByPeriod();
 
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i);
   const months = [
@@ -55,6 +68,15 @@ const Costs = () => {
 
     exportCostsToCSV(analysis.employeeDetails, { company: companyId, year, month });
     toast.success("Datos exportados correctamente");
+  };
+
+  const handleDelete = async () => {
+    await deleteMutation.mutateAsync({
+      year,
+      month,
+      companyId: companyId === "all" ? undefined : companyId,
+    });
+    setShowDeleteDialog(false);
   };
 
   return (
@@ -122,10 +144,22 @@ const Costs = () => {
           </Select>
         </div>
 
-        <Button onClick={handleExport} variant="outline" className="w-full md:w-auto md:mt-6">
-          <Download className="w-4 h-4 mr-2" />
-          Exportar CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleExport} variant="outline" className="w-full md:w-auto md:mt-6">
+            <Download className="w-4 h-4 mr-2" />
+            Exportar CSV
+          </Button>
+          
+          <Button 
+            onClick={() => setShowDeleteDialog(true)} 
+            variant="destructive" 
+            className="w-full md:w-auto md:mt-6"
+            disabled={analysis.employeeDetails.length === 0 || deleteMutation.isPending}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Eliminar mes
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -184,6 +218,39 @@ const Costs = () => {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Dialog de confirmación de eliminación */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar datos del mes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará todos los registros de nómina de{" "}
+              <strong>
+                {months.find(m => m.value === month)?.label} {year}
+              </strong>
+              {companyId !== "all" && companies && (
+                <>
+                  {" "}para <strong>{companies.find(c => c.id === companyId)?.name}</strong>
+                </>
+              )}
+              .
+              <br />
+              <br />
+              Esta operación <strong className="text-destructive">no se puede deshacer</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

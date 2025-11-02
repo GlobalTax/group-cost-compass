@@ -7,6 +7,7 @@ import {
   updateCost,
   upsertCost,
   bulkUpsertCosts,
+  deleteCostsByPeriod,
   type CostsFilters 
 } from "@/lib/supabase/repositories/costs.repo";
 import type { Database } from "@/integrations/supabase/types";
@@ -169,6 +170,31 @@ export const useBulkUpsertEmployeeCosts = () => {
     },
     onError: (error: Error) => {
       toast.error(`Error al guardar costes: ${error.message}`);
+    },
+  });
+};
+
+/**
+ * Delete costs by period (bulk delete)
+ * Usado para eliminar nóminas de un mes completo
+ */
+export const useDeleteCostsByPeriod = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteCostsByPeriod,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["employee-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["costs-by-period"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success(
+        result.count === 0 
+          ? "No hay datos para eliminar"
+          : `${result.count} registro(s) eliminado(s) correctamente`
+      );
+    },
+    onError: (error: Error) => {
+      toast.error(`Error al eliminar: ${error.message}`);
     },
   });
 };

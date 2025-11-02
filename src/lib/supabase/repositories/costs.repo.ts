@@ -206,6 +206,44 @@ export const bulkUpsertCosts = async (costs: CostInsert[]) => {
   return data;
 };
 
+/**
+ * Delete costs by period and optional company filter
+ * Usado para limpiar datos de un mes completo
+ */
+export const deleteCostsByPeriod = async (filters: {
+  year: number;
+  month: number;
+  companyId?: string;
+}) => {
+  const period = `${filters.year}-${String(filters.month).padStart(2, '0')}-01`;
+  
+  let query = supabase
+    .from('hr_employee_costs')
+    .delete()
+    .eq('period', period);
+  
+  // Si se especifica empresa, filtrar por ella
+  if (filters.companyId && filters.companyId !== 'all') {
+    // Subconsulta para obtener employee_ids de esa empresa
+    const { data: employeeIds } = await supabase
+      .from('hr_employees')
+      .select('id')
+      .eq('company_id', filters.companyId);
+    
+    if (employeeIds && employeeIds.length > 0) {
+      query = query.in('employee_id', employeeIds.map(e => e.id));
+    } else {
+      // No hay empleados de esa empresa, no borrar nada
+      return { count: 0 };
+    }
+  }
+  
+  const { error, count } = await query;
+  
+  if (error) throw error;
+  return { count: count || 0 };
+};
+
 // ============================================
 // 4. TRANSFORMATIONS (lógica de negocio)
 // ============================================
