@@ -67,11 +67,19 @@ export const importEmployees = async ({
  * Normaliza nombres de empleados para matching
  */
 const normalizeEmployeeName = (name: string): string => {
-  return name
-    .trim()
+  let normalized = name.trim();
+  
+  // Detectar formato "Apellidos, Nombre" e invertir
+  if (normalized.includes(',')) {
+    const [apellidos, nombre] = normalized.split(',').map(s => s.trim());
+    normalized = `${nombre} ${apellidos}`;
+  }
+  
+  // Normalizar: lowercase + sin acentos
+  return normalized
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, ""); // Remover diacríticos
+    .replace(/[\u0300-\u036f]/g, "");
 };
 
 /**
