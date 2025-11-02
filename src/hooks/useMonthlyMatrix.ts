@@ -31,7 +31,7 @@ export const useMonthlyMatrix = (filters: MonthlyMatrixFilters) => {
         .select(`
           employee_id,
           period,
-          bruto_mensual,
+          bruto,
           coste_empresa,
           hr_employees!inner(
             full_name,
@@ -57,7 +57,7 @@ export const useMonthlyMatrix = (filters: MonthlyMatrixFilters) => {
         const employeeId = cost.employee_id;
         const period = cost.period.substring(0, 7); // "2025-01"
         const value = filters.costType === "bruto" 
-          ? cost.bruto_mensual 
+          ? cost.bruto 
           : cost.coste_empresa;
 
         if (!employeeMap.has(employeeId)) {
