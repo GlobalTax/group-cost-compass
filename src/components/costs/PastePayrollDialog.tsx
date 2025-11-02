@@ -3,6 +3,7 @@ import { Check, AlertCircle, ClipboardPaste } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PasteArea } from "@/components/upload/PasteArea";
 import { useBulkUpsertEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { parseNumber } from "@/lib/parsers/a3nom/numberParser";
@@ -47,22 +48,44 @@ const normalizeEmployeeName = (name: string): string => {
 };
 
 /**
- * Busca un empleado por nombre fuzzy
+ * Busca un empleado por nombre fuzzy con soporte para formato "Apellidos, Nombre"
  */
 const findEmployeeByName = (
   pastedName: string,
   employees: Employee[]
 ): Employee | null => {
-  const normalized = normalizeEmployeeName(pastedName);
+  let normalized = normalizeEmployeeName(pastedName);
   
-  return employees.find(emp => {
-    const empNormalized = emp.full_name.toLowerCase();
-    return (
-      empNormalized === normalized ||
-      empNormalized.includes(normalized) ||
-      normalized.includes(empNormalized)
-    );
-  }) ?? null;
+  // Si tiene formato "Apellidos, Nombre" → convertir a "Nombre Apellidos"
+  if (normalized.includes(",")) {
+    const [apellidos, nombre] = normalized.split(",").map(s => s.trim());
+    normalized = `${nombre} ${apellidos}`;
+  }
+  
+  // 1. Buscar coincidencia exacta primero
+  let match = employees.find(emp => 
+    emp.full_name.toLowerCase() === normalized
+  );
+  
+  if (match) return match;
+  
+  // 2. Buscar por palabras clave (todas las palabras deben estar presentes)
+  const words = normalized.split(/\s+/).filter(w => w.length > 2); // Ignorar palabras cortas
+  match = employees.find(emp => {
+    const empLower = emp.full_name.toLowerCase();
+    return words.every(word => empLower.includes(word));
+  });
+  
+  if (match) return match;
+  
+  // 3. Buscar por al menos 2 palabras coincidentes (apellidos compuestos)
+  match = employees.find(emp => {
+    const empLower = emp.full_name.toLowerCase();
+    const matchCount = words.filter(word => empLower.includes(word)).length;
+    return matchCount >= 2 && matchCount >= words.length - 1;
+  });
+  
+  return match || null;
 };
 
 /**
@@ -179,7 +202,21 @@ export const PastePayrollDialog = ({
     setParsedData([]);
   };
 
+  const handleManualEmployeeSelect = (index: number, employeeId: string) => {
+    const employee = employees.find(e => e.id === employeeId) || null;
+    setParsedData(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        employee,
+        hasMatch: !!employee,
+      };
+      return updated;
+    });
+  };
+
   const matchedCount = parsedData.filter((p) => p.hasMatch).length;
+  const unassignedCount = parsedData.filter((p) => !p.hasMatch).length;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -205,7 +242,11 @@ export const PastePayrollDialog = ({
               <PasteArea onParsedData={handleParsedData} />
             </div>
           ) : (
-            <PreviewTable data={parsedData} />
+            <PreviewTable 
+              data={parsedData} 
+              employees={employees}
+              onEmployeeSelect={handleManualEmployeeSelect}
+            />
           )}
         </div>
 
@@ -217,10 +258,12 @@ export const PastePayrollDialog = ({
               </Button>
               <Button
                 onClick={handleSaveAll}
-                disabled={matchedCount === 0 || bulkUpsert.isPending}
+                disabled={unassignedCount > 0 || bulkUpsert.isPending}
               >
                 {bulkUpsert.isPending
                   ? "Guardando..."
+                  : unassignedCount > 0
+                  ? `Asigna ${unassignedCount} empleado${unassignedCount > 1 ? 's' : ''} faltante${unassignedCount > 1 ? 's' : ''}`
                   : `Guardar ${matchedCount} nómina${matchedCount !== 1 ? "s" : ""}`}
               </Button>
             </>
@@ -232,9 +275,17 @@ export const PastePayrollDialog = ({
 };
 
 /**
- * Tabla de preview con indicadores de match
+ * Tabla de preview con indicadores de match y selector manual
  */
-const PreviewTable = ({ data }: { data: ParsedPayroll[] }) => {
+const PreviewTable = ({ 
+  data, 
+  employees,
+  onEmployeeSelect 
+}: { 
+  data: ParsedPayroll[];
+  employees: Employee[];
+  onEmployeeSelect: (index: number, employeeId: string) => void;
+}) => {
   return (
     <div className="rounded-md border">
       <Table>
@@ -267,11 +318,25 @@ const PreviewTable = ({ data }: { data: ParsedPayroll[] }) => {
                   <span className="text-sm">
                     {row.employee!.full_name}
                     <span className="text-muted-foreground ml-2">
-                      ({row.employee!.company_id})
+                      ({row.employee!.employee_code || row.employee!.company_id})
                     </span>
                   </span>
                 ) : (
-                  <span className="text-xs text-yellow-600">No encontrado</span>
+                  <Select
+                    value={row.employee?.id || ""}
+                    onValueChange={(employeeId) => onEmployeeSelect(idx, employeeId)}
+                  >
+                    <SelectTrigger className="w-[300px] h-8 text-xs">
+                      <SelectValue placeholder="Seleccionar empleado..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employees.map(emp => (
+                        <SelectItem key={emp.id} value={emp.id} className="text-xs">
+                          {emp.full_name} {emp.employee_code && `(${emp.employee_code})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
               </TableCell>
               <TableCell className="text-right">
