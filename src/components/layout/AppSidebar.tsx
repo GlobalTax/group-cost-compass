@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator, UserPlus, Briefcase, TrendingUp, Scale, Layers } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator, UserPlus, Briefcase, TrendingUp, Scale, Layers, Table } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -32,6 +32,7 @@ const navigationItems = [
       { title: "Selección", url: "/recruitment", icon: Briefcase },
       { title: "Costes", url: "/costs", icon: DollarSign },
       { title: "Costes por Empresa", url: "/costs-by-company", icon: Building2 },
+      { title: "Matriz Mensual", url: "/costs-matrix", icon: Table },
       { title: "Traslados", url: "/transfers", icon: ArrowRightLeft },
       { title: "Onboarding", url: "/admin/onboarding", icon: UserPlus },
     ],

@@ -33,6 +33,7 @@ import DealsTracker from "./pages/DealsTracker";
 import CompensationScales from "./pages/CompensationScales";
 import CostsOverview from "./pages/CostsOverview";
 import CostsByCompany from "./pages/CostsByCompany";
+import CostsMatrix from "./pages/CostsMatrix";
 import { Navigate } from "react-router-dom";
 
 // Admin pages - lazy loading (code splitting)
@@ -61,6 +62,7 @@ const ProtectedDashboard = withAuth(['admin', 'finance', 'super_admin'])(Dashboa
 const ProtectedCosts = withAuth(['admin', 'finance', 'super_admin'])(Costs);
 const ProtectedCostsOverview = withAuth(['admin', 'finance', 'super_admin'])(CostsOverview);
 const ProtectedCostsByCompany = withAuth(['admin', 'finance', 'super_admin'])(CostsByCompany);
+const ProtectedCostsMatrix = withAuth(['admin', 'finance', 'super_admin'])(CostsMatrix);
 const ProtectedAudit = withAuth(['admin', 'super_admin'])(Audit);
 const ProtectedBudget = withAuth(['admin', 'finance', 'super_admin'])(Budget);
 const ProtectedBudgetDetail = withAuth(['admin', 'finance', 'super_admin'])(BudgetDetail);
@@ -125,6 +127,7 @@ const App = () => (
                     <Route path="/costs" element={<ProtectedCosts />} />
                     <Route path="/costs-overview" element={<ProtectedCostsOverview />} />
                     <Route path="/costs-by-company" element={<ProtectedCostsByCompany />} />
+                    <Route path="/costs-matrix" element={<ProtectedCostsMatrix />} />
                     <Route path="/budget" element={<ProtectedBudget />} />
                     <Route path="/budget/new" element={<ProtectedBudgetDetail />} />
                     <Route path="/budget/:id" element={<ProtectedBudgetDetail />} />
