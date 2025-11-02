@@ -36,13 +36,14 @@ const FIELD_OPTIONS = {
     { value: "ignored", label: "❌ Ignorar" },
   ],
   costs: [
-    { value: "employee_nif", label: "NIF Empleado" },
+    { value: "ignore", label: "🚫 Ignorar" },
+    { value: "employee_code", label: "Código Empleado" },
+    { value: "employee_nif", label: "NIF" },
     { value: "employee_name", label: "Nombre Empleado" },
     { value: "company", label: "Empresa" },
     { value: "period", label: "Período (YYYY-MM)" },
     { value: "bruto", label: "Bruto" },
     { value: "coste_empresa", label: "Coste Empresa" },
-    { value: "ignored", label: "❌ Ignorar" },
   ],
   payroll: [
     { value: "employee_code", label: "Código Empleado" },

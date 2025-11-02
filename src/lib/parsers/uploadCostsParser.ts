@@ -94,8 +94,8 @@ export const parseUploadCostsFile = async (
       complete: (results) => {
         const headers = results.meta.fields || [];
         
-        // Validar cabeceras requeridas
-        const requiredHeaders = ["nif", "name", "company", "date", "bruto", "coste_empresa"];
+        // Validar cabeceras requeridas (reducidas: solo obligatorias)
+        const requiredHeaders = ["company", "date", "bruto", "coste_empresa"];
         const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
         
         if (missingHeaders.length > 0) {
@@ -135,24 +135,37 @@ export const parseUploadCostsFile = async (
           
           companyMapping.set(row.company || "", normalizedCompany);
           
-          // 3. Construir objeto para validación
+          // 3. Leer employee_id desde múltiples posibles alias
+          const employeeCode = 
+            row.employee_id ||
+            row.employee_code ||
+            row.codigo ||
+            row.codigo_empleado ||
+            "";
+
+          // 4. Construir objeto para validación
           const rawData = {
-            employee_id: row.employee_id || "",
-            nif: row.nif?.trim().toUpperCase() || "",
-            name: row.name?.trim() || "",
+            employee_id: (employeeCode || "").toString().trim(),
+            nif: row.nif?.toString().trim().toUpperCase() || "",
+            name: row.name?.toString().trim() || "",
             company: normalizedCompany,
             date: normalizedDate,
             bruto: normalizedBruto,
             coste_empresa: normalizedCoste,
           };
           
-          // 4. Detectar campos faltantes
-          if (!rawData.nif) missingFields.push("nif");
-          if (!rawData.name) missingFields.push("name");
+          // 5. Detectar campos faltantes y validar que haya al menos un identificador
+          if (!rawData.employee_id && !rawData.nif && !rawData.name) {
+            warnings.push("Sin identificador (Código/NIF/Nombre). Mapea al menos uno.");
+          }
+          
+          if (!rawData.employee_id) missingFields.push("Código empleado");
+          if (!rawData.nif) missingFields.push("NIF");
+          if (!rawData.name) missingFields.push("Nombre");
           if (!rawData.company) missingFields.push("company");
           if (!rawData.date) missingFields.push("date");
           
-          // 5. Validar con Zod
+          // 6. Validar con Zod
           const result = uploadCostRowSchema.safeParse(rawData);
           
           if (!result.success) {
@@ -167,14 +180,17 @@ export const parseUploadCostsFile = async (
             validCount++;
           }
           
-          // 6. Detectar duplicados
-          const key = `${rawData.nif}-${rawData.date}`;
+          // 7. Detectar duplicados (usar identificador disponible preferente)
+          const dupKeyBase = rawData.employee_id || rawData.nif || rawData.name;
+          const key = `${dupKeyBase}-${rawData.date}`;
           const isDuplicate = seenKeys.has(key);
-          if (isDuplicate) {
+          if (isDuplicate && dupKeyBase) {
             duplicates++;
-            warnings.push("Registro duplicado (mismo NIF + fecha)");
+            warnings.push("Registro duplicado (mismo identificador + fecha)");
           }
-          seenKeys.add(key);
+          if (dupKeyBase) {
+            seenKeys.add(key);
+          }
           
           if (warnings.length > 0) warningCount++;
           
