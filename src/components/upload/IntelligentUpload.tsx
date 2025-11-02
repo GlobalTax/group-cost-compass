@@ -311,6 +311,26 @@ export const IntelligentUpload = () => {
                 </Alert>
               )}
 
+              {/* Advertencia si falta NIF */}
+              {aiResult.detected_type !== "employees" && 
+               !Object.values(finalMapping).includes("employee_nif") && 
+               !Object.values(finalMapping).includes("nif") && (
+                <Alert variant="default" className="border-blue-200 bg-blue-50 dark:bg-blue-950">
+                  <AlertTriangle className="h-4 w-4 text-blue-600" />
+                  <AlertTitle>Matching por Nombre Detectado</AlertTitle>
+                  <AlertDescription>
+                    <p className="text-sm">
+                      No se detectó columna de <strong>NIF/NIE</strong>. El sistema buscará empleados 
+                      por <strong>nombre completo exacto</strong>.
+                    </p>
+                    <p className="text-sm mt-2">
+                      ⚠️ Asegúrate de que los nombres coincidan <strong>exactamente</strong> con los 
+                      registrados en la base de datos (mayúsculas, acentos, espacios).
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Mapeo de columnas */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">

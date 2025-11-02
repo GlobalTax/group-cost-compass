@@ -64,17 +64,51 @@ export const importEmployees = async ({
 };
 
 /**
- * Mapea NIFs a employee_ids desde la base de datos
+ * Normaliza nombres de empleados para matching
  */
-export const mapNifToEmployeeId = async (
-  nifs: string[]
-): Promise<Map<string, string>> => {
-  const { data: employees } = await supabase
-    .from("hr_employees")
-    .select("id, dni")
-    .in("dni", nifs);
+const normalizeEmployeeName = (name: string): string => {
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, ""); // Remover diacríticos
+};
 
-  return new Map(employees?.map((e) => [e.dni, e.id]) || []);
+/**
+ * Mapea NIFs o nombres a employee_ids desde la base de datos
+ */
+export const mapEmployeeIdentifier = async (
+  identifiers: string[],
+  useNames = false
+): Promise<Map<string, string>> => {
+  if (useNames) {
+    // Buscar por nombre
+    const normalizedIdentifiers = identifiers.map(normalizeEmployeeName);
+    
+    const { data: employees } = await supabase
+      .from("hr_employees")
+      .select("id, full_name");
+
+    // Mapear con nombres normalizados
+    const map = new Map<string, string>();
+    employees?.forEach((e) => {
+      const normalizedName = normalizeEmployeeName(e.full_name);
+      const matchIndex = normalizedIdentifiers.indexOf(normalizedName);
+      if (matchIndex !== -1) {
+        map.set(identifiers[matchIndex], e.id);
+      }
+    });
+    
+    return map;
+  } else {
+    // Buscar por NIF (comportamiento original)
+    const { data: employees } = await supabase
+      .from("hr_employees")
+      .select("id, dni")
+      .in("dni", identifiers);
+
+    return new Map(employees?.map((e) => [e.dni, e.id]) || []);
+  }
 };
 
 /**
@@ -108,22 +142,35 @@ export const importCosts = async ({
     throw new Error("No hay datos válidos para importar");
   }
 
-  // Mapear NIFs a employee_ids
-  const nifs = validRows.map((r) => r.nif);
-  const employeeMap = await mapNifToEmployeeId(nifs);
+  // Detectar si tenemos NIFs o solo nombres
+  const hasNif = validRows.some((r) => r.nif && r.nif.trim() !== "");
+  const useNames = !hasNif;
+
+  // Obtener identificadores (NIFs o nombres)
+  const identifiers = validRows.map((r) => (useNames ? r.name : r.nif!));
+  const employeeMap = await mapEmployeeIdentifier(identifiers, useNames);
 
   // Preparar costes
   const costsToImport = validRows
-    .filter((r) => employeeMap.has(r.nif))
-    .map((r) => ({
-      employee_id: employeeMap.get(r.nif)!,
-      period: `${r.date}-01`, // Normalizar a primer día del mes
-      bruto: r.bruto,
-      coste_empresa: r.coste_empresa,
-    }));
+    .filter((r) => {
+      const identifier = useNames ? r.name : r.nif!;
+      return employeeMap.has(identifier);
+    })
+    .map((r) => {
+      const identifier = useNames ? r.name : r.nif!;
+      return {
+        employee_id: employeeMap.get(identifier)!,
+        period: `${r.date}-01`, // Normalizar a primer día del mes
+        bruto: r.bruto,
+        coste_empresa: r.coste_empresa,
+      };
+    });
 
   if (costsToImport.length === 0) {
-    throw new Error("Ningún empleado encontrado con los NIFs proporcionados");
+    const errorMsg = useNames
+      ? "Ningún empleado encontrado con los nombres proporcionados. Verifica que los nombres coincidan exactamente con los registrados."
+      : "Ningún empleado encontrado con los NIFs proporcionados";
+    throw new Error(errorMsg);
   }
 
   // Verificar duplicados
