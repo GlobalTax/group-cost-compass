@@ -118,6 +118,15 @@ export const parseUploadCostsFile = async (
           const warnings: string[] = [];
           const missingFields: string[] = [];
           
+          // Helper para leer el primer valor no vacío de varios alias
+          const pick = (...keys: string[]) => {
+            for (const k of keys) {
+              const v = row[k];
+              if (v != null && String(v).trim() !== "") return String(v).trim();
+            }
+            return "";
+          };
+          
           // 1. Normalizar datos
           const normalizedDate = row.date ? normalizeDateToFirstDay(row.date.trim()) : "";
           const normalizedBruto = parseLocaleNumber(row.bruto || "0");
@@ -135,19 +144,39 @@ export const parseUploadCostsFile = async (
           
           companyMapping.set(row.company || "", normalizedCompany);
           
-          // 3. Leer employee_id desde múltiples posibles alias
-          const employeeCode = 
-            row.employee_id ||
-            row.employee_code ||
-            row.codigo ||
-            row.codigo_empleado ||
-            "";
+          // 3. Leer campos con alias
+          const employeeCode = pick(
+            "employee_id",
+            "employee_code",
+            "codigo",
+            "codigo_empleado"
+          );
+          
+          const nameCandidate = pick(
+            "name",
+            "employee_name",
+            "nombre",
+            "nombre_empleado",
+            "empleado",
+            "trabajador",
+            "full_name",
+            "fullname",
+            "nombre_y_apellidos"
+          );
+          
+          const nifCandidate = pick(
+            "nif",
+            "employee_nif",
+            "nif_empleado",
+            "dni",
+            "nie"
+          );
 
           // 4. Construir objeto para validación
           const rawData = {
-            employee_id: (employeeCode || "").toString().trim(),
-            nif: row.nif?.toString().trim().toUpperCase() || "",
-            name: row.name?.toString().trim() || "",
+            employee_id: employeeCode,
+            nif: nifCandidate.toUpperCase(),
+            name: nameCandidate,
             company: normalizedCompany,
             date: normalizedDate,
             bruto: normalizedBruto,
@@ -159,9 +188,9 @@ export const parseUploadCostsFile = async (
             warnings.push("Sin identificador (Código/NIF/Nombre). Mapea al menos uno.");
           }
           
-          if (!rawData.employee_id) missingFields.push("Código empleado");
-          if (!rawData.nif) missingFields.push("NIF");
-          if (!rawData.name) missingFields.push("Nombre");
+          if (!employeeCode) missingFields.push("Código empleado");
+          if (!nifCandidate) missingFields.push("NIF");
+          if (!nameCandidate) missingFields.push("Nombre");
           if (!rawData.company) missingFields.push("company");
           if (!rawData.date) missingFields.push("date");
           
