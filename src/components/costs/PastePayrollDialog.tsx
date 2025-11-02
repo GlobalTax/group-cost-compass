@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Check, AlertCircle, ClipboardPaste } from "lucide-react";
+import { Check, AlertCircle, ClipboardPaste, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PasteArea } from "@/components/upload/PasteArea";
 import { useBulkUpsertEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { parseNumber } from "@/lib/parsers/a3nom/numberParser";
+import { createEmployee } from "@/lib/supabase/repositories/employees.repo";
 import type { Database } from "@/integrations/supabase/types";
 
 type Employee = Database["public"]["Tables"]["hr_employees"]["Row"];
@@ -22,6 +24,12 @@ interface ParsedPayroll {
   ss_trabajador: number;
   ss_empresa: number;
   hasMatch: boolean;
+  isNewEmployee?: boolean;
+  newEmployeeData?: {
+    full_name: string;
+    company_id: string;
+    hire_date: string;
+  };
 }
 
 interface PastePayrollDialogProps {
@@ -175,25 +183,67 @@ export const PastePayrollDialog = ({
   };
 
   const handleSaveAll = async () => {
-    const validRows = parsedData.filter((p) => p.hasMatch);
-
-    const costs: CostInsert[] = validRows.map((p) => ({
-      employee_id: p.employee!.id,
-      period,
-      bruto: p.bruto,
-      sal_neto: p.neto,
-      coste_empresa: p.coste_empresa,
-      irpf_dinero: p.irpf_dinero,
-      ss_trabajador: p.ss_trabajador,
-      ss_empresa: p.ss_empresa,
-    }));
-
-    await bulkUpsert.mutateAsync(costs);
-    
-    // Resetear y cerrar
-    onOpenChange(false);
-    setStep("paste");
-    setParsedData([]);
+    try {
+      // 1️⃣ Identificar empleados nuevos a crear
+      const rowsToCreate = parsedData.filter(p => p.isNewEmployee && p.newEmployeeData);
+      
+      // 2️⃣ Crear empleados nuevos en batch
+      const newEmployees: Employee[] = [];
+      if (rowsToCreate.length > 0) {
+        console.log(`📝 Creando ${rowsToCreate.length} empleados nuevos...`);
+        
+        for (const row of rowsToCreate) {
+          const newEmp = await createEmployee({
+            full_name: row.newEmployeeData!.full_name,
+            company_id: row.newEmployeeData!.company_id,
+            hire_date: row.newEmployeeData!.hire_date,
+            org_id: employees[0]?.org_id || "",
+            notes: `Creado automáticamente desde importación de nóminas ${period}`,
+          });
+          newEmployees.push(newEmp);
+          
+          // Actualizar parsedData con el empleado recién creado
+          const idx = parsedData.findIndex(r => r === row);
+          if (idx !== -1) {
+            parsedData[idx].employee = newEmp;
+          }
+        }
+        
+        console.log(`✅ ${newEmployees.length} empleados creados correctamente`);
+      }
+      
+      // 3️⃣ Preparar costes (ahora todos tienen employee_id)
+      const validRows = parsedData.filter(p => p.hasMatch && p.employee);
+      
+      const costs: CostInsert[] = validRows.map(p => ({
+        employee_id: p.employee!.id,
+        period,
+        bruto: p.bruto,
+        sal_neto: p.neto,
+        coste_empresa: p.coste_empresa,
+        irpf_dinero: p.irpf_dinero,
+        ss_trabajador: p.ss_trabajador,
+        ss_empresa: p.ss_empresa,
+      }));
+      
+      // 4️⃣ Guardar costes en bulk
+      await bulkUpsert.mutateAsync(costs);
+      
+      // 5️⃣ Resetear y cerrar
+      onOpenChange(false);
+      setStep("paste");
+      setParsedData([]);
+      
+      // Toast personalizado si se crearon empleados
+      if (newEmployees.length > 0) {
+        toast.success(
+          `✅ ${newEmployees.length} empleado${newEmployees.length > 1 ? 's' : ''} nuevo${newEmployees.length > 1 ? 's' : ''} creado${newEmployees.length > 1 ? 's' : ''} + ${costs.length} nómina${costs.length > 1 ? 's' : ''} guardada${costs.length > 1 ? 's' : ''}`
+        );
+      }
+    } catch (error) {
+      console.error("❌ Error al guardar:", error);
+      toast.error("Error al guardar. Revisa la consola para más detalles.");
+    }
   };
 
   const handleClose = () => {
@@ -210,6 +260,45 @@ export const PastePayrollDialog = ({
         ...updated[index],
         employee,
         hasMatch: !!employee,
+      };
+      return updated;
+    });
+  };
+
+  const handleMarkAsNewEmployee = (index: number) => {
+    const row = parsedData[index];
+    
+    // Convertir "Apellidos, Nombre" a "Nombre Apellidos"
+    let fullName = row.rawName.replace(/\*\*/g, "").replace(/\(.*?\)/g, "").trim();
+    if (fullName.includes(",")) {
+      const [apellidos, nombre] = fullName.split(",").map(s => s.trim());
+      fullName = `${nombre} ${apellidos}`;
+    }
+    
+    setParsedData(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        isNewEmployee: true,
+        hasMatch: true,
+        newEmployeeData: {
+          full_name: fullName,
+          company_id: companyId,
+          hire_date: `${period}-01`,
+        },
+      };
+      return updated;
+    });
+  };
+
+  const handleCancelNewEmployee = (index: number) => {
+    setParsedData(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        isNewEmployee: false,
+        hasMatch: false,
+        newEmployeeData: undefined,
       };
       return updated;
     });
@@ -246,6 +335,8 @@ export const PastePayrollDialog = ({
               data={parsedData} 
               employees={employees}
               onEmployeeSelect={handleManualEmployeeSelect}
+              onMarkAsNew={handleMarkAsNewEmployee}
+              onCancelNew={handleCancelNewEmployee}
             />
           )}
         </div>
@@ -280,11 +371,15 @@ export const PastePayrollDialog = ({
 const PreviewTable = ({ 
   data, 
   employees,
-  onEmployeeSelect 
+  onEmployeeSelect,
+  onMarkAsNew,
+  onCancelNew
 }: { 
   data: ParsedPayroll[];
   employees: Employee[];
   onEmployeeSelect: (index: number, employeeId: string) => void;
+  onMarkAsNew: (index: number) => void;
+  onCancelNew: (index: number) => void;
 }) => {
   return (
     <div className="rounded-md border">
@@ -314,7 +409,20 @@ const PreviewTable = ({
               </TableCell>
               <TableCell className="font-medium">{row.rawName}</TableCell>
               <TableCell>
-                {row.hasMatch ? (
+                {row.isNewEmployee ? (
+                  <div className="flex items-center gap-2 text-xs text-green-600">
+                    <UserPlus className="h-4 w-4" />
+                    <span className="font-medium">Se creará: {row.newEmployeeData?.full_name}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onCancelNew(idx)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                ) : row.hasMatch ? (
                   <span className="text-sm">
                     {row.employee!.full_name}
                     <span className="text-muted-foreground ml-2">
@@ -322,21 +430,33 @@ const PreviewTable = ({
                     </span>
                   </span>
                 ) : (
-                  <Select
-                    value={row.employee?.id || ""}
-                    onValueChange={(employeeId) => onEmployeeSelect(idx, employeeId)}
-                  >
-                    <SelectTrigger className="w-[300px] h-8 text-xs">
-                      <SelectValue placeholder="Seleccionar empleado..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employees.map(emp => (
-                        <SelectItem key={emp.id} value={emp.id} className="text-xs">
-                          {emp.full_name} {emp.employee_code && `(${emp.employee_code})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      value={row.employee?.id || ""}
+                      onValueChange={(employeeId) => onEmployeeSelect(idx, employeeId)}
+                    >
+                      <SelectTrigger className="w-[250px] h-8 text-xs">
+                        <SelectValue placeholder="Seleccionar empleado..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {employees.map(emp => (
+                          <SelectItem key={emp.id} value={emp.id} className="text-xs">
+                            {emp.full_name} {emp.employee_code && `(${emp.employee_code})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onMarkAsNew(idx)}
+                      className="h-8 px-3 text-xs whitespace-nowrap"
+                    >
+                      <UserPlus className="h-3 w-3 mr-1" />
+                      Crear nuevo
+                    </Button>
+                  </div>
                 )}
               </TableCell>
               <TableCell className="text-right">
