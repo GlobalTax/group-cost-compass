@@ -143,11 +143,14 @@ export const importCosts = async ({
   }
 
   // Detectar si tenemos NIFs o solo nombres
-  const hasNif = validRows.some((r) => r.nif && r.nif.trim() !== "");
+  const hasNif = validRows.some((r) => r.nif && typeof r.nif === "string" && r.nif.trim() !== "");
   const useNames = !hasNif;
 
+  console.log("🔍 Debug importCosts - Primera fila:", validRows[0]);
+  console.log("🔍 hasNif:", hasNif, "useNames:", useNames);
+
   // Obtener identificadores (NIFs o nombres)
-  const identifiers = validRows.map((r) => (useNames ? r.name : r.nif!));
+  const identifiers = validRows.map((r) => (useNames ? (r.name || "") : (r.nif || "")));
   const employeeMap = await mapEmployeeIdentifier(identifiers, useNames);
 
   // Preparar costes
