@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, ClipboardPaste } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EditableCell } from "@/components/ui/editable-cell";
+import { Button } from "@/components/ui/button";
+import { PastePayrollDialog } from "./PastePayrollDialog";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useCostsByPeriod } from "@/hooks/useEmployeeCosts";
 import { useUpsertEmployeeCost } from "@/hooks/useEmployeeCosts";
@@ -19,6 +21,7 @@ interface ManualPayrollTableProps {
 
 export const ManualPayrollTable = ({ companyId, year, month }: ManualPayrollTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showPasteDialog, setShowPasteDialog] = useState(false);
   
   const period = `${year}-${String(month).padStart(2, "0")}-01`;
   
@@ -92,7 +95,7 @@ export const ManualPayrollTable = ({ companyId, year, month }: ManualPayrollTabl
   
   return (
     <div className="space-y-4">
-      {/* Barra de búsqueda */}
+      {/* Barra de búsqueda y acciones */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -103,8 +106,18 @@ export const ManualPayrollTable = ({ companyId, year, month }: ManualPayrollTabl
             className="pl-9"
           />
         </div>
-        <div className="text-sm text-muted-foreground">
-          {filteredEmployees.length} empleado{filteredEmployees.length !== 1 ? "s" : ""}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setShowPasteDialog(true)}
+            disabled={isLoading}
+          >
+            <ClipboardPaste className="h-4 w-4 mr-2" />
+            Pegar desde Excel
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            {filteredEmployees.length} empleado{filteredEmployees.length !== 1 ? "s" : ""}
+          </div>
         </div>
       </div>
       
@@ -212,6 +225,15 @@ export const ManualPayrollTable = ({ companyId, year, month }: ManualPayrollTabl
           </Table>
         </div>
       </Card>
+      
+      {/* Dialog de pegado masivo */}
+      <PastePayrollDialog
+        open={showPasteDialog}
+        onOpenChange={setShowPasteDialog}
+        employees={filteredEmployees}
+        period={period}
+        companyId={companyId}
+      />
     </div>
   );
 };
