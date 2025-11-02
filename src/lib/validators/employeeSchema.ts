@@ -21,6 +21,20 @@ export const employeeSchema = z.object({
   annual_salary: z.number().min(0, "El salario debe ser positivo").optional(),
   department_id: z.string().uuid().optional().nullable(),
   team_id: z.string().uuid().optional().nullable(),
+  employment_status: z.enum([
+    'active',
+    'leave_of_absence',
+    'maternity_leave',
+    'paternity_leave',
+    'medical_leave',
+    'sabbatical',
+    'unpaid_leave',
+    'suspended',
+    'terminated'
+  ]).optional().default('active'),
+  leave_start_date: z.string().optional().nullable(),
+  leave_end_date: z.string().optional().nullable(),
+  leave_reason: z.string().max(500, "Máximo 500 caracteres").optional().nullable(),
 });
 
 export type EmployeeFormData = z.infer<typeof employeeSchema>;

@@ -10,6 +10,28 @@ import { useTeams } from "@/hooks/useTeams";
 import { useCompanies } from "@/hooks/useCompanies";
 import { ConfirmCompanyChangeDialog } from "../ConfirmCompanyChangeDialog";
 
+const EMPLOYMENT_STATUS_OPTIONS = [
+  { value: 'active', label: '✅ Activo' },
+  { value: 'leave_of_absence', label: '🏖️ Excedencia' },
+  { value: 'maternity_leave', label: '👶 Baja Maternal' },
+  { value: 'paternity_leave', label: '👨‍👦 Baja Paternal' },
+  { value: 'medical_leave', label: '🏥 Baja Médica' },
+  { value: 'sabbatical', label: '🌍 Sabático' },
+  { value: 'unpaid_leave', label: '⏸️ Permiso sin sueldo' },
+  { value: 'suspended', label: '⚠️ Suspendido' },
+  { value: 'terminated', label: '❌ Finalizado' },
+];
+
+const LEAVE_STATUSES = [
+  'leave_of_absence',
+  'maternity_leave',
+  'paternity_leave',
+  'medical_leave',
+  'sabbatical',
+  'unpaid_leave',
+  'suspended'
+];
+
 interface GeneralInfoTabProps {
   employee: any;
   financials: {
@@ -129,6 +151,42 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
     },
   ];
 
+  const employmentStatusFields: FieldDefinition[] = [
+    {
+      name: "employment_status",
+      label: "Estado",
+      value: employee.employment_status || 'active',
+      type: "select",
+      options: EMPLOYMENT_STATUS_OPTIONS,
+      description: "Estado actual del empleado en la organización"
+    },
+    // Campos condicionales solo si hay ausencia
+    ...(LEAVE_STATUSES.includes(employee.employment_status || 'active') ? [
+      {
+        name: "leave_start_date",
+        label: "Fecha de inicio",
+        value: employee.leave_start_date || "",
+        type: "date" as const,
+        description: "Fecha en la que comenzó la ausencia"
+      },
+      {
+        name: "leave_end_date",
+        label: "Fecha estimada de retorno",
+        value: employee.leave_end_date || "",
+        type: "date" as const,
+        description: "Dejar vacío si la fecha es indefinida"
+      },
+      {
+        name: "leave_reason",
+        label: "Motivo/Notas",
+        value: employee.leave_reason || "",
+        type: "textarea" as const,
+        placeholder: "Información adicional sobre la ausencia...",
+        description: "Detalles internos sobre la situación"
+      }
+    ] : [])
+  ];
+
   const handleSavePersonalData = async (data: Record<string, any>) => {
     return await updateFields(data);
   };
@@ -166,6 +224,22 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
     return true;
   };
 
+  const handleSaveEmploymentStatus = async (data: Record<string, any>) => {
+    // Si cambia a 'active', limpiar campos de ausencia
+    if (data.employment_status === 'active') {
+      data.leave_start_date = null;
+      data.leave_end_date = null;
+      data.leave_reason = null;
+    }
+    
+    // Si cambia a 'terminated', actualizar termination_date
+    if (data.employment_status === 'terminated' && !employee.termination_date) {
+      data.termination_date = new Date().toISOString().split('T')[0];
+    }
+    
+    return await updateFields(data);
+  };
+
   return (
     <div className="space-y-6">
       {/* Datos Personales - Editable */}
@@ -191,6 +265,14 @@ export const GeneralInfoTab = ({ employee, financials, latestCost }: GeneralInfo
         fields={economicDataFields}
         onSave={handleSaveEconomicData}
         isLoading={isUpdatingCost}
+      />
+
+      {/* Estado de Empleo - Editable */}
+      <EditableSection
+        title="Estado de Empleo"
+        fields={employmentStatusFields}
+        onSave={handleSaveEmploymentStatus}
+        isLoading={isUpdating}
       />
 
       {/* Notas - Editable */}

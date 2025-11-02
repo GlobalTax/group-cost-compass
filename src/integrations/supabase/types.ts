@@ -5397,9 +5397,13 @@ export type Database = {
           dni: string | null
           email: string | null
           employee_code: string | null
+          employment_status: string | null
           full_name: string
           hire_date: string | null
           id: string
+          leave_end_date: string | null
+          leave_reason: string | null
+          leave_start_date: string | null
           notes: string | null
           nss: string | null
           org_id: string | null
@@ -5427,9 +5431,13 @@ export type Database = {
           dni?: string | null
           email?: string | null
           employee_code?: string | null
+          employment_status?: string | null
           full_name: string
           hire_date?: string | null
           id?: string
+          leave_end_date?: string | null
+          leave_reason?: string | null
+          leave_start_date?: string | null
           notes?: string | null
           nss?: string | null
           org_id?: string | null
@@ -5457,9 +5465,13 @@ export type Database = {
           dni?: string | null
           email?: string | null
           employee_code?: string | null
+          employment_status?: string | null
           full_name?: string
           hire_date?: string | null
           id?: string
+          leave_end_date?: string | null
+          leave_reason?: string | null
+          leave_start_date?: string | null
           notes?: string | null
           nss?: string | null
           org_id?: string | null

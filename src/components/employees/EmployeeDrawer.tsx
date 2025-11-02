@@ -20,6 +20,24 @@ import { KPICard } from "@/components/dashboard/KPICard";
 import { GeneralInfoTab } from "./tabs/GeneralInfoTab";
 import { CostsTab } from "./tabs/CostsTab";
 import { TransfersTab } from "./tabs/TransfersTab";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
+const getEmploymentStatusBadge = (status: string | null | undefined) => {
+  const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    'active': { label: '✅ Activo', variant: 'default' },
+    'leave_of_absence': { label: '🏖️ Excedencia', variant: 'secondary' },
+    'maternity_leave': { label: '👶 Maternal', variant: 'secondary' },
+    'paternity_leave': { label: '👨‍👦 Paternal', variant: 'secondary' },
+    'medical_leave': { label: '🏥 Baja Médica', variant: 'secondary' },
+    'sabbatical': { label: '🌍 Sabático', variant: 'secondary' },
+    'unpaid_leave': { label: '⏸️ Sin sueldo', variant: 'outline' },
+    'suspended': { label: '⚠️ Suspendido', variant: 'destructive' },
+    'terminated': { label: '❌ Finalizado', variant: 'destructive' },
+  };
+  
+  return statusMap[status || 'active'] || statusMap['active'];
+};
 
 interface EmployeeDrawerProps {
   employeeId: string | null;
@@ -67,17 +85,25 @@ export const EmployeeDrawer = ({ employeeId, open, onOpenChange }: EmployeeDrawe
                 <div className="flex items-start gap-4">
                   <AvatarInitials name={employee.full_name} className="h-16 w-16" />
                   <div className="flex-1 space-y-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <DrawerTitle className="text-2xl font-bold">
-                        {employee.full_name}
-                      </DrawerTitle>
-                      <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-success" : ""}>
-                        {isActive ? "Activo" : "Inactivo"}
-                      </Badge>
-                      {employee.transfer_group && (
-                        <Badge variant="outline" className="border-primary text-primary">
-                          Traslado
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <DrawerTitle className="text-2xl font-bold">
+                          {employee.full_name}
+                        </DrawerTitle>
+                        <Badge variant={getEmploymentStatusBadge(employee.employment_status).variant}>
+                          {getEmploymentStatusBadge(employee.employment_status).label}
                         </Badge>
+                        {employee.transfer_group && (
+                          <Badge variant="outline" className="border-primary text-primary">
+                            Traslado
+                          </Badge>
+                        )}
+                      </div>
+                      {employee.leave_start_date && (
+                        <p className="text-xs text-muted-foreground">
+                          Desde: {format(new Date(employee.leave_start_date), 'dd/MM/yyyy', { locale: es })}
+                          {employee.leave_end_date && ` → ${format(new Date(employee.leave_end_date), 'dd/MM/yyyy', { locale: es })}`}
+                        </p>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
