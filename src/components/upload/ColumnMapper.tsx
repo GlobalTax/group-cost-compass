@@ -5,6 +5,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Settings2, RotateCcw } from "lucide-react";
 
+// Normalizar nombre de columna (debe coincidir con uploadCostsParser)
+const normalizeColumnName = (name: string): string => {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "_")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+};
+
 interface ColumnMapperProps {
   headers: string[];
   onMappingChange: (mapping: Record<string, string>) => void;
@@ -133,7 +143,12 @@ export const ColumnMapper = ({ headers, onMappingChange, storageKey = "upload-co
                 </SelectItem>
                 {headers.map(header => (
                   <SelectItem key={header} value={header}>
-                    {header}
+                    <div className="flex items-center gap-2">
+                      <span>{header}</span>
+                      <span className="text-xs text-muted-foreground">
+                        → {normalizeColumnName(header)}
+                      </span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

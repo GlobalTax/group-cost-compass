@@ -98,11 +98,22 @@ export const parseUploadCostsFile = async (
         // Aplicar mapeo si existe
         let processedData = results.data;
         if (mapping && Object.keys(mapping).length > 0) {
+          // ✅ Normalizar keys del mapping
+          const normalizedMapping: Record<string, string> = {};
+          Object.entries(mapping).forEach(([targetField, sourceHeader]) => {
+            if (sourceHeader) {
+              normalizedMapping[targetField] = normalizeColumnName(sourceHeader);
+            }
+          });
+          
+          console.log("🔍 Mapping original:", mapping);
+          console.log("🔍 Mapping normalizado:", normalizedMapping);
+          
           processedData = results.data.map((row: any) => {
             const mappedRow: any = {};
-            Object.entries(mapping).forEach(([targetField, sourceHeader]) => {
-              if (sourceHeader && row[sourceHeader] !== undefined) {
-                mappedRow[targetField] = row[sourceHeader];
+            Object.entries(normalizedMapping).forEach(([targetField, normalizedSource]) => {
+              if (normalizedSource && row[normalizedSource] !== undefined) {
+                mappedRow[targetField] = row[normalizedSource];
               }
             });
             // Preservar campos no mapeados
@@ -111,8 +122,11 @@ export const parseUploadCostsFile = async (
             });
             return mappedRow;
           });
+          
+          console.log("🔍 Primera fila procesada:", processedData[0]);
+          
           // Actualizar headers con los campos mapeados
-          headers = Array.from(new Set([...headers, ...Object.keys(mapping).filter(k => mapping[k])]));
+          headers = Array.from(new Set([...headers, ...Object.keys(normalizedMapping).filter(k => normalizedMapping[k])]));
         }
         
         // Validar cabeceras requeridas (reducidas: solo obligatorias)
