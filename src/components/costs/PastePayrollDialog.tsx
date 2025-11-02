@@ -213,6 +213,18 @@ export const PastePayrollDialog = ({
             throw new Error(`No se pudo determinar la organización de la empresa seleccionada`);
           }
           
+          // 🔍 DEBUGGING: Log detallado antes de crear empleado
+          console.log("🔍 ========== DEBUGGING CREAR EMPLEADO ==========");
+          console.log("🔍 Datos del empleado a crear:", {
+            full_name: row.newEmployeeData!.full_name,
+            company_id: row.newEmployeeData!.company_id,
+            hire_date: row.newEmployeeData!.hire_date,
+            org_id: orgId,
+          });
+          console.log("🔍 Cliente Supabase importado desde:", "@/lib/supabase/repositories/employees.repo");
+          console.log("🔍 Period:", period);
+          console.log("🔍 Row completo:", row);
+          
           const newEmp = await createEmployee({
             full_name: row.newEmployeeData!.full_name,
             company_id: row.newEmployeeData!.company_id!,
@@ -261,9 +273,21 @@ export const PastePayrollDialog = ({
         );
       }
     } catch (error: any) {
-      console.error("❌ Error al guardar:", error);
-      const message = error?.message || (error as any)?.error?.message || "";
-      toast.error(`Error al guardar: ${message || 'revisa la consola'}`);
+      // 🔍 DEBUGGING: Capturar error completo con todos los detalles
+      console.error("❌ ========== ERROR COMPLETO ==========");
+      console.error("❌ Error objeto completo:", error);
+      console.error("❌ Error.message:", error?.message);
+      console.error("❌ Error.stack:", error?.stack);
+      console.error("❌ Error.code:", error?.code);
+      console.error("❌ Error.details:", error?.details);
+      console.error("❌ Error.hint:", error?.hint);
+      console.error("❌ Supabase error:", error?.error);
+      console.error("❌ Error serializado:", JSON.stringify(error, null, 2));
+      console.error("❌ Type of error:", typeof error);
+      console.error("❌ Error constructor:", error?.constructor?.name);
+      
+      const message = error?.message || error?.error?.message || "";
+      toast.error(`Error al guardar: ${message || 'revisa la consola con F12'}`);
     }
   };
 
