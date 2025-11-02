@@ -2,12 +2,14 @@ import { useState, useMemo, useEffect } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { CostsOverviewKPIs } from "@/components/costs/CostsOverviewKPIs";
 import { CostsOverviewTable } from "@/components/costs/CostsOverviewTable";
+import { DuplicateCleanupDialog } from "@/components/employees/DuplicateCleanupDialog";
 import { useCostsOverview } from "@/hooks/useCostsOverview";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useCompanies } from "@/hooks/useCompanies";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useTeams } from "@/hooks/useTeams";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -15,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator } from "lucide-react";
+import { Copy } from "lucide-react";
 
 const CostsOverview = () => {
   const currentYear = new Date().getFullYear();
@@ -25,6 +27,7 @@ const CostsOverview = () => {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
 
   const { data: companies } = useCompanies();
   const { data: departments } = useDepartments();
@@ -72,10 +75,21 @@ const CostsOverview = () => {
 
   return (
     <div className="flex-1 space-y-6 p-6">
-      <PageHeader
-        title="Coste Total de Plantilla"
-        subtitle="Desglose completo de costes: salarios, seguridad social y bonus"
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader
+          title="Coste Total de Plantilla"
+          subtitle="Desglose completo de costes: salarios, seguridad social y bonus"
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCleanupDialogOpen(true)}
+          className="gap-2"
+        >
+          <Copy className="w-4 h-4" />
+          Limpiar Duplicados
+        </Button>
+      </div>
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-4">
@@ -179,6 +193,11 @@ const CostsOverview = () => {
           <CostsOverviewTable data={filteredData} year={selectedYear} searchTerm={searchTerm} />
         )
       )}
+
+      <DuplicateCleanupDialog
+        open={cleanupDialogOpen}
+        onOpenChange={setCleanupDialogOpen}
+      />
     </div>
   );
 };
