@@ -70,7 +70,16 @@ const findEmployeeByName = (
  */
 const getColumnValue = (row: Record<string, any>, possibleNames: string[]): any => {
   for (const name of possibleNames) {
-    if (row[name] !== undefined) return row[name];
+    // Buscar exacto
+    if (row[name] !== undefined && row[name] !== "") return row[name];
+    
+    // Buscar case-insensitive y sin espacios extra
+    const normalizedName = name.toLowerCase().trim();
+    for (const key of Object.keys(row)) {
+      if (key.toLowerCase().trim() === normalizedName && row[key] !== "") {
+        return row[key];
+      }
+    }
   }
   return "";
 };
@@ -87,6 +96,10 @@ export const PastePayrollDialog = ({
   const bulkUpsert = useBulkUpsertEmployeeCosts();
 
   const handleParsedData = (rows: Array<Record<string, any>>) => {
+    console.log("📊 Filas parseadas:", rows.length);
+    console.log("📋 Primera fila:", rows[0]);
+    console.log("🔑 Columnas detectadas:", rows[0] ? Object.keys(rows[0]) : []);
+    
     const mapped: ParsedPayroll[] = rows.map((row) => {
       const rawName = getColumnValue(row, ["Trabajador", "trabajador", "Nombre", "nombre"]);
       const employee = findEmployeeByName(rawName, employees);
@@ -111,7 +124,30 @@ export const PastePayrollDialog = ({
       };
     });
 
-    setParsedData(mapped);
+    // Filtrar filas con nombre vacío y duplicados
+    const uniqueMap = new Map<string, ParsedPayroll>();
+    
+    mapped.forEach((row) => {
+      if (!row.rawName || row.rawName.trim() === "") return; // Skip vacíos
+      
+      const key = `${row.employee?.id || row.rawName.toLowerCase()}`;
+      
+      // Si ya existe, mantener la que tenga valores > 0
+      if (uniqueMap.has(key)) {
+        const existing = uniqueMap.get(key)!;
+        if (row.bruto > 0 && existing.bruto === 0) {
+          uniqueMap.set(key, row); // Reemplazar con valores reales
+        }
+      } else {
+        uniqueMap.set(key, row);
+      }
+    });
+
+    const deduplicated = Array.from(uniqueMap.values());
+    
+    console.log("✅ Filas únicas:", deduplicated.length);
+    
+    setParsedData(deduplicated);
     setStep("preview");
   };
 

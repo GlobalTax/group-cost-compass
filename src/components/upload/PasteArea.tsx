@@ -41,7 +41,7 @@ export const PasteArea = ({ onParsedData, disabled }: PasteAreaProps) => {
       delimiter,
       header: true,
       skipEmptyLines: true,
-      dynamicTyping: true,
+      dynamicTyping: false, // Mantener todo como string para procesar manualmente
       complete: (results) => {
         const data = results.data as Array<Record<string, any>>;
         
@@ -72,7 +72,7 @@ export const PasteArea = ({ onParsedData, disabled }: PasteAreaProps) => {
       delimiter: detectedFormat.includes("tabs") ? "\t" : detectedFormat.includes("coma") ? "," : ";",
       header: true,
       skipEmptyLines: true,
-      dynamicTyping: true,
+      dynamicTyping: false, // Mantener todo como string para procesar manualmente
       complete: (results) => {
         const data = results.data as Array<Record<string, any>>;
         onParsedData(data);
