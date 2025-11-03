@@ -66,7 +66,7 @@ export const MonthlyCostsMatrix = ({
                       {getMonthLabel(month)}
                     </TableHead>
                   ))}
-                  <TableHead className="text-right font-bold sticky right-[60px] bg-background z-20 min-w-[120px]">
+                  <TableHead className="text-right font-bold sticky right-[60px] bg-background z-20 min-w-[140px] pr-4">
                     TOTAL
                   </TableHead>
                   <TableHead className="sticky right-0 bg-background z-20 w-[60px]"></TableHead>
@@ -96,7 +96,7 @@ export const MonthlyCostsMatrix = ({
                         </TableCell>
                       );
                     })}
-                    <TableCell className="text-right font-bold sticky right-[60px] bg-background z-10">
+                    <TableCell className="text-right font-bold sticky right-[60px] bg-background z-10 pr-4 font-tabular-nums">
                       {formatCurrency(employee.total)}
                     </TableCell>
                     <TableCell className="sticky right-0 bg-background z-10">
@@ -123,7 +123,7 @@ export const MonthlyCostsMatrix = ({
                       {formatCurrency(monthlyTotals[month] || 0)}
                     </TableCell>
                   ))}
-                  <TableCell className="text-right sticky right-[60px] bg-muted/50 z-10">
+                  <TableCell className="text-right sticky right-[60px] bg-muted/50 z-10 pr-4 font-tabular-nums">
                     {formatCurrency(grandTotal)}
                   </TableCell>
                   <TableCell className="sticky right-0 bg-muted/50 z-10"></TableCell>
