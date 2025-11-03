@@ -57,10 +57,11 @@ export const MonthlyCostsMatrix = ({
           Exportar Excel
         </Button>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="max-h-[600px] w-full">
-          <div className="overflow-x-auto pb-4">
-            <Table>
+      <CardContent className="p-0">
+        <div className="relative h-[600px] w-full overflow-hidden">
+          <ScrollArea className="h-full w-full">
+            <div className="min-w-full pb-4">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="sticky left-0 bg-background z-30 min-w-[200px] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
@@ -147,10 +148,11 @@ export const MonthlyCostsMatrix = ({
                   </TableCell>
                 </TableRow>
               </TableBody>
-            </Table>
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+              </Table>
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
