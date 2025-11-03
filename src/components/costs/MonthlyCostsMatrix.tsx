@@ -12,6 +12,8 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/formatters";
+import { EditableCell } from "@/components/ui/editable-cell";
+import { useUpdateCostInMatrix } from "@/hooks/useUpdateCostInMatrix";
 import type { EmployeeMonthlyRow } from "@/hooks/useMonthlyMatrix";
 
 interface MonthlyCostsMatrixProps {
@@ -20,6 +22,7 @@ interface MonthlyCostsMatrixProps {
   monthlyTotals: { [key: string]: number };
   grandTotal: number;
   onExport: () => void;
+  costType: "bruto" | "total";
 }
 
 export const MonthlyCostsMatrix = ({
@@ -28,7 +31,9 @@ export const MonthlyCostsMatrix = ({
   monthlyTotals,
   grandTotal,
   onExport,
+  costType,
 }: MonthlyCostsMatrixProps) => {
+  const { updateCostValue, isLoading } = useUpdateCostInMatrix();
   const getMonthLabel = (period: string) => {
     const [_, month] = period.split("-");
     const monthNames = [
@@ -94,15 +99,30 @@ export const MonthlyCostsMatrix = ({
                       </div>
                     </TableCell>
                     {monthsOfYear.map((month) => {
-                      const value = employee.months[month] || 0;
+                      const costData = employee.months[month];
+                      const value = costData?.value || 0;
+                      const costId = costData?.cost_id;
+
                       return (
                         <TableCell
                           key={month}
-                          className={`text-right ${
-                            value === 0 ? "text-muted-foreground" : ""
-                          }`}
+                          className={`text-right ${value === 0 ? "text-muted-foreground" : ""}`}
                         >
-                          {value > 0 ? formatCurrency(value) : "—"}
+                          {costId ? (
+                            <EditableCell
+                              value={value}
+                              format="currency"
+                              min={0}
+                              max={500000}
+                              disabled={isLoading}
+                              onSave={async (newValue) => {
+                                const field = costType === "bruto" ? "bruto" : "coste_empresa";
+                                await updateCostValue(costId, field, newValue);
+                              }}
+                            />
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                       );
                     })}

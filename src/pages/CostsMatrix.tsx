@@ -84,7 +84,7 @@ const CostsMatrix = () => {
       ...matrixData.rows.map((row) => [
         row.full_name,
         row.company,
-        ...matrixData.monthsOfYear.map((m) => row.months[m] || 0),
+        ...matrixData.monthsOfYear.map((m) => row.months[m]?.value || 0),
         row.total,
       ]),
       [
@@ -233,6 +233,7 @@ const CostsMatrix = () => {
               monthlyTotals={matrixData.monthlyTotals}
               grandTotal={matrixData.grandTotal}
               onExport={handleExportCosts}
+              costType={costType}
             />
           ) : null}
         </TabsContent>

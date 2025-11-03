@@ -11,7 +11,7 @@ export interface EmployeeMonthlyRow {
   employee_id: string;
   full_name: string;
   company: string;
-  months: { [key: string]: number };
+  months: { [key: string]: { value: number; cost_id: string } };
   total: number;
 }
 
@@ -29,6 +29,7 @@ export const useMonthlyMatrix = (filters: MonthlyMatrixFilters) => {
       let query = supabase
         .from("hr_employee_costs")
         .select(`
+          id,
           employee_id,
           period,
           bruto,
@@ -71,7 +72,7 @@ export const useMonthlyMatrix = (filters: MonthlyMatrixFilters) => {
         }
 
         const row = employeeMap.get(employeeId)!;
-        row.months[period] = value;
+        row.months[period] = { value, cost_id: cost.id };
         row.total += value;
       });
 
@@ -84,7 +85,7 @@ export const useMonthlyMatrix = (filters: MonthlyMatrixFilters) => {
       const monthlyTotals: { [key: string]: number } = {};
       monthsOfYear.forEach((month) => {
         monthlyTotals[month] = rows.reduce(
-          (sum, row) => sum + (row.months[month] || 0),
+          (sum, row) => sum + (row.months[month]?.value || 0),
           0
         );
       });
