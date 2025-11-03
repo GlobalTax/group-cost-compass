@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/formatters";
 import type { EmployeeMonthlyRow } from "@/hooks/useMonthlyMatrix";
@@ -54,7 +54,7 @@ export const MonthlyCostsMatrix = ({
       </CardHeader>
       <CardContent>
         <ScrollArea className="max-h-[600px] w-full">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto pb-4">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -129,6 +129,7 @@ export const MonthlyCostsMatrix = ({
               </TableBody>
             </Table>
           </div>
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </CardContent>
     </Card>
