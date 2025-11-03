@@ -10,6 +10,8 @@ import { useDepartments } from "@/hooks/useDepartments";
 import { useTeams } from "@/hooks/useTeams";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MultiSelectFilter } from "@/components/ui/multi-select-filter";
 import {
   Select,
   SelectContent,
@@ -17,14 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Copy } from "lucide-react";
+import { Copy, Building2, X, Users } from "lucide-react";
 
 const CostsOverview = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("all");
-  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("all");
-  const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
+  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<string[]>([]);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
@@ -32,7 +34,7 @@ const CostsOverview = () => {
   const { data: companies } = useCompanies();
   const { data: departments } = useDepartments();
   const { data: teams } = useTeams({ 
-    departmentId: selectedDepartmentId !== "all" ? selectedDepartmentId : undefined 
+    departmentId: selectedDepartmentIds.length === 1 ? selectedDepartmentIds[0] : undefined 
   });
   const { data: costsData, isLoading } = useCostsOverview({
     year: selectedYear,
@@ -53,12 +55,16 @@ const CostsOverview = () => {
       filtered = filtered.filter(e => activeEmployeeIds.has(e.employee_id));
     }
     
-    if (selectedDepartmentId !== "all") {
-      filtered = filtered.filter(e => e.department_id === selectedDepartmentId);
+    if (selectedDepartmentIds.length > 0) {
+      filtered = filtered.filter(e => 
+        e.department_id && selectedDepartmentIds.includes(e.department_id)
+      );
     }
     
-    if (selectedTeamId !== "all") {
-      filtered = filtered.filter(e => e.team_id === selectedTeamId);
+    if (selectedTeamIds.length > 0) {
+      filtered = filtered.filter(e => 
+        e.team_id && selectedTeamIds.includes(e.team_id)
+      );
     }
     
     if (searchTerm) {
@@ -68,7 +74,7 @@ const CostsOverview = () => {
     }
     
     return filtered;
-  }, [costsData, selectedDepartmentId, selectedTeamId, searchTerm, statusFilter, employees]);
+  }, [costsData, selectedDepartmentIds, selectedTeamIds, searchTerm, statusFilter, employees]);
 
   // Generar lista de años (actual - 3 años hacia atrás)
   const years = Array.from({ length: 4 }, (_, i) => currentYear - i);
@@ -123,33 +129,25 @@ const CostsOverview = () => {
           </SelectContent>
         </Select>
 
-        <Select value={selectedDepartmentId} onValueChange={setSelectedDepartmentId}>
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder="Todos los departamentos" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los departamentos</SelectItem>
-            {departments?.map((dept) => (
-              <SelectItem key={dept.id} value={dept.id}>
-                {dept.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          label="Departamentos"
+          options={departments?.map(dept => ({ id: dept.id, name: dept.name })) || []}
+          selectedIds={selectedDepartmentIds}
+          onChange={setSelectedDepartmentIds}
+          placeholder="Todos los departamentos"
+          emptyMessage="No hay departamentos disponibles"
+          icon={<Building2 className="h-4 w-4" />}
+        />
 
-        <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder="Todos los equipos" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los equipos</SelectItem>
-            {teams?.map((team) => (
-              <SelectItem key={team.id} value={team.id}>
-                {team.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          label="Equipos"
+          options={teams?.map(team => ({ id: team.id, name: team.name })) || []}
+          selectedIds={selectedTeamIds}
+          onChange={setSelectedTeamIds}
+          placeholder="Todos los equipos"
+          emptyMessage="No hay equipos disponibles"
+          icon={<Users className="h-4 w-4" />}
+        />
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48">
@@ -173,6 +171,56 @@ const CostsOverview = () => {
           className="w-full sm:w-96 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
+
+      {/* Badges de filtros activos */}
+      {(selectedDepartmentIds.length > 0 || selectedTeamIds.length > 0) && (
+        <div className="flex flex-wrap gap-3">
+          {selectedDepartmentIds.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">Departamentos:</span>
+              {departments
+                ?.filter(dept => selectedDepartmentIds.includes(dept.id))
+                .map(dept => (
+                  <Badge key={dept.id} variant="secondary" className="gap-1">
+                    {dept.name}
+                    <button
+                      onClick={() => {
+                        setSelectedDepartmentIds(prev => 
+                          prev.filter(id => id !== dept.id)
+                        );
+                      }}
+                      className="ml-1 hover:bg-muted rounded-full"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+            </div>
+          )}
+          {selectedTeamIds.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">Equipos:</span>
+              {teams
+                ?.filter(team => selectedTeamIds.includes(team.id))
+                .map(team => (
+                  <Badge key={team.id} variant="secondary" className="gap-1">
+                    {team.name}
+                    <button
+                      onClick={() => {
+                        setSelectedTeamIds(prev => 
+                          prev.filter(id => id !== team.id)
+                        );
+                      }}
+                      className="ml-1 hover:bg-muted rounded-full"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* KPIs */}
       {isLoading ? (
