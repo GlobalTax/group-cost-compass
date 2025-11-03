@@ -73,20 +73,20 @@ export const MonthlyHeadcountMatrix = ({
         </Button>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[600px]">
-          <div className="relative">
+        <ScrollArea className="max-h-[600px]">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="sticky left-0 bg-background z-20 min-w-[250px]">
+                  <TableHead className="sticky left-0 bg-background z-30 min-w-[200px] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     Empresa
                   </TableHead>
                   {monthsOfYear.map((month) => (
-                    <TableHead key={month} className="text-right min-w-[80px]">
+                    <TableHead key={month} className="text-right min-w-[90px]">
                       {getMonthLabel(month)}
                     </TableHead>
                   ))}
-                  <TableHead className="text-right font-bold sticky right-0 bg-background z-20 min-w-[120px] px-4">
+                  <TableHead className="text-right font-bold sticky right-0 bg-background z-30 min-w-[140px] px-4 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     PROMEDIO
                   </TableHead>
                 </TableRow>
@@ -94,9 +94,9 @@ export const MonthlyHeadcountMatrix = ({
               <TableBody>
                 {rows.map((company) => (
                   <TableRow key={company.company_id}>
-                    <TableCell className="sticky left-0 bg-background z-10 font-medium">
+                    <TableCell className="sticky left-0 bg-background z-20 font-medium shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                       <div className="flex flex-col">
-                        <span>{company.company_name}</span>
+                        <span className="truncate">{company.company_name}</span>
                         <span className="text-xs text-muted-foreground">
                           Max: {company.maxMonth} | Min: {company.minMonth}
                         </span>
@@ -127,13 +127,13 @@ export const MonthlyHeadcountMatrix = ({
                         </TableCell>
                       );
                     })}
-                    <TableCell className="text-right font-bold sticky right-0 bg-background z-10 px-4 font-tabular-nums">
+                    <TableCell className="text-right font-bold sticky right-0 bg-background z-20 px-4 font-tabular-nums shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                       {company.total.toFixed(1)}
                     </TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="bg-muted/50 font-bold">
-                  <TableCell className="sticky left-0 bg-muted/50 z-10">
+                <TableRow className="bg-muted font-bold border-t-2 border-border">
+                  <TableCell className="sticky left-0 bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     TOTAL
                   </TableCell>
                   {monthsOfYear.map((month, idx) => {
@@ -161,7 +161,7 @@ export const MonthlyHeadcountMatrix = ({
                       </TableCell>
                     );
                   })}
-                  <TableCell className="text-right sticky right-0 bg-muted/50 z-10 px-4 font-tabular-nums">
+                  <TableCell className="text-right sticky right-0 bg-muted z-20 px-4 font-tabular-nums shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     {grandTotal.toFixed(1)}
                   </TableCell>
                 </TableRow>

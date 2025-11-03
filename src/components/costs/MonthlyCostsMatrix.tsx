@@ -53,20 +53,20 @@ export const MonthlyCostsMatrix = ({
         </Button>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[600px] w-full">
-          <div className="min-w-[1400px]">
+        <ScrollArea className="max-h-[600px] w-full">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="sticky left-0 bg-background z-20 min-w-[250px]">
+                  <TableHead className="sticky left-0 bg-background z-30 min-w-[200px] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     Empleado
                   </TableHead>
                   {monthsOfYear.map((month) => (
-                    <TableHead key={month} className="text-right min-w-[100px]">
+                    <TableHead key={month} className="text-right min-w-[90px]">
                       {getMonthLabel(month)}
                     </TableHead>
                   ))}
-                  <TableHead className="text-right font-bold sticky right-0 bg-background z-20 min-w-[160px] px-4">
+                  <TableHead className="text-right font-bold sticky right-0 bg-background z-30 min-w-[140px] px-4 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     TOTAL
                   </TableHead>
                 </TableRow>
@@ -74,11 +74,11 @@ export const MonthlyCostsMatrix = ({
               <TableBody>
                 {rows.map((employee) => (
                   <TableRow key={employee.employee_id} className="group">
-                    <TableCell className="sticky left-0 bg-background z-10 font-medium">
+                    <TableCell className="sticky left-0 bg-background z-20 font-medium shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex flex-col">
-                          <span>{employee.full_name}</span>
-                          <span className="text-xs text-muted-foreground">
+                        <div className="flex flex-col min-w-0">
+                          <span className="truncate">{employee.full_name}</span>
+                          <span className="text-xs text-muted-foreground truncate">
                             {employee.company}
                           </span>
                         </div>
@@ -86,7 +86,7 @@ export const MonthlyCostsMatrix = ({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="opacity-0 group-hover:opacity-100 h-7 w-7"
+                            className="opacity-0 group-hover:opacity-100 h-7 w-7 flex-shrink-0"
                           >
                             <ArrowUpRight className="h-3.5 w-3.5" />
                           </Button>
@@ -106,15 +106,15 @@ export const MonthlyCostsMatrix = ({
                         </TableCell>
                       );
                     })}
-                    <TableCell className="text-right font-bold sticky right-0 bg-background z-10 px-4 font-tabular-nums">
+                    <TableCell className="text-right font-bold sticky right-0 bg-background z-20 px-4 font-tabular-nums shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                       {formatCurrency(employee.total)}
                     </TableCell>
                   </TableRow>
                 ))}
                 
                 {/* Fila de totales */}
-                <TableRow className="bg-muted/50 font-bold border-t-2">
-                  <TableCell className="sticky left-0 bg-muted/50 z-10">
+                <TableRow className="bg-muted font-bold border-t-2 border-border">
+                  <TableCell className="sticky left-0 bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     TOTAL MES
                   </TableCell>
                   {monthsOfYear.map((month) => (
@@ -122,7 +122,7 @@ export const MonthlyCostsMatrix = ({
                       {formatCurrency(monthlyTotals[month] || 0)}
                     </TableCell>
                   ))}
-                  <TableCell className="text-right sticky right-0 bg-muted/50 z-10 px-4 font-tabular-nums">
+                  <TableCell className="text-right sticky right-0 bg-muted z-20 px-4 font-tabular-nums shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     {formatCurrency(grandTotal)}
                   </TableCell>
                 </TableRow>
