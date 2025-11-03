@@ -58,7 +58,7 @@ export const MonthlyCostsMatrix = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="sticky left-0 bg-background z-20 min-w-[200px]">
+                  <TableHead className="sticky left-0 bg-background z-20 min-w-[250px]">
                     Empleado
                   </TableHead>
                   {monthsOfYear.map((month) => (
@@ -66,21 +66,31 @@ export const MonthlyCostsMatrix = ({
                       {getMonthLabel(month)}
                     </TableHead>
                   ))}
-                  <TableHead className="text-right font-bold sticky right-[60px] bg-background z-20 min-w-[140px] pr-4">
+                  <TableHead className="text-right font-bold sticky right-0 bg-background z-20 min-w-[160px] px-4">
                     TOTAL
                   </TableHead>
-                  <TableHead className="sticky right-0 bg-background z-20 w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.map((employee) => (
                   <TableRow key={employee.employee_id} className="group">
                     <TableCell className="sticky left-0 bg-background z-10 font-medium">
-                      <div className="flex flex-col">
-                        <span>{employee.full_name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {employee.company}
-                        </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col">
+                          <span>{employee.full_name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {employee.company}
+                          </span>
+                        </div>
+                        <Link to={`/employees/${employee.employee_id}`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 h-7 w-7"
+                          >
+                            <ArrowUpRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
                       </div>
                     </TableCell>
                     {monthsOfYear.map((month) => {
@@ -96,19 +106,8 @@ export const MonthlyCostsMatrix = ({
                         </TableCell>
                       );
                     })}
-                    <TableCell className="text-right font-bold sticky right-[60px] bg-background z-10 pr-4 font-tabular-nums">
+                    <TableCell className="text-right font-bold sticky right-0 bg-background z-10 px-4 font-tabular-nums">
                       {formatCurrency(employee.total)}
-                    </TableCell>
-                    <TableCell className="sticky right-0 bg-background z-10">
-                      <Link to={`/employees/${employee.employee_id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="opacity-0 group-hover:opacity-100"
-                        >
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Button>
-                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -123,10 +122,9 @@ export const MonthlyCostsMatrix = ({
                       {formatCurrency(monthlyTotals[month] || 0)}
                     </TableCell>
                   ))}
-                  <TableCell className="text-right sticky right-[60px] bg-muted/50 z-10 pr-4 font-tabular-nums">
+                  <TableCell className="text-right sticky right-0 bg-muted/50 z-10 px-4 font-tabular-nums">
                     {formatCurrency(grandTotal)}
                   </TableCell>
-                  <TableCell className="sticky right-0 bg-muted/50 z-10"></TableCell>
                 </TableRow>
               </TableBody>
             </Table>
