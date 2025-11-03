@@ -16,9 +16,11 @@ import type { EmployeeAnnualCost } from "@/hooks/useCostsOverview";
 import { toast } from "sonner";
 import { EditableCell } from "@/components/ui/editable-cell";
 import { EditableSelectCell } from "@/components/ui/editable-select-cell";
+import { EditableDateCell } from "@/components/ui/editable-date-cell";
 import { useUpdateEmployeeSalary } from "@/hooks/useUpdateEmployeeSalary";
 import { useUpdateEmployeeDepartment } from "@/hooks/useUpdateEmployeeDepartment";
 import { useUpdateEmployeeTeam } from "@/hooks/useUpdateEmployeeTeam";
+import { useEmployeeUpdate } from "@/hooks/useEmployeeUpdate";
 import { useCurrentUserRole } from "@/hooks/useCurrentUserRole";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useTeams } from "@/hooks/useTeams";
@@ -212,6 +214,33 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
   const basicColumns = ["full_name", "hire_date", "company", "department", "team"];
   const visibleBasicColumns = basicColumns.filter(isColumnVisible);
 
+  const HireDateCell = ({ 
+    employeeId, 
+    hireDate, 
+    canEdit 
+  }: { 
+    employeeId: string; 
+    hireDate: string | null; 
+    canEdit: boolean;
+  }) => {
+    const { updateFields } = useEmployeeUpdate(employeeId);
+
+    const handleSave = async (newDate: string | null) => {
+      await updateFields({ hire_date: newDate });
+    };
+
+    return (
+      <EditableDateCell
+        value={hireDate}
+        onSave={handleSave}
+        disabled={!canEdit}
+        placeholder="Sin fecha"
+        minDate={new Date("2000-01-01")}
+        maxDate={new Date()}
+      />
+    );
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -270,10 +299,12 @@ export const CostsOverviewTable = ({ data, year }: CostsOverviewTableProps) => {
                       )}
                       
                       {isColumnVisible("hire_date") && (
-                        <TableCell className="text-muted-foreground text-sm">
-                          {employee.hire_date 
-                            ? format(new Date(employee.hire_date), "dd MMM yyyy", { locale: es })
-                            : "—"}
+                        <TableCell>
+                          <HireDateCell
+                            employeeId={employee.employee_id}
+                            hireDate={employee.hire_date}
+                            canEdit={canEdit}
+                          />
                         </TableCell>
                       )}
                       
