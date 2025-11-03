@@ -30,9 +30,14 @@ export const useUpdateCostInMatrix = () => {
       throw new Error("El importe debe ser mayor que 0");
     }
 
+    // Normalizar período a formato date (primer día del mes)
+    const normalizedPeriod = period.includes('-01') 
+      ? period 
+      : `${period}-01`;
+
     const baseCost = {
       employee_id: employeeId,
-      period: period,
+      period: normalizedPeriod,
       [field]: value,
     };
 
