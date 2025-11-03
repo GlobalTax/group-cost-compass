@@ -33,7 +33,7 @@ export const MonthlyCostsMatrix = ({
   onExport,
   costType,
 }: MonthlyCostsMatrixProps) => {
-  const { updateCostValue, isLoading } = useUpdateCostInMatrix();
+  const { updateCostValue, createCostValue, isLoading } = useUpdateCostInMatrix();
   const getMonthLabel = (period: string) => {
     const [_, month] = period.split("-");
     const monthNames = [
@@ -107,23 +107,31 @@ export const MonthlyCostsMatrix = ({
                       return (
                         <TableCell
                           key={month}
-                          className={`text-right ${value === 0 ? "text-muted-foreground" : ""}`}
+                          className={`text-right ${value === 0 ? "bg-muted/20" : ""}`}
                         >
-                          {costId ? (
-                            <EditableCell
-                              value={value}
-                              format="currency"
-                              min={0}
-                              max={500000}
-                              disabled={isLoading}
-                              onSave={async (newValue) => {
-                                const field = costType === "bruto" ? "bruto" : "coste_empresa";
+                          <EditableCell
+                            value={value}
+                            format="currency"
+                            min={0}
+                            max={500000}
+                            disabled={isLoading}
+                            onSave={async (newValue) => {
+                              const field = costType === "bruto" ? "bruto" : "coste_empresa";
+                              
+                              if (costId) {
+                                // Actualizar coste existente
                                 await updateCostValue(costId, field, newValue);
-                              }}
-                            />
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
+                              } else {
+                                // Crear nuevo coste
+                                await createCostValue(
+                                  employee.employee_id,
+                                  month,
+                                  field,
+                                  newValue
+                                );
+                              }
+                            }}
+                          />
                         </TableCell>
                       );
                     })}
