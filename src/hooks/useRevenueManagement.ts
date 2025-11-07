@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   createRevenueItem,
   updateRevenueItem,
@@ -7,7 +8,9 @@ import {
   createRevenueAllocation,
   bulkCreateRevenueAllocations,
   deleteRevenueAllocation,
+  bulkApplyAllocations,
 } from "@/lib/supabase/repositories/revenue.repo";
+import { applyTemplateToRevenue } from "@/lib/supabase/repositories/allocationTemplates.repo";
 
 export const useRevenueManagement = () => {
   const queryClient = useQueryClient();
@@ -82,6 +85,28 @@ export const useRevenueManagement = () => {
     },
   });
 
+  const bulkAssignRevenues = useMutation({
+    mutationFn: async ({ revenueItemIds, templateId, customAllocations }: { revenueItemIds: string[]; templateId?: string; customAllocations?: any[] }) => {
+      if (templateId) {
+        const promises = revenueItemIds.map(async (itemId) => {
+          const { data, error } = await supabase.from("revenue_items").select("total_amount").eq("id", itemId).single();
+          if (error) throw error;
+          return applyTemplateToRevenue(templateId, itemId, data.total_amount);
+        });
+        await Promise.all(promises);
+      } else if (customAllocations) {
+        await bulkApplyAllocations(revenueItemIds, customAllocations);
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["revenues"] });
+      toast.success(`Asignaciones aplicadas a ${variables.revenueItemIds.length} items`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
   return {
     createRevenue,
     updateRevenue,
@@ -89,5 +114,6 @@ export const useRevenueManagement = () => {
     addAllocation,
     bulkAddAllocations,
     removeAllocation,
+    bulkAssignRevenues,
   };
 };

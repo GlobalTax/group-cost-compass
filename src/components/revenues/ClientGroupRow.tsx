@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -8,6 +8,7 @@ import {
   Zap,
   FileSpreadsheet,
   Layers,
+  UserCheck,
 } from "lucide-react";
 import { TableCell, TableRow, Table, TableHeader, TableHead, TableBody } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ interface ClientGroupRowProps {
   onEdit?: (revenue: any) => void;
   onDelete?: (id: string) => void;
   onApplyTemplate?: (group: ClientGroup, category: string) => void;
+  onBulkAssign?: (group: ClientGroup) => void;
 }
 
 export const ClientGroupRow = ({
@@ -40,8 +42,34 @@ export const ClientGroupRow = ({
   onEdit,
   onDelete,
   onApplyTemplate,
+  onBulkAssign,
 }: ClientGroupRowProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const assignmentStatus = useMemo(() => {
+    const totalItems = group.items.length;
+    const fullyAssigned = group.items.filter((item) => {
+      const allocations = item.revenue_allocations || [];
+      const totalPercentage = allocations.reduce(
+        (sum: number, alloc: any) => sum + (alloc.allocation_percentage || 0),
+        0
+      );
+      return allocations.length > 0 && totalPercentage >= 99.9;
+    }).length;
+
+    const partiallyAssigned = group.items.filter((item) => {
+      const allocations = item.revenue_allocations || [];
+      const totalPercentage = allocations.reduce(
+        (sum: number, alloc: any) => sum + (alloc.allocation_percentage || 0),
+        0
+      );
+      return allocations.length > 0 && totalPercentage < 99.9;
+    }).length;
+
+    const unassigned = totalItems - fullyAssigned - partiallyAssigned;
+
+    return { totalItems, fullyAssigned, partiallyAssigned, unassigned };
+  }, [group.items]);
 
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded} asChild>
@@ -64,6 +92,19 @@ export const ClientGroupRow = ({
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
               {group.clientName}
+              {assignmentStatus.unassigned === 0 ? (
+                <Badge variant="default" className="bg-emerald-500 text-xs">
+                  ✓ Completo
+                </Badge>
+              ) : assignmentStatus.partiallyAssigned > 0 || assignmentStatus.fullyAssigned > 0 ? (
+                <Badge variant="secondary" className="text-xs">
+                  ⚠️ Parcial ({assignmentStatus.fullyAssigned}/{assignmentStatus.totalItems})
+                </Badge>
+              ) : (
+                <Badge variant="destructive" className="text-xs">
+                  ❌ Sin asignar
+                </Badge>
+              )}
             </div>
           </TableCell>
 
@@ -132,6 +173,11 @@ export const ClientGroupRow = ({
                 <DropdownMenuItem onClick={() => onApplyTemplate?.(group, 'all')}>
                   <Layers className="h-4 w-4 mr-2" />
                   Todos los conceptos
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onBulkAssign?.(group)}>
+                  <UserCheck className="h-4 w-4 mr-2" />
+                  Asignación masiva de grupo
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -30,32 +30,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useEmployees } from "@/hooks/useEmployees";
-import { useTeams } from "@/hooks/useTeams";
 import { useRevenueManagement } from "@/hooks/useRevenueManagement";
+import { SearchableAssigneeSelector } from "./SearchableAssigneeSelector";
 
 const formSchema = z.object({
-  assigneeType: z.enum(["employee", "team"]),
-  employeeId: z.string().optional(),
-  teamId: z.string().optional(),
+  assignee: z.object({
+    type: z.enum(["employee", "team"]),
+    id: z.string(),
+    name: z.string(),
+  }).nullable().refine((val) => val !== null, {
+    message: "Debe seleccionar un empleado o equipo",
+  }),
   allocationMethod: z.enum(["amount", "percentage"]),
   allocatedAmount: z.string().optional(),
   allocationPercentage: z.string().optional(),
   allocationType: z.enum(["originator", "executor", "support"]),
   notes: z.string().optional(),
 }).refine(
-  (data) => {
-    if (data.assigneeType === "employee") {
-      return !!data.employeeId;
-    } else {
-      return !!data.teamId;
-    }
-  },
-  {
-    message: "Debe seleccionar un empleado o equipo",
-    path: ["employeeId"],
-  }
-).refine(
   (data) => {
     if (data.allocationMethod === "amount") {
       return !!data.allocatedAmount && Number(data.allocatedAmount) > 0;
@@ -87,21 +78,18 @@ export const AddAllocationDialog = ({
   totalAmount,
   currentAllocations,
 }: AddAllocationDialogProps) => {
-  const { data: employees } = useEmployees({ activeOnly: true });
-  const { data: teams } = useTeams();
   const { addAllocation } = useRevenueManagement();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      assigneeType: "employee",
+      assignee: null,
       allocationMethod: "percentage",
       allocationType: "executor",
       notes: "",
     },
   });
 
-  const assigneeType = form.watch("assigneeType");
   const allocationMethod = form.watch("allocationMethod");
   const allocatedAmount = form.watch("allocatedAmount");
   const allocationPercentage = form.watch("allocationPercentage");
@@ -138,14 +126,14 @@ export const AddAllocationDialog = ({
   }, [allocationMethod, allocatedAmount, allocationPercentage, remainingAmount, remainingPercentage]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (hasValidationError) {
+    if (hasValidationError || !values.assignee) {
       return;
     }
 
     const data: any = {
       revenue_item_id: revenueItemId,
-      employee_id: values.assigneeType === "employee" ? values.employeeId : null,
-      team_id: values.assigneeType === "team" ? values.teamId : null,
+      employee_id: values.assignee.type === "employee" ? values.assignee.id : null,
+      team_id: values.assignee.type === "team" ? values.assignee.id : null,
       allocation_type: values.allocationType,
       notes: values.notes || null,
     };
@@ -175,90 +163,23 @@ export const AddAllocationDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Assignee Type */}
+            {/* Assignee Selector */}
             <FormField
               control={form.control}
-              name="assigneeType"
+              name="assignee"
               render={({ field }) => (
-                <FormItem className="space-y-3">
+                <FormItem>
                   <FormLabel>Asignar a</FormLabel>
                   <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
+                    <SearchableAssigneeSelector
                       value={field.value}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="employee" id="employee" />
-                        <Label htmlFor="employee" className="cursor-pointer">
-                          Empleado
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="team" id="team" />
-                        <Label htmlFor="team" className="cursor-pointer">
-                          Equipo
-                        </Label>
-                      </div>
-                    </RadioGroup>
+                      onSelect={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            {/* Employee or Team Selector */}
-            {assigneeType === "employee" ? (
-              <FormField
-                control={form.control}
-                name="employeeId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Empleado</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona empleado" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {employees?.map((emp) => (
-                          <SelectItem key={emp.id} value={emp.id}>
-                            {emp.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ) : (
-              <FormField
-                control={form.control}
-                name="teamId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Equipo</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona equipo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {teams?.map((team) => (
-                          <SelectItem key={team.id} value={team.id}>
-                            {team.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             {/* Allocation Method */}
             <FormField

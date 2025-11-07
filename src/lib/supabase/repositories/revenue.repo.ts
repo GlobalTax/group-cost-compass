@@ -183,6 +183,30 @@ export async function deleteRevenueAllocation(id: string) {
   if (error) throw error;
 }
 
+export async function bulkApplyAllocations(
+  revenueItemIds: string[],
+  allocations: RevenueAllocationInsert[]
+) {
+  const allAllocations: RevenueAllocationInsert[] = [];
+  
+  for (const itemId of revenueItemIds) {
+    for (const alloc of allocations) {
+      allAllocations.push({
+        ...alloc,
+        revenue_item_id: itemId,
+      });
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("revenue_allocations")
+    .insert(allAllocations)
+    .select();
+
+  if (error) throw error;
+  return data;
+}
+
 // ============= ANALYTICS =============
 
 export async function fetchRevenueAnalytics(filters?: {

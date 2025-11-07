@@ -7,6 +7,7 @@ export type TeamUpdate = Database['public']['Tables']['teams']['Update'];
 
 export interface TeamWithDepartment extends Team {
   departments: { name: string } | null;
+  member_count?: number;
 }
 
 export async function fetchTeams(filters?: { departmentId?: string }): Promise<TeamWithDepartment[]> {

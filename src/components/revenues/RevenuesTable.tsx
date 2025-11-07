@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Users, ChevronDown, ChevronRight, List, Filter } from "lucide-react";
+import { Pencil, Trash2, Users, ChevronDown, ChevronRight, List, Filter, UserCheck } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Collapsible,
@@ -24,6 +24,7 @@ import { RevenueAllocationsManager } from "./RevenueAllocationsManager";
 import { ClientGroupRow } from "./ClientGroupRow";
 import { BatchTemplateDialog } from "./BatchTemplateDialog";
 import { RevenueFilters } from "./RevenueFilters";
+import { BulkAssignByCompanyDialog } from "./BulkAssignByCompanyDialog";
 import { 
   groupRevenuesByClient, 
   filterClientGroups,
@@ -60,6 +61,13 @@ export const RevenuesTable = ({
     group: null,
     category: '',
   });
+  const [bulkAssignDialog, setBulkAssignDialog] = useState<{
+    open: boolean;
+    companyId?: string;
+  }>({
+    open: false,
+    companyId: undefined,
+  });
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
@@ -90,6 +98,13 @@ export const RevenuesTable = ({
       open: true,
       group,
       category,
+    });
+  };
+
+  const handleBulkAssign = (group?: ClientGroup) => {
+    setBulkAssignDialog({
+      open: true,
+      companyId: group?.companyId,
     });
   };
 
@@ -125,11 +140,17 @@ export const RevenuesTable = ({
           </Label>
         </div>
 
-        {viewMode === 'grouped' && (
-          <div className="text-sm text-muted-foreground">
-            {clientGroups.length} clientes · {revenues.length} conceptos
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={() => handleBulkAssign()}>
+            <UserCheck className="h-4 w-4 mr-2" />
+            Asignación Masiva
+          </Button>
+          {viewMode === 'grouped' && (
+            <div className="text-sm text-muted-foreground">
+              {clientGroups.length} clientes · {revenues.length} conceptos
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filtros avanzados */}
@@ -187,6 +208,7 @@ export const RevenuesTable = ({
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onApplyTemplate={handleApplyTemplate}
+                    onBulkAssign={handleBulkAssign}
                   />
                 ))
               )}
@@ -363,6 +385,14 @@ export const RevenuesTable = ({
         }
         group={batchTemplateDialog.group}
         category={batchTemplateDialog.category}
+      />
+
+      <BulkAssignByCompanyDialog
+        open={bulkAssignDialog.open}
+        onOpenChange={(open) =>
+          setBulkAssignDialog((prev) => ({ ...prev, open }))
+        }
+        preSelectedCompanyId={bulkAssignDialog.companyId}
       />
     </>
   );
