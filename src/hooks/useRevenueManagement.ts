@@ -107,6 +107,21 @@ export const useRevenueManagement = () => {
     },
   });
 
+  const bulkDeleteRevenues = useMutation({
+    mutationFn: async (revenueItemIds: string[]) => {
+      const promises = revenueItemIds.map(id => deleteRevenueItem(id));
+      await Promise.all(promises);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["revenues"] });
+      queryClient.invalidateQueries({ queryKey: ["revenue-analytics"] });
+      toast.success(`${variables.length} ${variables.length === 1 ? 'ingreso eliminado' : 'ingresos eliminados'}`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Error al eliminar: ${error.message}`);
+    },
+  });
+
   return {
     createRevenue,
     updateRevenue,
@@ -115,5 +130,6 @@ export const useRevenueManagement = () => {
     bulkAddAllocations,
     removeAllocation,
     bulkAssignRevenues,
+    bulkDeleteRevenues,
   };
 };

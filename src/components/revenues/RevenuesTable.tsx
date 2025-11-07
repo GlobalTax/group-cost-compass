@@ -25,6 +25,11 @@ import { ClientGroupRow } from "./ClientGroupRow";
 import { BatchTemplateDialog } from "./BatchTemplateDialog";
 import { RevenueFilters } from "./RevenueFilters";
 import { BulkAssignByCompanyDialog } from "./BulkAssignByCompanyDialog";
+import { RevenuesTableFlat } from "./RevenuesTableFlat";
+import { BulkActionsToolbar } from "./BulkActionsToolbar";
+import { BulkAssignDialog } from "./BulkAssignDialog";
+import { useRevenueManagement } from "@/hooks/useRevenueManagement";
+import { useAllocationTemplates } from "@/hooks/useAllocationTemplates";
 import { 
   groupRevenuesByClient, 
   filterClientGroups,
@@ -46,6 +51,7 @@ export const RevenuesTable = ({
 }: RevenuesTableProps) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'grouped' | 'list'>('grouped');
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<RevenueFiltersType>({
     amountMin: null,
     amountMax: null,
@@ -68,6 +74,11 @@ export const RevenuesTable = ({
     open: false,
     companyId: undefined,
   });
+  const [flatBulkAssignDialog, setFlatBulkAssignDialog] = useState(false);
+  const [flatBulkTemplateDialog, setFlatBulkTemplateDialog] = useState(false);
+
+  const { deleteRevenue, bulkAssignRevenues } = useRevenueManagement();
+  const { data: templates } = useAllocationTemplates();
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
@@ -106,6 +117,24 @@ export const RevenuesTable = ({
       open: true,
       companyId: group?.companyId,
     });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRows.size === 0) return;
+    
+    const count = selectedRows.size;
+    if (!confirm(`¿Eliminar ${count} ${count === 1 ? 'ingreso' : 'ingresos'}?`)) return;
+
+    const deletePromises = Array.from(selectedRows).map(id => 
+      deleteRevenue.mutateAsync(id)
+    );
+    
+    await Promise.all(deletePromises);
+    setSelectedRows(new Set());
+  };
+
+  const handleBulkApplyTemplate = async () => {
+    setFlatBulkTemplateDialog(true);
   };
 
   if (!revenues || revenues.length === 0) {
@@ -163,6 +192,18 @@ export const RevenuesTable = ({
         />
       </div>
 
+      {/* Toolbar de acciones masivas (solo en modo lista) */}
+      {viewMode === 'list' && selectedRows.size > 0 && (
+        <BulkActionsToolbar
+          selectedCount={selectedRows.size}
+          onBulkAssignPerson={() => setFlatBulkAssignDialog(true)}
+          onBulkAssignTeam={() => setFlatBulkAssignDialog(true)}
+          onBulkApplyTemplate={handleBulkApplyTemplate}
+          onBulkDelete={handleBulkDelete}
+          onClearSelection={() => setSelectedRows(new Set())}
+        />
+      )}
+
       <ScrollArea className="h-[600px]">
         {viewMode === 'grouped' ? (
           <Table>
@@ -215,166 +256,13 @@ export const RevenuesTable = ({
             </TableBody>
           </Table>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12"></TableHead>
-                <TableHead>Período</TableHead>
-                <TableHead>Empresa</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead className="text-right">Importe</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Asignaciones</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRevenues.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center">
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <Filter className="h-8 w-8 opacity-20" />
-                      <p>No se encontraron ingresos que cumplan los filtros</p>
-                      <Button
-                        variant="link"
-                        onClick={() => setFilters({
-                          amountMin: null,
-                          amountMax: null,
-                          allocationStatus: 'all',
-                          recurrence: 'all',
-                        })}
-                        size="sm"
-                      >
-                        Limpiar filtros
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredRevenues.map((revenue) => {
-                  const allocations = revenue.revenue_allocations || [];
-                  const uniqueAssignees = new Set(
-                    allocations.map((a: any) => 
-                      a.hr_employees?.full_name || a.teams?.name
-                    ).filter(Boolean)
-                  );
-
-                  const isExpanded = expandedRows.has(revenue.id);
-
-                  return (
-                    <Collapsible
-                      key={revenue.id}
-                      open={isExpanded}
-                      onOpenChange={() => toggleRow(revenue.id)}
-                      asChild
-                    >
-                      <>
-                        <TableRow>
-                          <TableCell>
-                            <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                {isExpanded ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </CollapsibleTrigger>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {format(new Date(revenue.period), "MMM yyyy", { locale: es })}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{revenue.companies?.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {revenue.companies?.nif}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="max-w-xs">
-                            <div className="flex flex-col gap-1">
-                              <span className="line-clamp-1">{revenue.description}</span>
-                              {revenue.category && (
-                                <Badge variant="outline" className="w-fit text-xs">
-                                  {revenue.category}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-muted-foreground">
-                              {revenue.client_name || "—"}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {revenue.total_amount.toLocaleString('es-ES', {
-                              style: 'currency',
-                              currency: 'EUR',
-                            })}
-                          </TableCell>
-                          <TableCell>
-                            {revenue.is_recurring ? (
-                              <Badge variant="default" className="bg-emerald-500">
-                                Recurrente
-                              </Badge>
-                            ) : (
-                              <Badge variant="secondary">No recurrente</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {allocations.length > 0 ? (
-                              <div className="flex items-center gap-2">
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">
-                                  {uniqueAssignees.size} {uniqueAssignees.size === 1 ? 'asignación' : 'asignaciones'}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">Sin asignar</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              {onEdit && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => onEdit(revenue)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              )}
-                              {onDelete && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => onDelete(revenue.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-
-                        <CollapsibleContent asChild>
-                          <TableRow>
-                            <TableCell colSpan={9} className="p-0">
-                              <div className="bg-muted/30 p-4 border-t">
-                                <RevenueAllocationsManager revenueItem={revenue} />
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        </CollapsibleContent>
-                      </>
-                    </Collapsible>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+          <RevenuesTableFlat
+            revenues={filteredRevenues}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            selectedRows={selectedRows}
+            onSelectionChange={setSelectedRows}
+          />
         )}
       </ScrollArea>
 
@@ -393,6 +281,13 @@ export const RevenuesTable = ({
           setBulkAssignDialog((prev) => ({ ...prev, open }))
         }
         preSelectedCompanyId={bulkAssignDialog.companyId}
+      />
+
+      <BulkAssignDialog
+        open={flatBulkAssignDialog}
+        onOpenChange={setFlatBulkAssignDialog}
+        selectedRevenueIds={Array.from(selectedRows)}
+        onSuccess={() => setSelectedRows(new Set())}
       />
     </>
   );
