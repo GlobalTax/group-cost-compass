@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator, UserPlus, Briefcase, TrendingUp, Scale, Layers, Table } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator, UserPlus, Briefcase, TrendingUp, Scale, Layers, Table, Calendar } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -43,6 +43,12 @@ const navigationItems = [
       { title: "Bandas & Bonus", url: "/compensation", icon: TrendingUp },
       { title: "Operaciones M&A", url: "/compensation/deals", icon: Briefcase },
       { title: "Baremos", url: "/compensation/scales", icon: Scale },
+    ],
+  },
+  {
+    section: "ANÁLISIS",
+    items: [
+      { title: "Cierre Mensual", url: "/monthly-closing", icon: Calendar },
     ],
   },
   {
