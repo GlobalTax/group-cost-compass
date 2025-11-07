@@ -10,6 +10,7 @@ import { RevenuesTable } from "@/components/revenues/RevenuesTable";
 import { CreateRevenueDialog } from "@/components/revenues/CreateRevenueDialog";
 import { RevenueCSVUpload } from "@/components/revenues/RevenueCSVUpload";
 import { AllocationTemplatesManager } from "@/components/revenues/AllocationTemplatesManager";
+import { QuickImportByCompany } from "@/components/revenues/QuickImportByCompany";
 import {
   Select,
   SelectContent,
@@ -107,6 +108,10 @@ const Revenues = () => {
             <FileSpreadsheet className="h-4 w-4 mr-2" />
             Importar CSV
           </TabsTrigger>
+          <TabsTrigger value="quick-import">
+            <Zap className="h-4 w-4 mr-2" />
+            Por Empresa
+          </TabsTrigger>
           <TabsTrigger value="templates">
             <Zap className="h-4 w-4 mr-2" />
             Templates
@@ -185,6 +190,12 @@ const Revenues = () => {
 
         <TabsContent value="import">
           <RevenueCSVUpload
+            onImportComplete={() => setActiveTab("list")}
+          />
+        </TabsContent>
+
+        <TabsContent value="quick-import">
+          <QuickImportByCompany
             onImportComplete={() => setActiveTab("list")}
           />
         </TabsContent>
