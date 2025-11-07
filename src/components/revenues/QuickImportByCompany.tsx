@@ -160,6 +160,17 @@ export const QuickImportByCompany = ({ onImportComplete }: QuickImportByCompanyP
 
   const groupedItems = parsedItems.length > 0 ? groupItemsByClient(parsedItems) : [];
 
+  // Calcular rango de fechas
+  const dateRange = parsedItems.length > 0 
+    ? parsedItems.reduce((acc, item) => {
+        const date = new Date(item.period);
+        return {
+          min: !acc.min || date < acc.min ? date : acc.min,
+          max: !acc.max || date > acc.max ? date : acc.max,
+        };
+      }, { min: null as Date | null, max: null as Date | null })
+    : { min: null, max: null };
+
   return (
     <div className="space-y-6">
       {/* Paso 1: Selección de Empresa */}
@@ -287,12 +298,28 @@ export const QuickImportByCompany = ({ onImportComplete }: QuickImportByCompanyP
         <Card>
           <CardHeader>
             <CardTitle>Preview de Importación</CardTitle>
-            <CardDescription>
-              <Badge variant="outline" className="mr-2">
-                <Building className="h-3 w-3 mr-1" />
-                {selectedCompany?.name}
-              </Badge>
-              {parsedItems.length} conceptos · {formatCurrency(summary?.totalAmount || 0)}
+            <CardDescription className="space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline">
+                  <Building className="h-3 w-3 mr-1" />
+                  {selectedCompany?.name}
+                </Badge>
+                <span className="text-muted-foreground">·</span>
+                <span>{parsedItems.length} conceptos</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="font-semibold">{formatCurrency(summary?.totalAmount || 0)}</span>
+              </div>
+              {dateRange.min && dateRange.max && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Periodo:</span>
+                  <span className="font-medium">
+                    {dateRange.min.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
+                    {dateRange.min.getTime() !== dateRange.max.getTime() && (
+                      <> - {dateRange.max.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}</>
+                    )}
+                  </span>
+                </div>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
