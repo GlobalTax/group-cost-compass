@@ -18,3 +18,4 @@ export * from "./systemSettings.repo";
 export * from "./departments.repo";
 export * from "./costs.repo";
 export * from "./revenue.repo";
+export * from "./allocationTemplates.repo";

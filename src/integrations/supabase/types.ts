@@ -8564,6 +8564,121 @@ export type Database = {
           },
         ]
       }
+      revenue_allocation_template_items: {
+        Row: {
+          allocation_percentage: number
+          allocation_type: string | null
+          created_at: string | null
+          display_order: number | null
+          employee_id: string | null
+          id: string
+          notes: string | null
+          org_id: string
+          team_id: string | null
+          template_id: string
+        }
+        Insert: {
+          allocation_percentage: number
+          allocation_type?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          org_id?: string
+          team_id?: string | null
+          template_id: string
+        }
+        Update: {
+          allocation_percentage?: number
+          allocation_type?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          org_id?: string
+          team_id?: string | null
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_allocation_template_items_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_allocation_template_items_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "revenue_allocation_template_items_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "revenue_allocation_template_items_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_allocation_template_items_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "revenue_allocation_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_allocation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revenue_allocation_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          org_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          org_id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          org_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       revenue_allocations: {
         Row: {
           allocated_amount: number | null

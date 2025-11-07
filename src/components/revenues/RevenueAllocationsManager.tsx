@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { User, Users, Plus, Trash2 } from "lucide-react";
+import { User, Users, Plus, Trash2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useRevenueManagement } from "@/hooks/useRevenueManagement";
 import { AddAllocationDialog } from "./AddAllocationDialog";
+import { ApplyTemplateDialog } from "./ApplyTemplateDialog";
 import { toast } from "sonner";
 
 interface RevenueAllocationsManagerProps {
@@ -43,6 +44,7 @@ export const RevenueAllocationsManager = ({
   revenueItem,
 }: RevenueAllocationsManagerProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isApplyTemplateOpen, setIsApplyTemplateOpen] = useState(false);
   const { removeAllocation } = useRevenueManagement();
 
   const allocations = revenueItem.revenue_allocations || [];
@@ -111,10 +113,20 @@ export const RevenueAllocationsManager = ({
             </p>
           )}
         </div>
-        <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Añadir Asignación
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setIsApplyTemplateOpen(true)}
+          >
+            <Zap className="h-4 w-4 mr-1" />
+            Aplicar Template
+          </Button>
+          <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Añadir Asignación
+          </Button>
+        </div>
       </div>
 
       {/* Allocations Table */}
@@ -211,6 +223,13 @@ export const RevenueAllocationsManager = ({
           totalAmount: totalAllocated,
           totalPercentage: totalPercentage,
         }}
+      />
+
+      <ApplyTemplateDialog
+        open={isApplyTemplateOpen}
+        onOpenChange={setIsApplyTemplateOpen}
+        revenueItemId={revenueItem.id}
+        totalAmount={revenueItem.total_amount}
       />
     </div>
   );
