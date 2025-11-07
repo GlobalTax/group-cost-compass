@@ -98,3 +98,28 @@ export const REVENUE_VIEW_LABELS: Record<RevenueViewMode, string> = {
   client: 'Por Cliente',
   company: 'Por Empresa',
 };
+
+export const MONTH_PRESETS = {
+  Q1: { label: 'Q1', startMonth: 1, endMonth: 3 },
+  Q2: { label: 'Q2', startMonth: 4, endMonth: 6 },
+  Q3: { label: 'Q3', startMonth: 7, endMonth: 9 },
+  Q4: { label: 'Q4', startMonth: 10, endMonth: 12 },
+  S1: { label: 'S1', startMonth: 1, endMonth: 6 },
+  S2: { label: 'S2', startMonth: 7, endMonth: 12 },
+  YEAR: { label: 'Todo el año', startMonth: 1, endMonth: 12 },
+} as const;
+
+export const MONTHS = [
+  { value: 1, label: 'Enero' },
+  { value: 2, label: 'Febrero' },
+  { value: 3, label: 'Marzo' },
+  { value: 4, label: 'Abril' },
+  { value: 5, label: 'Mayo' },
+  { value: 6, label: 'Junio' },
+  { value: 7, label: 'Julio' },
+  { value: 8, label: 'Agosto' },
+  { value: 9, label: 'Septiembre' },
+  { value: 10, label: 'Octubre' },
+  { value: 11, label: 'Noviembre' },
+  { value: 12, label: 'Diciembre' },
+] as const;

@@ -141,7 +141,7 @@ export const MonthlyRevenuesMatrix = ({
           Total general: <span className="font-bold text-foreground">{formatCurrency(grandTotal)}</span>
         </div>
         <div>
-          Promedio mensual: <span className="font-bold text-foreground">{formatCurrency(grandTotal / 12)}</span>
+          Promedio mensual: <span className="font-bold text-foreground">{formatCurrency(grandTotal / monthsOfYear.length)}</span>
         </div>
       </div>
     </Card>

@@ -9,7 +9,9 @@ export const exportRevenueMatrixToExcel = (
   grandTotal: number,
   viewMode: "assignee" | "client" | "company",
   year: number,
-  companyName?: string
+  companyName?: string,
+  startMonth?: number,
+  endMonth?: number
 ) => {
   // 1. Crear workbook
   const wb = XLSX.utils.book_new();
@@ -120,7 +122,7 @@ export const exportRevenueMatrixToExcel = (
     [],
     ["Año", year],
     ["Total General", grandTotal],
-    ["Promedio Mensual", grandTotal / 12],
+    ["Promedio Mensual", grandTotal / monthsOfYear.length],
     [],
     ["Mes", "Total"],
   ];
@@ -144,8 +146,13 @@ export const exportRevenueMatrixToExcel = (
 
   XLSX.utils.book_append_sheet(wb, wsSummary, "Resumen");
 
-  // 10. Exportar archivo
-  const fileName = `matriz_ingresos_${viewMode}_${year}${
+  // 10. Exportar archivo con rango de meses en el nombre
+  const periodSuffix = 
+    startMonth && endMonth && (startMonth !== 1 || endMonth !== 12)
+      ? `_${["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"][startMonth - 1]}-${["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"][endMonth - 1]}`
+      : "";
+  
+  const fileName = `matriz_ingresos_${viewMode}_${year}${periodSuffix}${
     companyName ? `_${companyName.replace(/\s+/g, "_")}` : ""
   }_${new Date().toISOString().split("T")[0]}.xlsx`;
 

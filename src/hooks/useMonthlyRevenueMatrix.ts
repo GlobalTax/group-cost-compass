@@ -5,6 +5,8 @@ interface MonthlyRevenueMatrixFilters {
   year: number;
   companyId?: string;
   viewMode: "assignee" | "client" | "company";
+  startMonth?: number;
+  endMonth?: number;
 }
 
 export interface RevenueMatrixRow {
@@ -24,9 +26,13 @@ export const useMonthlyRevenueMatrix = (filters: MonthlyRevenueMatrixFilters) =>
   return useQuery({
     queryKey: ["monthly-revenue-matrix", filters],
     queryFn: async () => {
-      // 1. Construir array de meses del año
-      const monthsOfYear = Array.from({ length: 12 }, (_, i) => {
-        const month = String(i + 1).padStart(2, "0");
+      // 1. Construir array de meses del año (con rango)
+      const startMonth = filters.startMonth || 1;
+      const endMonth = filters.endMonth || 12;
+      const monthCount = endMonth - startMonth + 1;
+      
+      const monthsOfYear = Array.from({ length: monthCount }, (_, i) => {
+        const month = String(startMonth + i).padStart(2, "0");
         return `${filters.year}-${month}`;
       });
 
@@ -51,9 +57,15 @@ export const useMonthlyRevenueMatrix = (filters: MonthlyRevenueMatrixFilters) =>
             hr_employees(id, full_name),
             teams(id, name)
           )
-        `)
-        .gte("period", `${filters.year}-01-01`)
-        .lte("period", `${filters.year}-12-31`);
+        `);
+      
+      const startDate = `${filters.year}-${String(startMonth).padStart(2, "0")}-01`;
+      const endDate = new Date(filters.year, endMonth, 0);
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      query = query
+        .gte("period", startDate)
+        .lte("period", endDateStr);
 
       if (filters.companyId && filters.companyId !== "all") {
         query = query.eq("company_id", filters.companyId);

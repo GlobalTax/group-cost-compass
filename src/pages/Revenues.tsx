@@ -16,6 +16,7 @@ import { CreateRevenueDialog } from "@/components/revenues/CreateRevenueDialog";
 import { RevenueCSVUpload } from "@/components/revenues/RevenueCSVUpload";
 import { AllocationTemplatesManager } from "@/components/revenues/AllocationTemplatesManager";
 import { QuickImportByCompany } from "@/components/revenues/QuickImportByCompany";
+import { MonthRangeSelector } from "@/components/revenues/MonthRangeSelector";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,8 @@ const Revenues = () => {
   const [matrixYear, setMatrixYear] = useState(currentYear);
   const [matrixCompanyId, setMatrixCompanyId] = useState<string>("all");
   const [matrixViewMode, setMatrixViewMode] = useState<RevenueViewMode>(REVENUE_VIEW_MODES.ASSIGNEE);
+  const [matrixStartMonth, setMatrixStartMonth] = useState(1);
+  const [matrixEndMonth, setMatrixEndMonth] = useState(12);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [breakdownData, setBreakdownData] = useState<{
     assigneeName: string;
@@ -71,6 +74,8 @@ const Revenues = () => {
     year: matrixYear,
     companyId: matrixCompanyId === "all" ? undefined : matrixCompanyId,
     viewMode: matrixViewMode,
+    startMonth: matrixStartMonth,
+    endMonth: matrixEndMonth,
   });
 
   // Calcular KPIs con logging para debug
@@ -169,7 +174,9 @@ const Revenues = () => {
       matrixData.grandTotal,
       matrixViewMode,
       matrixYear,
-      companyName
+      companyName,
+      matrixStartMonth,
+      matrixEndMonth
     );
 
     toast.success("Matriz exportada a Excel");
@@ -293,60 +300,75 @@ const Revenues = () => {
         <TabsContent value="matrix" className="space-y-6">
           {/* Filtros */}
           <Card className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="space-y-2 flex-1">
-                <Label>Año</Label>
-                <Select
-                  value={matrixYear.toString()}
-                  onValueChange={(v) => setMatrixYear(Number(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              {/* Fila 1: Filtros básicos */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Año</Label>
+                  <Select
+                    value={matrixYear.toString()}
+                    onValueChange={(v) => setMatrixYear(Number(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Empresa</Label>
+                  <Select value={matrixCompanyId} onValueChange={setMatrixCompanyId}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas las empresas</SelectItem>
+                      {companies?.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Vista</Label>
+                  <Select
+                    value={matrixViewMode}
+                    onValueChange={(v: RevenueViewMode) => setMatrixViewMode(v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(REVENUE_VIEW_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="space-y-2 flex-1">
-                <Label>Empresa</Label>
-                <Select value={matrixCompanyId} onValueChange={setMatrixCompanyId}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas las empresas</SelectItem>
-                    {companies?.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2 flex-1">
-                <Label>Vista</Label>
-                <Select
-                  value={matrixViewMode}
-                  onValueChange={(v: RevenueViewMode) => setMatrixViewMode(v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(REVENUE_VIEW_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Fila 2: Selector de rango de meses */}
+              <div className="border-t pt-4">
+                <MonthRangeSelector
+                  startMonth={matrixStartMonth}
+                  endMonth={matrixEndMonth}
+                  onRangeChange={(start, end) => {
+                    setMatrixStartMonth(start);
+                    setMatrixEndMonth(end);
+                  }}
+                />
               </div>
             </div>
           </Card>
