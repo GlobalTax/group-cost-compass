@@ -84,3 +84,17 @@ export const RECRUITMENT = {
   EMPLOYMENT_TYPES: ['full-time', 'part-time', 'contract', 'internship'],
   POSITION_LEVELS: ['junior', 'mid', 'senior', 'lead', 'director'],
 } as const;
+
+export const REVENUE_VIEW_MODES = {
+  ASSIGNEE: 'assignee',
+  CLIENT: 'client',
+  COMPANY: 'company',
+} as const;
+
+export type RevenueViewMode = typeof REVENUE_VIEW_MODES[keyof typeof REVENUE_VIEW_MODES];
+
+export const REVENUE_VIEW_LABELS: Record<RevenueViewMode, string> = {
+  assignee: 'Por Empleado/Equipo',
+  client: 'Por Cliente',
+  company: 'Por Empresa',
+};
