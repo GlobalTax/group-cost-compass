@@ -41,9 +41,24 @@ const Revenues = () => {
 
   const { deleteRevenue } = useRevenueManagement();
 
-  // Calcular KPIs
+  // Calcular KPIs con logging para debug
   const kpis = useMemo(() => {
-    if (!analyticsData) {
+    console.log('🔍 Debug KPIs - Revenues.tsx:', {
+      analyticsDataLength: analyticsData?.length,
+      revenuesLength: revenues?.length,
+      selectedYear,
+      selectedCompany,
+      filters: {
+        year: selectedYear,
+        companyId: selectedCompany === "all" ? undefined : selectedCompany,
+      }
+    });
+
+    // Usar analyticsData como fuente principal, revenues como fallback
+    const dataSource = analyticsData && analyticsData.length > 0 ? analyticsData : revenues || [];
+    
+    if (dataSource.length === 0) {
+      console.warn('⚠️ No hay datos disponibles para calcular KPIs');
       return {
         totalRevenue: 0,
         recurringRevenue: 0,
@@ -52,18 +67,24 @@ const Revenues = () => {
       };
     }
 
-    const totalRevenue = analyticsData.reduce(
-      (sum, item) => sum + Number(item.total_amount),
+    const totalRevenue = dataSource.reduce(
+      (sum, item) => {
+        const amount = Number(item.total_amount || 0);
+        return sum + amount;
+      },
       0
     );
 
-    const recurringRevenue = analyticsData
+    const recurringRevenue = dataSource
       .filter((item) => item.is_recurring)
-      .reduce((sum, item) => sum + Number(item.total_amount), 0);
+      .reduce((sum, item) => {
+        const amount = Number(item.total_amount || 0);
+        return sum + amount;
+      }, 0);
 
     const oneTimeRevenue = totalRevenue - recurringRevenue;
 
-    // Contar contribuyentes únicos (simplificado)
+    // Contar contribuyentes únicos
     const uniqueContributors = new Set(
       revenues?.flatMap((r) => 
         r.revenue_allocations?.map((a: any) => 
@@ -72,13 +93,22 @@ const Revenues = () => {
       )
     );
 
+    console.log('📊 KPIs calculados:', {
+      totalRevenue,
+      recurringRevenue,
+      oneTimeRevenue,
+      topContributors: uniqueContributors.size,
+      dataSourceUsed: analyticsData && analyticsData.length > 0 ? 'analyticsData' : 'revenues',
+      itemsProcessed: dataSource.length
+    });
+
     return {
       totalRevenue,
       recurringRevenue,
       oneTimeRevenue,
       topContributors: uniqueContributors.size,
     };
-  }, [analyticsData, revenues]);
+  }, [analyticsData, revenues, selectedYear, selectedCompany]);
 
   const handleDelete = async (id: string) => {
     if (confirm("¿Estás seguro de eliminar este ingreso?")) {
