@@ -303,7 +303,9 @@ export const QuickImportByCompany = ({ onImportComplete }: QuickImportByCompanyP
                   <strong>{parseErrors.length} errores detectados:</strong>
                   <ul className="list-disc list-inside mt-2">
                     {parseErrors.slice(0, 3).map((error, idx) => (
-                      <li key={idx} className="text-sm">Fila {error.row}: {error.error}</li>
+                      <li key={idx} className="text-sm">
+                        {typeof error === 'string' ? error : error.error || 'Error desconocido'}
+                      </li>
                     ))}
                   </ul>
                 </AlertDescription>
