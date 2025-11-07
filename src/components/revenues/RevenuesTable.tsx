@@ -11,9 +11,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Users } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Pencil, Trash2, Users, ChevronDown, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { RevenueAllocationsManager } from "./RevenueAllocationsManager";
 
 interface RevenuesTableProps {
   revenues: any[];
@@ -26,6 +31,20 @@ export const RevenuesTable = ({
   onEdit,
   onDelete,
 }: RevenuesTableProps) => {
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
   if (!revenues || revenues.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -39,6 +58,7 @@ export const RevenuesTable = ({
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12"></TableHead>
             <TableHead>Período</TableHead>
             <TableHead>Empresa</TableHead>
             <TableHead>Descripción</TableHead>
@@ -58,11 +78,31 @@ export const RevenuesTable = ({
               ).filter(Boolean)
             );
 
+            const isExpanded = expandedRows.has(revenue.id);
+
             return (
-              <TableRow key={revenue.id}>
-                <TableCell className="font-medium">
-                  {format(new Date(revenue.period), "MMM yyyy", { locale: es })}
-                </TableCell>
+              <Collapsible
+                key={revenue.id}
+                open={isExpanded}
+                onOpenChange={() => toggleRow(revenue.id)}
+                asChild
+              >
+                <>
+                  <TableRow>
+                    <TableCell>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {format(new Date(revenue.period), "MMM yyyy", { locale: es })}
+                    </TableCell>
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium">{revenue.companies?.name}</span>
@@ -113,29 +153,41 @@ export const RevenuesTable = ({
                     <span className="text-sm text-muted-foreground">Sin asignar</span>
                   )}
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    {onEdit && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(revenue)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {onDelete && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(revenue.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {onEdit && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(revenue)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {onDelete && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(revenue.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+
+                  <CollapsibleContent asChild>
+                    <TableRow>
+                      <TableCell colSpan={9} className="p-0">
+                        <div className="bg-muted/30 p-4 border-t">
+                          <RevenueAllocationsManager revenueItem={revenue} />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </CollapsibleContent>
+                </>
+              </Collapsible>
             );
           })}
         </TableBody>
