@@ -34,7 +34,7 @@ export const revenueAllocationSchema = z.object({
 
 export type RevenueAllocationFormData = z.infer<typeof revenueAllocationSchema>;
 
-// Schema para subida CSV
+// Schema para subida CSV (individual row)
 export const uploadRevenueRowSchema = z.object({
   period: z.string().regex(/^\d{4}-\d{2}(-\d{2})?$/, 'Formato debe ser YYYY-MM o YYYY-MM-DD'),
   company: z.string().min(1, 'Empresa requerida'),
@@ -52,3 +52,20 @@ export const uploadRevenueRowSchema = z.object({
 });
 
 export type UploadRevenueRow = z.infer<typeof uploadRevenueRowSchema>;
+
+// Schema para CSV completo con metadata
+export const csvImportSchema = z.object({
+  rows: z.array(uploadRevenueRowSchema),
+  metadata: z.object({
+    filename: z.string(),
+    uploadedAt: z.date(),
+    totalRows: z.number(),
+    validRows: z.number(),
+    errors: z.array(z.object({
+      row: z.number(),
+      error: z.string(),
+    })),
+  }),
+});
+
+export type CSVImportData = z.infer<typeof csvImportSchema>;
