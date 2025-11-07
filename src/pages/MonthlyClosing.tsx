@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MonthNavigator } from "@/components/monthly/MonthNavigator";
+import { MonthlyKPIs } from "@/components/monthly/MonthlyKPIs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useMonthlyKPIs } from "@/hooks/useMonthlyKPIs";
 
 const MonthlyClosing = () => {
   const currentDate = new Date();
@@ -13,6 +15,10 @@ const MonthlyClosing = () => {
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
   };
+
+  const { data: kpisData, isLoading: kpisLoading } = useMonthlyKPIs({
+    month: selectedMonth,
+  });
 
   return (
     <div className="p-8 space-y-8">
@@ -27,12 +33,8 @@ const MonthlyClosing = () => {
         onMonthChange={handleMonthChange}
       />
 
-      {/* Placeholder para KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-32" />
-        ))}
-      </div>
+      {/* KPIs Mensuales con Deltas */}
+      <MonthlyKPIs data={kpisData} isLoading={kpisLoading} />
 
       {/* Placeholder para Alertas */}
       <div className="space-y-4">
