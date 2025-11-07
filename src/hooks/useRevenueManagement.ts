@@ -86,7 +86,17 @@ export const useRevenueManagement = () => {
   });
 
   const bulkAssignRevenues = useMutation({
-    mutationFn: async ({ revenueItemIds, templateId, customAllocations }: { revenueItemIds: string[]; templateId?: string; customAllocations?: any[] }) => {
+    mutationFn: async ({ 
+      revenueItemIds, 
+      templateId, 
+      customAllocations,
+      mode = 'add'
+    }: { 
+      revenueItemIds: string[]; 
+      templateId?: string; 
+      customAllocations?: any[];
+      mode?: 'replace' | 'add';
+    }) => {
       if (templateId) {
         const promises = revenueItemIds.map(async (itemId) => {
           const { data, error } = await supabase.from("revenue_items").select("total_amount").eq("id", itemId).single();
@@ -95,6 +105,15 @@ export const useRevenueManagement = () => {
         });
         await Promise.all(promises);
       } else if (customAllocations) {
+        if (mode === 'replace') {
+          const { error: deleteError } = await supabase
+            .from("revenue_allocations")
+            .delete()
+            .in("revenue_item_id", revenueItemIds);
+          
+          if (deleteError) throw deleteError;
+        }
+        
         await bulkApplyAllocations(revenueItemIds, customAllocations);
       }
     },

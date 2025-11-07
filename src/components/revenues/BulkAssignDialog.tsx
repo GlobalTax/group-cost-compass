@@ -52,13 +52,13 @@ export const BulkAssignDialog = ({
     const customAllocations = [{
       employee_id: assigneeType === 'employee' ? assigneeId : null,
       team_id: assigneeType === 'team' ? assigneeId : null,
-      percentage: parseFloat(percentage),
-      mode,
+      allocation_percentage: parseFloat(percentage),
     }];
 
     await bulkAssignRevenues.mutateAsync({
       revenueItemIds: selectedRevenueIds,
       customAllocations,
+      mode,
     });
 
     onOpenChange(false);

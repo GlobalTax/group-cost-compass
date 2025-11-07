@@ -187,6 +187,17 @@ export async function bulkApplyAllocations(
   revenueItemIds: string[],
   allocations: RevenueAllocationInsert[]
 ) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Usuario no autenticado");
+  
+  const { data: userData } = await supabase
+    .from("users")
+    .select("org_id")
+    .eq("id", user.id)
+    .single();
+  
+  if (!userData?.org_id) throw new Error("Organización no encontrada");
+
   const allAllocations: RevenueAllocationInsert[] = [];
   
   for (const itemId of revenueItemIds) {
@@ -194,6 +205,7 @@ export async function bulkApplyAllocations(
       allAllocations.push({
         ...alloc,
         revenue_item_id: itemId,
+        org_id: userData.org_id,
       });
     }
   }
