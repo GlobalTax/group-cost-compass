@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -160,16 +160,18 @@ export const QuickImportByCompany = ({ onImportComplete }: QuickImportByCompanyP
 
   const groupedItems = parsedItems.length > 0 ? groupItemsByClient(parsedItems) : [];
 
-  // Calcular rango de fechas
-  const dateRange = parsedItems.length > 0 
-    ? parsedItems.reduce((acc, item) => {
-        const date = new Date(item.period);
-        return {
-          min: !acc.min || date < acc.min ? date : acc.min,
-          max: !acc.max || date > acc.max ? date : acc.max,
-        };
-      }, { min: null as Date | null, max: null as Date | null })
-    : { min: null, max: null };
+  // Calcular rango de fechas (memorizado para evitar re-renders infinitos)
+  const dateRange = useMemo(() => {
+    if (parsedItems.length === 0) return { min: null, max: null };
+    
+    return parsedItems.reduce((acc, item) => {
+      const date = new Date(item.period);
+      return {
+        min: !acc.min || date < acc.min ? date : acc.min,
+        max: !acc.max || date > acc.max ? date : acc.max,
+      };
+    }, { min: null as Date | null, max: null as Date | null });
+  }, [parsedItems]);
 
   return (
     <div className="space-y-6">
