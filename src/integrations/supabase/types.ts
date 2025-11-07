@@ -8564,6 +8564,165 @@ export type Database = {
           },
         ]
       }
+      revenue_allocations: {
+        Row: {
+          allocated_amount: number | null
+          allocation_percentage: number | null
+          allocation_type: string | null
+          created_at: string | null
+          employee_id: string | null
+          id: string
+          notes: string | null
+          org_id: string
+          revenue_item_id: string
+          team_id: string | null
+        }
+        Insert: {
+          allocated_amount?: number | null
+          allocation_percentage?: number | null
+          allocation_type?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          org_id?: string
+          revenue_item_id: string
+          team_id?: string | null
+        }
+        Update: {
+          allocated_amount?: number | null
+          allocation_percentage?: number | null
+          allocation_type?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          org_id?: string
+          revenue_item_id?: string
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_allocations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_allocations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "revenue_allocations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_costs_summary"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "revenue_allocations_revenue_item_id_fkey"
+            columns: ["revenue_item_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_allocations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_allocations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["team_id"]
+          },
+        ]
+      }
+      revenue_items: {
+        Row: {
+          category: string | null
+          client_name: string | null
+          company_id: string
+          created_at: string | null
+          description: string
+          id: string
+          is_recurring: boolean | null
+          notes: string | null
+          org_id: string
+          period: string
+          recurrence_pattern: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          client_name?: string | null
+          company_id: string
+          created_at?: string | null
+          description: string
+          id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
+          org_id?: string
+          period: string
+          recurrence_pattern?: string | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          client_name?: string | null
+          company_id?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
+          org_id?: string
+          period?: string
+          recurrence_pattern?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "revenue_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "revenue_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["company_id"]
+          },
+        ]
+      }
       revenue_metrics: {
         Row: {
           average_deal_size: number | null

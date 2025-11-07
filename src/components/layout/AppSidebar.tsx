@@ -46,9 +46,15 @@ const navigationItems = [
     ],
   },
   {
+    section: "FINANZAS",
+    items: [
+      { title: "Ingresos", url: "/revenues", icon: TrendingUp },
+      { title: "Presupuestos", url: "/budget", icon: Calculator },
+    ],
+  },
+  {
     section: "HERRAMIENTAS",
     items: [
-      { title: "Presupuestos", url: "/budget", icon: Calculator },
       { title: "Importar", url: "/upload", icon: FileUp },
       { title: "Auditoría", url: "/audit", icon: Shield },
     ],
