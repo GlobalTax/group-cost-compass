@@ -56,6 +56,7 @@ export interface RevenueFilters {
   amountMax: number | null;
   allocationStatus: 'all' | 'with' | 'without';
   recurrence: 'all' | 'recurring' | 'one-time';
+  conceptSearch: string;
 }
 
 /**
@@ -98,6 +99,18 @@ export function filterClientGroups(
       }
     }
     
+    // Filtro por búsqueda de concepto
+    if (filters.conceptSearch.trim() !== '') {
+      const searchLower = filters.conceptSearch.toLowerCase().trim();
+      const hasMatch = group.items.some(item => 
+        item.description?.toLowerCase().includes(searchLower)
+      );
+      
+      if (!hasMatch) {
+        return false;
+      }
+    }
+    
     return true;
   });
 }
@@ -136,6 +149,16 @@ export function filterRevenueItems(
         return false;
       }
       if (filters.recurrence === 'one-time' && item.is_recurring) {
+        return false;
+      }
+    }
+    
+    // Filtro por búsqueda de concepto
+    if (filters.conceptSearch.trim() !== '') {
+      const searchLower = filters.conceptSearch.toLowerCase().trim();
+      const description = item.description?.toLowerCase() || '';
+      
+      if (!description.includes(searchLower)) {
         return false;
       }
     }

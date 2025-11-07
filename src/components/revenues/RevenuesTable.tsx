@@ -57,6 +57,7 @@ export const RevenuesTable = ({
     amountMax: null,
     allocationStatus: 'all',
     recurrence: 'all',
+    conceptSearch: '',
   });
   const [batchTemplateDialog, setBatchTemplateDialog] = useState<{
     open: boolean;
@@ -233,6 +234,7 @@ export const RevenuesTable = ({
                           amountMax: null,
                           allocationStatus: 'all',
                           recurrence: 'all',
+                          conceptSearch: '',
                         })}
                         size="sm"
                       >

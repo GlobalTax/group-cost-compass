@@ -18,7 +18,8 @@ import {
   UserCheck, 
   RefreshCw,
   ChevronDown,
-  ChevronUp 
+  ChevronUp,
+  Search 
 } from "lucide-react";
 import {
   Collapsible,
@@ -46,7 +47,8 @@ export const RevenueFilters = ({
     filters.amountMin !== null ||
     filters.amountMax !== null ||
     filters.allocationStatus !== 'all' ||
-    filters.recurrence !== 'all';
+    filters.recurrence !== 'all' ||
+    filters.conceptSearch.trim() !== '';
   
   const handleReset = () => {
     onFiltersChange({
@@ -54,6 +56,7 @@ export const RevenueFilters = ({
       amountMax: null,
       allocationStatus: 'all',
       recurrence: 'all',
+      conceptSearch: '',
     });
   };
   
@@ -94,6 +97,32 @@ export const RevenueFilters = ({
         </div>
         
         <CollapsibleContent className="mt-4">
+          {/* Búsqueda por concepto */}
+          <div className="mb-4">
+            <Label htmlFor="concept-search" className="flex items-center gap-2 text-sm font-semibold mb-2">
+              <Search className="h-4 w-4" />
+              Buscar por Concepto
+            </Label>
+            <Input
+              id="concept-search"
+              type="text"
+              placeholder="Ej: SERVICIOS RENTA, HONORARIOS..."
+              value={filters.conceptSearch}
+              onChange={(e) =>
+                onFiltersChange({
+                  ...filters,
+                  conceptSearch: e.target.value,
+                })
+              }
+              className="h-9"
+            />
+            {filters.conceptSearch && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Buscando: "{filters.conceptSearch}"
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Filtro por rango de importes */}
             <div className="space-y-2">
@@ -205,6 +234,11 @@ export const RevenueFilters = ({
             <div className="mt-4 p-3 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground mb-2">Filtros activos:</p>
               <div className="flex flex-wrap gap-2">
+                {filters.conceptSearch.trim() !== '' && (
+                  <Badge variant="outline">
+                    🔍 "{filters.conceptSearch}"
+                  </Badge>
+                )}
                 {filters.amountMin !== null && (
                   <Badge variant="outline">
                     Mín: {filters.amountMin.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
