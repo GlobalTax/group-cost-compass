@@ -2,7 +2,7 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MonthNavigator } from "@/components/monthly/MonthNavigator";
 import { MonthlyKPIs } from "@/components/monthly/MonthlyKPIs";
-import { Skeleton } from "@/components/ui/skeleton";
+import { MonthlyDetailTabs } from "@/components/monthly/MonthlyDetailTabs";
 import { format } from "date-fns";
 import { useMonthlyKPIs } from "@/hooks/useMonthlyKPIs";
 
@@ -36,20 +36,15 @@ const MonthlyClosing = () => {
       {/* KPIs Mensuales con Deltas */}
       <MonthlyKPIs data={kpisData} isLoading={kpisLoading} />
 
-      {/* Placeholder para Alertas */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground">
-          Alertas del Mes
-        </h3>
-        <Skeleton className="h-40" />
-      </div>
-
-      {/* Placeholder para Tabs */}
+      {/* Tabs de Detalle del Mes */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-foreground">
           Detalle del Mes
         </h3>
-        <Skeleton className="h-96" />
+        <MonthlyDetailTabs 
+          selectedMonth={selectedMonth}
+          companyId={undefined}
+        />
       </div>
     </div>
   );
