@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Download, FileSpreadsheet, BarChart3, Zap } from "lucide-react";
+import { Plus, Download, FileSpreadsheet, BarChart3, Zap, RefreshCw } from "lucide-react";
 import { useRevenues, useRevenueAnalytics } from "@/hooks/useRevenues";
 import { useRevenueManagement } from "@/hooks/useRevenueManagement";
 import { RevenueKPIs } from "@/components/revenues/RevenueKPIs";
@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCompanies } from "@/hooks/useCompanies";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const Revenues = () => {
   const currentYear = new Date().getFullYear();
@@ -28,6 +30,7 @@ const Revenues = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("list");
 
+  const queryClient = useQueryClient();
   const { data: companies } = useCompanies();
   const { data: revenues, isLoading } = useRevenues({
     year: selectedYear,
@@ -116,6 +119,12 @@ const Revenues = () => {
     }
   };
 
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["revenues"] });
+    queryClient.invalidateQueries({ queryKey: ["revenue-analytics"] });
+    toast.success("Datos actualizados");
+  };
+
   const years = Array.from(
     { length: 5 },
     (_, i) => currentYear - 2 + i
@@ -185,6 +194,15 @@ const Revenues = () => {
               </div>
 
               <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refrescar
+                </Button>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
                   Exportar
