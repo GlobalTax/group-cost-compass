@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileDropzone } from "@/components/upload/FileDropzone";
+import { PasteArea } from "@/components/upload/PasteArea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -8,11 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCompanies } from "@/hooks/useCompanies";
-import { parseRevenueCSV, groupItemsByClient, ParsedRevenueItem, detectCompanyForClient } from "@/lib/parsers/revenueParser";
+import { parseRevenueCSV, parseRevenueFromRows, groupItemsByClient, ParsedRevenueItem, detectCompanyForClient } from "@/lib/parsers/revenueParser";
 import { bulkImportRevenueItems, validateImportData } from "@/services/import/revenueImportService";
 import { formatCurrency } from "@/lib/formatters";
-import { Upload, AlertCircle, CheckCircle2, Loader2, ChevronDown, ChevronRight, Zap } from "lucide-react";
+import { Upload, AlertCircle, CheckCircle2, Loader2, ChevronDown, ChevronRight, Zap, Clipboard } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -21,9 +23,11 @@ interface RevenueCSVUploadProps {
 }
 
 type Step = 'upload' | 'mapping' | 'preview' | 'importing' | 'complete';
+type UploadMethod = 'file' | 'paste';
 
 export const RevenueCSVUpload = ({ onImportComplete }: RevenueCSVUploadProps) => {
   const [step, setStep] = useState<Step>('upload');
+  const [uploadMethod, setUploadMethod] = useState<UploadMethod>('file');
   const [parsedItems, setParsedItems] = useState<ParsedRevenueItem[]>([]);
   const [parseErrors, setParseErrors] = useState<Array<{ row: number; error: string }>>([]);
   const [summary, setSummary] = useState<any>(null);
@@ -71,6 +75,44 @@ export const RevenueCSVUpload = ({ onImportComplete }: RevenueCSVUploadProps) =>
       console.error('Error uploading file:', error);
       toast.dismiss();
       toast.error(error.message || 'Error al procesar el archivo');
+    }
+  };
+
+  const handlePastedData = async (rows: Array<Record<string, any>>) => {
+    try {
+      toast.loading('Procesando datos pegados...');
+      
+      const result = await parseRevenueFromRows(rows);
+      
+      setParsedItems(result.items);
+      setParseErrors(result.errors);
+      setSummary(result.summary);
+
+      // Auto-detect company for each client
+      const grouped = groupItemsByClient(result.items);
+      const autoMapping: Record<string, string> = {};
+      
+      grouped.forEach(group => {
+        const detected = detectCompanyForClient(group.client_name, group.categories);
+        if (detected && companies) {
+          const company = companies.find(c => 
+            c.name.toLowerCase().includes(detected) ||
+            c.nif?.toLowerCase().includes(detected)
+          );
+          if (company) {
+            autoMapping[group.client_name] = company.id;
+          }
+        }
+      });
+
+      setCompanyMapping(autoMapping);
+      setStep('mapping');
+      toast.dismiss();
+      toast.success(`Datos procesados: ${result.items.length} líneas válidas`);
+    } catch (error: any) {
+      console.error('Error processing pasted data:', error);
+      toast.dismiss();
+      toast.error(error.message || 'Error al procesar los datos');
     }
   };
 
@@ -140,17 +182,42 @@ export const RevenueCSVUpload = ({ onImportComplete }: RevenueCSVUploadProps) =>
       {step === 'upload' && (
         <Card>
           <CardHeader>
-            <CardTitle>Importar CSV de Facturación</CardTitle>
+            <CardTitle>Importar Facturación</CardTitle>
             <CardDescription>
-              Sube un archivo CSV con el formato de facturación estándar (columnas: T, NÚMERO, INICIO, CL, NOMBRE CLIENTE, SECCIÓN, HN, CB, PG, E, FACTURA)
+              Elige cómo quieres cargar los datos
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <FileDropzone
-              accept=".csv,.xlsx,.xls"
-              onFileSelect={handleFileUpload}
-              maxSize={10 * 1024 * 1024}
-            />
+            <Tabs value={uploadMethod} onValueChange={(v) => setUploadMethod(v as UploadMethod)}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="file">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Subir Archivo
+                </TabsTrigger>
+                <TabsTrigger value="paste">
+                  <Clipboard className="h-4 w-4 mr-2" />
+                  Copiar y Pegar
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="file" className="mt-4">
+                <FileDropzone
+                  accept=".csv,.xlsx,.xls"
+                  onFileSelect={handleFileUpload}
+                  maxSize={10 * 1024 * 1024}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Formato esperado: T, NÚMERO, INICIO, CL, NOMBRE CLIENTE, SECCIÓN, HN, CB, PG, E, FACTURA
+                </p>
+              </TabsContent>
+
+              <TabsContent value="paste" className="mt-4">
+                <PasteArea
+                  onParsedData={handlePastedData}
+                  disabled={false}
+                />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       )}

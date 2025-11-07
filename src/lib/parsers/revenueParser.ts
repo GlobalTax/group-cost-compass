@@ -223,6 +223,144 @@ export function detectCompanyForClient(clientName: string, categories: string[])
 }
 
 /**
+ * Parse revenue data from array of objects (for paste functionality)
+ */
+export async function parseRevenueFromRows(
+  rows: Array<Record<string, any>>
+): Promise<{
+  items: ParsedRevenueItem[];
+  errors: Array<{ row: number; error: string; data?: any }>;
+  summary: {
+    totalRows: number;
+    validRows: number;
+    totalAmount: number;
+    recurringAmount: number;
+    uniqueClients: number;
+    categoriesBreakdown: Record<string, number>;
+  };
+}> {
+  const items: ParsedRevenueItem[] = [];
+  const errors: Array<{ row: number; error: string; data?: any }> = [];
+  const clientsSet = new Set<string>();
+  const categoriesBreakdown: Record<string, number> = {};
+  let totalAmount = 0;
+  let recurringAmount = 0;
+
+  rows.forEach((row, index) => {
+    try {
+      // Detectar columnas flexiblemente
+      const clientName = 
+        row['NOMBRE CLIENTE'] || 
+        row['CLIENTE'] || 
+        row['Cliente'] || 
+        row['Nombre Cliente'] || 
+        row['client_name'] ||
+        '';
+      
+      const clientCode = 
+        row['CL'] || 
+        row['Código'] || 
+        row['CODIGO'] ||
+        row['client_code'] ||
+        '';
+
+      const section = 
+        row['SECCIÓN'] || 
+        row['SECCION'] || 
+        row['Sección'] || 
+        row['CATEGORIA'] ||
+        row['Categoría'] ||
+        row['category'] ||
+        '';
+
+      const inicio = 
+        row['INICIO'] || 
+        row['Inicio'] || 
+        row['FECHA'] ||
+        row['Fecha'] ||
+        row['period'] ||
+        '';
+
+      const factura = 
+        row['FACTURA'] || 
+        row['Factura'] || 
+        row['NÚMERO'] ||
+        row['Número'] ||
+        row['invoice_number'] ||
+        '';
+
+      // Validaciones básicas
+      if (!clientName || !inicio || !factura) {
+        errors.push({
+          row: index + 1,
+          error: 'Faltan campos requeridos (NOMBRE CLIENTE, INICIO, FACTURA)',
+          data: row,
+        });
+        return;
+      }
+
+      // Parse amounts (pueden estar separados o como TOTAL)
+      const hn = parseAmount(row['HN'] || row['hn'] || 0);
+      const cb = parseAmount(row['CB'] || row['cb'] || 0);
+      const pg = parseAmount(row['PG'] || row['pg'] || 0);
+      const e = parseAmount(row['E'] || row['e'] || 0);
+      const total = row['TOTAL'] || row['Total'] || row['total']
+        ? parseAmount(row['TOTAL'] || row['Total'] || row['total'])
+        : hn + cb + pg + e;
+
+      // Skip zero amount lines
+      if (total === 0) {
+        return;
+      }
+
+      // Parse category
+      const { category, is_recurring } = normalizeCategory(section || 'Otros');
+
+      // Parse date
+      const period = parseDate(inicio);
+
+      // Create item
+      const item: ParsedRevenueItem = {
+        client_code: clientCode.trim(),
+        client_name: clientName.trim(),
+        period,
+        category,
+        description: `${category} - ${clientName}`,
+        is_recurring,
+        total_amount: total,
+        invoice_number: factura.trim(),
+        raw_line: row as any,
+      };
+
+      items.push(item);
+      clientsSet.add(item.client_name);
+      totalAmount += total;
+      if (is_recurring) recurringAmount += total;
+      categoriesBreakdown[category] = (categoriesBreakdown[category] || 0) + total;
+    } catch (error: any) {
+      errors.push({
+        row: index + 1,
+        error: error.message || 'Error procesando fila',
+        data: row,
+      });
+    }
+  });
+
+  return {
+    items,
+    errors,
+    summary: {
+      totalRows: rows.length,
+      validRows: items.length,
+      totalAmount,
+      recurringAmount,
+      uniqueClients: clientsSet.size,
+      categoriesBreakdown,
+    },
+  };
+}
+
+/**
  * Group items by client for preview
  */
 export function groupItemsByClient(items: ParsedRevenueItem[]): Array<{
