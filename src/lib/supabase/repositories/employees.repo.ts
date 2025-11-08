@@ -5,6 +5,7 @@
 
 import { supabase } from "../client";
 import type { Database } from "@/integrations/supabase/types";
+import type { EmployeeWithCompany } from "../types/enriched";
 
 type Employee = Database["public"]["Tables"]["hr_employees"]["Row"];
 type EmployeeInsert = Database["public"]["Tables"]["hr_employees"]["Insert"];
@@ -12,6 +13,7 @@ type EmployeeUpdate = Database["public"]["Tables"]["hr_employees"]["Update"];
 
 /**
  * Obtiene todos los empleados con filtros opcionales
+ * Incluye relación con companies
  */
 export const fetchEmployees = async (filters?: {
   companyId?: string;
@@ -20,7 +22,7 @@ export const fetchEmployees = async (filters?: {
   searchTerm?: string;
   activeOnly?: boolean;
   withoutTeam?: boolean;
-}): Promise<Employee[]> => {
+}): Promise<EmployeeWithCompany[]> => {
   let query = supabase
     .from("hr_employees")
     .select(
@@ -65,13 +67,14 @@ export const fetchEmployees = async (filters?: {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  return (data as EmployeeWithCompany[]) || [];
 };
 
 /**
  * Obtiene un empleado por ID
+ * Incluye relación con companies
  */
-export const fetchEmployeeById = async (id: string): Promise<Employee | null> => {
+export const fetchEmployeeById = async (id: string): Promise<EmployeeWithCompany | null> => {
   const { data, error } = await supabase
     .from("hr_employees")
     .select(
@@ -92,7 +95,7 @@ export const fetchEmployeeById = async (id: string): Promise<Employee | null> =>
     throw error;
   }
 
-  return data;
+  return data as EmployeeWithCompany;
 };
 
 /**
@@ -111,11 +114,12 @@ export const createEmployee = async (data: EmployeeInsert): Promise<Employee> =>
 
 /**
  * Actualiza un empleado existente
+ * Incluye relación con companies en el retorno
  */
 export const updateEmployee = async (
   id: string,
   data: EmployeeUpdate
-): Promise<Employee> => {
+): Promise<EmployeeWithCompany> => {
   const { data: employee, error } = await supabase
     .from("hr_employees")
     .update(data)
@@ -137,7 +141,7 @@ export const updateEmployee = async (
     throw new Error("Sin permisos o registro no existe");
   }
 
-  return employee;
+  return employee as EmployeeWithCompany;
 };
 
 /**

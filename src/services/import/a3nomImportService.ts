@@ -17,6 +17,7 @@ import {
   prepareCostsForInsertion,
   validateCostsForImport,
 } from "./costsPreparationService";
+import { fetchCompanies } from "@/lib/supabase/repositories/companies.repo";
 
 type Company = Database['public']['Tables']['companies']['Row'];
 type EmployeeInsert = Database['public']['Tables']['hr_employees']['Insert'];
@@ -52,11 +53,7 @@ export interface A3NomImportResult {
  * Obtiene y mapea el catálogo de empresas
  */
 async function fetchCompanyMap(): Promise<Map<string, CompanyInfo>> {
-  const { data: companies, error } = await supabase
-    .from("companies")
-    .select("id, name, nif, org_id");
-
-  if (error) throw error;
+  const companies = await fetchCompanies();
 
   if (!companies || companies.length === 0) {
     throw new Error("No se pudieron cargar las empresas del catálogo");

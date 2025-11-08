@@ -1,0 +1,75 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Verificando arquitectura antes del commit..."
+
+# Colores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Contador de violaciones
+VIOLATIONS=0
+
+# ====================================================================
+# 1. Verificar queries directas a Supabase en componentes
+# ====================================================================
+echo "📦 Verificando componentes..."
+COMPONENT_VIOLATIONS=$(grep -r "supabase\.from" src/components/ 2>/dev/null | wc -l)
+
+if [ "$COMPONENT_VIOLATIONS" -gt 0 ]; then
+  echo "${RED}❌ ERROR: Encontradas $COMPONENT_VIOLATIONS queries a Supabase en componentes${NC}"
+  echo "${YELLOW}   Los componentes deben usar hooks, no acceder a Supabase directamente.${NC}"
+  grep -rn "supabase\.from" src/components/ 2>/dev/null
+  VIOLATIONS=$((VIOLATIONS + COMPONENT_VIOLATIONS))
+fi
+
+# ====================================================================
+# 2. Verificar queries directas a Supabase en servicios
+# ====================================================================
+echo "⚙️  Verificando servicios..."
+SERVICE_VIOLATIONS=$(grep -r "supabase\.from" src/services/ 2>/dev/null | grep -v "supabase/client" | wc -l)
+
+if [ "$SERVICE_VIOLATIONS" -gt 0 ]; then
+  echo "${RED}❌ ERROR: Encontradas $SERVICE_VIOLATIONS queries a Supabase en servicios${NC}"
+  echo "${YELLOW}   Los servicios deben usar repositorios en src/lib/supabase/repositories/${NC}"
+  grep -rn "supabase\.from" src/services/ 2>/dev/null | grep -v "supabase/client"
+  VIOLATIONS=$((VIOLATIONS + SERVICE_VIOLATIONS))
+fi
+
+# ====================================================================
+# 3. Verificar hooks gordos (>50 líneas)
+# ====================================================================
+echo "🪝 Verificando tamaño de hooks..."
+FAT_HOOKS=$(find src/hooks -name "*.ts" -type f -exec sh -c '
+  lines=$(wc -l < "$1")
+  if [ "$lines" -gt 50 ]; then
+    echo "$1 ($lines líneas)"
+  fi
+' _ {} \;)
+
+if [ -n "$FAT_HOOKS" ]; then
+  echo "${YELLOW}⚠️  ADVERTENCIA: Hooks con >50 líneas detectados:${NC}"
+  echo "$FAT_HOOKS"
+  echo "${YELLOW}   Considera extraer lógica de negocio a servicios.${NC}"
+fi
+
+# ====================================================================
+# 4. Resultado final
+# ====================================================================
+if [ "$VIOLATIONS" -gt 0 ]; then
+  echo ""
+  echo "${RED}╔════════════════════════════════════════════════════════╗${NC}"
+  echo "${RED}║  ❌ COMMIT RECHAZADO - Violaciones arquitectónicas     ║${NC}"
+  echo "${RED}║                                                        ║${NC}"
+  echo "${RED}║  Total de violaciones: $VIOLATIONS                           ║${NC}"
+  echo "${RED}║                                                        ║${NC}"
+  echo "${RED}║  📚 Consulta ARCHITECTURE.md para más información     ║${NC}"
+  echo "${RED}╚════════════════════════════════════════════════════════╝${NC}"
+  exit 1
+else
+  echo ""
+  echo "${GREEN}✅ Arquitectura correcta - Commit permitido${NC}"
+  exit 0
+fi
