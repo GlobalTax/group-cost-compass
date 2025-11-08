@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ArrowUpRight } from "lucide-react";
@@ -25,7 +26,7 @@ interface MonthlyCostsMatrixProps {
   costType: "bruto" | "total";
 }
 
-export const MonthlyCostsMatrix = ({
+export const MonthlyCostsMatrix = memo(({
   rows,
   monthsOfYear,
   monthlyTotals,
@@ -34,14 +35,17 @@ export const MonthlyCostsMatrix = ({
   costType,
 }: MonthlyCostsMatrixProps) => {
   const { updateCostValue, createCostValue, isLoading } = useUpdateCostInMatrix();
-  const getMonthLabel = (period: string) => {
-    const [_, month] = period.split("-");
+  
+  const monthLabels = useMemo(() => {
     const monthNames = [
       "Ene", "Feb", "Mar", "Abr", "May", "Jun",
       "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
     ];
-    return monthNames[parseInt(month) - 1];
-  };
+    return monthsOfYear.map(period => {
+      const [_, month] = period.split("-");
+      return monthNames[parseInt(month) - 1];
+    });
+  }, [monthsOfYear]);
 
   return (
     <Card>
@@ -67,9 +71,9 @@ export const MonthlyCostsMatrix = ({
                   <TableHead className="sticky left-0 bg-background z-30 min-w-[200px] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                     Empleado
                   </TableHead>
-                  {monthsOfYear.map((month) => (
+                  {monthsOfYear.map((month, index) => (
                     <TableHead key={month} className="text-right min-w-[90px]">
-                      {getMonthLabel(month)}
+                      {monthLabels[index]}
                     </TableHead>
                   ))}
                   <TableHead className="text-right font-bold sticky right-0 bg-background z-30 min-w-[140px] px-4 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
@@ -164,4 +168,6 @@ export const MonthlyCostsMatrix = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+MonthlyCostsMatrix.displayName = "MonthlyCostsMatrix";

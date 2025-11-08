@@ -1,3 +1,4 @@
+import { memo, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,7 +25,7 @@ interface MonthlyRevenuesMatrixProps {
   onCellClick?: (row: RevenueMatrixRow, month: string) => void;
 }
 
-export const MonthlyRevenuesMatrix = ({
+export const MonthlyRevenuesMatrix = memo(({
   rows,
   monthsOfYear,
   monthlyTotals,
@@ -33,7 +34,7 @@ export const MonthlyRevenuesMatrix = ({
   onExport,
   onCellClick,
 }: MonthlyRevenuesMatrixProps) => {
-  const getColumnLabel = () => {
+  const columnLabel = useMemo(() => {
     switch (viewMode) {
       case "assignee":
         return "Empleado/Equipo";
@@ -42,14 +43,18 @@ export const MonthlyRevenuesMatrix = ({
       case "company":
         return "Empresa";
     }
-  };
+  }, [viewMode]);
 
-  const handleCellClick = (row: RevenueMatrixRow, month: string) => {
+  const handleCellClick = useCallback((row: RevenueMatrixRow, month: string) => {
     const monthData = row.months[month];
     if (monthData && monthData.amount > 0 && onCellClick) {
       onCellClick(row, month);
     }
-  };
+  }, [onCellClick]);
+
+  const averageMonthly = useMemo(() => {
+    return monthsOfYear.length > 0 ? grandTotal / monthsOfYear.length : 0;
+  }, [grandTotal, monthsOfYear.length]);
 
   return (
     <Card className="p-6">
@@ -57,7 +62,7 @@ export const MonthlyRevenuesMatrix = ({
         <div>
           <h3 className="text-lg font-semibold">Matriz Mensual de Ingresos</h3>
           <p className="text-sm text-muted-foreground">
-            Vista por {getColumnLabel().toLowerCase()}
+            Vista por {columnLabel.toLowerCase()}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={onExport}>
@@ -72,7 +77,7 @@ export const MonthlyRevenuesMatrix = ({
             <TableHeader>
               <TableRow>
                 <TableHead className="sticky left-0 z-20 bg-background w-[200px] border-r">
-                  {getColumnLabel()}
+                  {columnLabel}
                 </TableHead>
                 {monthsOfYear.map((month) => (
                   <TableHead key={month} className="text-right min-w-[110px]">
@@ -141,9 +146,11 @@ export const MonthlyRevenuesMatrix = ({
           Total general: <span className="font-bold text-foreground">{formatCurrency(grandTotal)}</span>
         </div>
         <div>
-          Promedio mensual: <span className="font-bold text-foreground">{formatCurrency(grandTotal / monthsOfYear.length)}</span>
+          Promedio mensual: <span className="font-bold text-foreground">{formatCurrency(averageMonthly)}</span>
         </div>
       </div>
     </Card>
   );
-};
+});
+
+MonthlyRevenuesMatrix.displayName = "MonthlyRevenuesMatrix";

@@ -12,32 +12,34 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { GlobalFiltersProvider } from "@/contexts/GlobalFiltersContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 
-// Core pages - eager loading
+// Core pages - eager loading (críticas para FCP)
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import CompanyDetail from "./pages/CompanyDetail";
-import Upload from "./pages/Upload";
-import Transfers from "./pages/Transfers";
-import Costs from "./pages/Costs";
-import Audit from "./pages/Audit";
-import Budget from "./pages/Budget";
-import BudgetDetail from "./pages/BudgetDetail";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
 import PublicOnboarding from "./pages/PublicOnboarding";
-import Recruitment from "./pages/Recruitment";
-import Compensation from "./pages/Compensation";
-import DealsTracker from "./pages/DealsTracker";
-import CompensationScales from "./pages/CompensationScales";
-import CostsOverview from "./pages/CostsOverview";
-import CostsByCompany from "./pages/CostsByCompany";
-import CostsMatrix from "./pages/CostsMatrix";
-import Revenues from "./pages/Revenues";
-import MonthlyClosing from "./pages/MonthlyClosing";
 import { Navigate } from "react-router-dom";
+
+// Secondary pages - lazy loading (code splitting)
+const Upload = lazy(() => import("./pages/Upload"));
+const Transfers = lazy(() => import("./pages/Transfers"));
+const Costs = lazy(() => import("./pages/Costs"));
+const Audit = lazy(() => import("./pages/Audit"));
+const Budget = lazy(() => import("./pages/Budget"));
+const BudgetDetail = lazy(() => import("./pages/BudgetDetail"));
+const Recruitment = lazy(() => import("./pages/Recruitment"));
+const Compensation = lazy(() => import("./pages/Compensation"));
+const DealsTracker = lazy(() => import("./pages/DealsTracker"));
+const CompensationScales = lazy(() => import("./pages/CompensationScales"));
+const CostsOverview = lazy(() => import("./pages/CostsOverview"));
+const CostsByCompany = lazy(() => import("./pages/CostsByCompany"));
+const CostsMatrix = lazy(() => import("./pages/CostsMatrix"));
+const Revenues = lazy(() => import("./pages/Revenues"));
+const MonthlyClosing = lazy(() => import("./pages/MonthlyClosing"));
 
 // Admin pages - lazy loading (code splitting)
 const AdminRoles = lazy(() => import("./pages/AdminRoles"));
@@ -58,7 +60,24 @@ const PageLoader = () => (
   </div>
 );
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60000, // 1 minuto - datos frescos
+      gcTime: 300000, // 5 minutos - garbage collection
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      retry: 1,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 0,
+      onError: (error) => {
+        console.error('[React Query] Mutation error:', error);
+      },
+    },
+  },
+});
 
 // Protected routes
 const ProtectedDashboard = withAuth(['admin', 'finance', 'super_admin'])(Dashboard);
@@ -126,23 +145,87 @@ const App = () => (
                     <Route path="/dashboard" element={<ProtectedDashboard />} />
                     <Route path="/employees" element={<Navigate to="/costs-overview" replace />} />
                     <Route path="/employees/:id" element={<ProtectedEmployeeDetail />} />
-              <Route path="/recruitment" element={<ProtectedRecruitment />} />
+              <Route path="/recruitment" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedRecruitment />
+                </Suspense>
+              } />
               <Route path="/companies/:id" element={<ProtectedCompanyDetail />} />
-              <Route path="/upload" element={<ProtectedUpload />} />
-              <Route path="/transfers" element={<ProtectedTransfers />} />
-                    <Route path="/costs" element={<ProtectedCosts />} />
-                    <Route path="/costs-overview" element={<ProtectedCostsOverview />} />
-                    <Route path="/costs-by-company" element={<ProtectedCostsByCompany />} />
-                    <Route path="/costs-matrix" element={<ProtectedCostsMatrix />} />
-                    <Route path="/monthly-closing" element={<ProtectedMonthlyClosing />} />
-                    <Route path="/revenues" element={<ProtectedRevenues />} />
-                    <Route path="/budget" element={<ProtectedBudget />} />
-                    <Route path="/budget/new" element={<ProtectedBudgetDetail />} />
-                    <Route path="/budget/:id" element={<ProtectedBudgetDetail />} />
-                    <Route path="/compensation" element={<ProtectedCompensation />} />
-                    <Route path="/compensation/deals" element={<ProtectedDealsTracker />} />
-                    <Route path="/compensation/scales" element={<ProtectedCompensationScales />} />
-                    <Route path="/audit" element={<ProtectedAudit />} />
+              <Route path="/upload" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedUpload />
+                </Suspense>
+              } />
+              <Route path="/transfers" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedTransfers />
+                </Suspense>
+              } />
+              <Route path="/costs" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedCosts />
+                </Suspense>
+              } />
+              <Route path="/costs-overview" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedCostsOverview />
+                </Suspense>
+              } />
+              <Route path="/costs-by-company" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedCostsByCompany />
+                </Suspense>
+              } />
+              <Route path="/costs-matrix" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedCostsMatrix />
+                </Suspense>
+              } />
+              <Route path="/monthly-closing" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedMonthlyClosing />
+                </Suspense>
+              } />
+              <Route path="/revenues" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedRevenues />
+                </Suspense>
+              } />
+              <Route path="/budget" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedBudget />
+                </Suspense>
+              } />
+              <Route path="/budget/new" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedBudgetDetail />
+                </Suspense>
+              } />
+              <Route path="/budget/:id" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedBudgetDetail />
+                </Suspense>
+              } />
+              <Route path="/compensation" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedCompensation />
+                </Suspense>
+              } />
+              <Route path="/compensation/deals" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedDealsTracker />
+                </Suspense>
+              } />
+              <Route path="/compensation/scales" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedCompensationScales />
+                </Suspense>
+              } />
+              <Route path="/audit" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ProtectedAudit />
+                </Suspense>
+              } />
                 <Route path="/admin/roles" element={
                   <Suspense fallback={<PageLoader />}>
                     <ProtectedAdminRoles />
