@@ -173,6 +173,14 @@ Sistema de diseño corporativo basado en:
 - Revisar historial de cambios
 - Exportar logs para due diligence
 
+## 📖 Documentación
+
+- **[Guía de Usuario](./docs/USER_GUIDE.md)**: Manual completo para RRHH, Finanzas y Dirección
+- **[Flujos de Trabajo](./docs/WORKFLOWS.md)**: Diagramas y procedimientos de importación, empleados y costes
+- **[Arquitectura](./ARCHITECTURE.md)**: Documentación técnica del proyecto
+- **[Tests E2E](./README_PLAYWRIGHT.md)**: Guía de tests automatizados con Playwright
+- **[Tests Unitarios](./README_TESTS.md)**: Documentación de tests con Vitest
+
 ## 🔗 Enlaces Útiles
 
 - **Proyecto Lovable**: https://lovable.dev/projects/5b9084b0-53b5-4ea6-b6b3-d66dcf768bc5

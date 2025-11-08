@@ -1,0 +1,38 @@
+# Screenshots Directory
+
+This directory stores screenshots for user documentation.
+
+## Required Screenshots (12):
+
+1. **dashboard-kpis.png** - Dashboard con 4 KPIs principales
+2. **dashboard-heatmap.png** - Heatmap mensual de costes
+3. **employee-create-form.png** - Formulario de creación de empleado
+4. **employee-detail-drawer.png** - Panel lateral de detalle de empleado
+5. **employee-costs-tab.png** - Histórico de costes de empleado
+6. **employee-transfers-tab.png** - Pestaña de transferencias interempresa
+7. **a3nom-period-select.png** - Selección de período de nómina
+8. **a3nom-validation.png** - Validación de archivo A3Nom
+9. **a3nom-importing.png** - Progreso de importación
+10. **a3nom-success.png** - Importación completada
+11. **company-create-form.png** - Formulario de creación de empresa
+12. **audit-table.png** - Tabla de auditoría
+
+## How to Capture:
+
+### Using Lovable Screenshot Tool:
+```bash
+# Use project_debug--sandbox-screenshot tool
+# Example: project_debug--sandbox-screenshot({ path: "/dashboard" })
+```
+
+### Manual Capture:
+1. Navigate to production app
+2. Use browser screenshot tool or Cmd+Shift+4 (Mac)
+3. Save with descriptive name
+4. Place in this directory
+
+## File Naming Convention:
+- Use kebab-case (lowercase with hyphens)
+- Be descriptive but concise
+- Include component/page name
+- Example: `dashboard-kpis.png`, `employee-detail-drawer.png`

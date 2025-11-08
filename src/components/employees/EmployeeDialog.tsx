@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface EmployeeDialogProps {
   open: boolean;
@@ -185,13 +186,13 @@ export const EmployeeDialog = ({
                 name="employee_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Código Empleado</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>Código Empleado</FormLabel>
+                      <InfoTooltip content="Código único de A3Nom. Si no lo conoces, déjalo vacío y se generará automáticamente al importar datos." />
+                    </div>
                     <FormControl>
                       <Input placeholder="000001" {...field} />
                     </FormControl>
-                    <FormDescription className="text-xs">
-                      Código de A3Nom
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -202,13 +203,13 @@ export const EmployeeDialog = ({
                 name="nss"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NSS</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>NSS</FormLabel>
+                      <InfoTooltip content="Número de Seguridad Social de 12 dígitos. Necesario para nóminas y Seguridad Social." />
+                    </div>
                     <FormControl>
                       <Input placeholder="12345678901" {...field} />
                     </FormControl>
-                    <FormDescription className="text-xs">
-                      Nº Seguridad Social
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -340,7 +341,10 @@ export const EmployeeDialog = ({
                 name="contract_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo de Contrato</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>Tipo de Contrato</FormLabel>
+                      <InfoTooltip content="Ej: Indefinido, Temporal, Prácticas, Autónomo (TRADE). Afecta a cálculos de indemnización." />
+                    </div>
                     <FormControl>
                       <Input placeholder="Ej: Laboral" {...field} />
                     </FormControl>
@@ -355,7 +359,10 @@ export const EmployeeDialog = ({
               name="annual_salary"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Salario Base Anual (€)</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <FormLabel>Salario Base Anual (€)</FormLabel>
+                    <InfoTooltip content="Salario bruto anual pactado en contrato (sin pagas extra, bonus ni incentivos). Se usa para calcular desviaciones." />
+                  </div>
                   <FormControl>
                     <Input 
                       type="number" 
@@ -365,9 +372,6 @@ export const EmployeeDialog = ({
                       value={field.value ?? ""}
                     />
                   </FormControl>
-                  <FormDescription className="text-xs">
-                    Salario bruto anual negociado (sin bonus ni extras)
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -407,13 +411,13 @@ export const EmployeeDialog = ({
                 name="seniority_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fecha de Antigüedad</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>Fecha de Antigüedad</FormLabel>
+                      <InfoTooltip content="Fecha para cálculo de antigüedad (puede ser diferente a la fecha de alta si hubo traslado desde otra empresa)." />
+                    </div>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
-                    <FormDescription className="text-xs">
-                      Para cálculo de antigüedad
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -432,9 +436,12 @@ export const EmployeeDialog = ({
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Traslado interno del grupo
-                    </FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>
+                        Traslado interno del grupo
+                      </FormLabel>
+                      <InfoTooltip content="Marca esta opción si el empleado proviene de otra empresa del grupo. Se usará para detectar traspasos internos." />
+                    </div>
                     <FormDescription>
                       Marcar si el empleado ha sido trasladado entre empresas del grupo
                     </FormDescription>

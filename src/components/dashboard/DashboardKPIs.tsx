@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import { TrendingUp, Users, DollarSign, ArrowUpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface DashboardKPIsProps {
   costeTotal: number;
@@ -68,10 +69,15 @@ export const DashboardKPIs = memo(({
             )}
           >
             <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">
-                  {kpi.title}
-                </p>
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {kpi.title}
+                  </p>
+                  {index === 0 && <InfoTooltip content="Suma del coste empresa (bruto + Seg. Social) de todos los empleados activos en el período seleccionado." side="top" />}
+                  {index === 3 && <InfoTooltip content="Variación porcentual año sobre año del coste empresa. No incluye promedios, solo compara mismo mes." side="top" />}
+                  {index === 1 && <InfoTooltip content="Número de empleados con contrato activo en el período, considerando fecha de alta y baja." side="top" />}
+                </div>
                 <p className="text-3xl font-bold tracking-tight text-foreground">
                   {kpi.value}
                 </p>

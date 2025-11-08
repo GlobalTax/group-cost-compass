@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCreateEmployeeCost, useUpdateEmployeeCost } from "@/hooks/useEmployeeCosts";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 interface EditCostDialogProps {
   open: boolean;
@@ -125,7 +126,10 @@ export const EditCostDialog = ({
               name="period"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Período (YYYY-MM)</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <FormLabel>Período (YYYY-MM)</FormLabel>
+                    <InfoTooltip content="Formato YYYY-MM. El coste se guardará al primer día del mes (ej: 2025-01 → 2025-01-01)." />
+                  </div>
                   <FormControl>
                     <Input
                       type="month"
@@ -163,7 +167,10 @@ export const EditCostDialog = ({
               name="coste_empresa"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Coste Empresa (€)</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <FormLabel>Coste Empresa (€)</FormLabel>
+                    <InfoTooltip content="Incluye bruto + Seguridad Social + otros costes patronales. Debe ser mayor o igual al bruto." />
+                  </div>
                   <FormControl>
                     <Input
                       type="number"

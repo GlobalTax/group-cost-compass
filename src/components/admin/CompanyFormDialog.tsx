@@ -24,6 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { companySchema, type CompanyInput } from '@/lib/validators/companySchema';
 import { useCreateCompany, useUpdateCompany } from '@/hooks/useCompanyManagement';
 import type { Company } from '@/lib/supabase/types/enriched';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 interface CompanyFormDialogProps {
   open: boolean;
@@ -141,7 +142,10 @@ export const CompanyFormDialog = ({
                 name="nif"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIF *</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>NIF *</FormLabel>
+                      <InfoTooltip content="NIF de la empresa (9 caracteres: 8 números + letra). Usado para matching en importaciones." />
+                    </div>
                     <FormControl>
                       <Input
                         {...field}
@@ -181,7 +185,10 @@ export const CompanyFormDialog = ({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between space-y-0 rounded-lg border p-4">
                     <div>
-                      <FormLabel>Estado</FormLabel>
+                      <div className="flex items-center gap-2 mb-1">
+                        <FormLabel>Estado</FormLabel>
+                        <InfoTooltip content="Las empresas inactivas no se muestran en filtros ni dashboards. Útil para empresas disueltas." />
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         {field.value ? 'Activa' : 'Inactiva'}
                       </div>

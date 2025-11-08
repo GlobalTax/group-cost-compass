@@ -13,6 +13,7 @@ import { useBulkCreateEmployees } from "@/hooks/useBulkCreateEmployees";
 import { importA3NomData } from "@/services/import/a3nomImportService";
 import { toast } from "sonner";
 import { InfoIcon, Upload } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 export const A3NomCostsUpload = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -117,7 +118,10 @@ export const A3NomCostsUpload = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Período de Nómina</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>Período de Nómina</CardTitle>
+            <InfoTooltip content="Mes y año al que corresponden los datos de nómina (ej: Octubre 2024). El sistema normalizará automáticamente al primer día del mes." />
+          </div>
           <CardDescription>
             Selecciona el mes y año al que corresponden estos datos
           </CardDescription>
@@ -139,7 +143,10 @@ export const A3NomCostsUpload = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Archivo A3Nom</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>Archivo A3Nom</CardTitle>
+            <InfoTooltip content="Acepta Excel (.xlsx, .xls) o texto plano (.txt con tabs). El sistema detectará automáticamente las columnas." />
+          </div>
           <CardDescription>
             Sube el archivo Excel exportado desde A3Nom (formato .xls, .xlsx, o .txt con tabs)
           </CardDescription>
@@ -155,7 +162,10 @@ export const A3NomCostsUpload = () => {
       {validation && (
         <Card>
           <CardHeader>
-            <CardTitle>Resultados de Validación A3Nom</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Resultados de Validación A3Nom</CardTitle>
+              <InfoTooltip content="Los empleados marcados en rojo ya existen en la base de datos para este período. Serán sobrescritos si confirmas la importación." />
+            </div>
           </CardHeader>
           <CardContent>
             <ValidationResults
