@@ -1,5 +1,5 @@
 import type { EmployeeAnnualCost } from "@/hooks/useCostsOverview";
-import { downloadCSV } from "@/lib/utils";
+import { downloadCSV } from "@/lib/utils/dom";
 import { format } from "date-fns";
 
 /**

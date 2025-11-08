@@ -21,7 +21,8 @@ import { useEmployees, useCreateEmployee } from "@/hooks/useEmployees";
 import { useBulkCreateEmployeeCosts } from "@/hooks/useEmployeeCosts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { downloadCSV, generateEmployeeTemplate } from "@/lib/utils";
+import { downloadCSV } from "@/lib/utils/dom";
+import { generateEmployeeTemplate } from "@/lib/utils/templates";
 import Papa from "papaparse";
 
 const Upload = () => {

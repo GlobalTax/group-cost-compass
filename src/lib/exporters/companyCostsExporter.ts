@@ -1,5 +1,5 @@
 import type { CompanyCostsSummary } from "@/hooks/useCompanyCostsComparison";
-import { downloadCSV } from "@/lib/utils";
+import { downloadCSV } from "@/lib/utils/dom";
 
 /**
  * Exporta la tabla de costes por empresa a CSV
