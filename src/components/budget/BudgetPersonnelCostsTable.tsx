@@ -7,8 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useBudgetPersonnelCosts } from "@/hooks/useBudgetPersonnelCosts";
 
 interface BudgetPersonnelCostsTableProps {
   period: string;
@@ -16,36 +15,7 @@ interface BudgetPersonnelCostsTableProps {
 }
 
 export function BudgetPersonnelCostsTable({ period, companyId }: BudgetPersonnelCostsTableProps) {
-  const { data: costs = [], isLoading } = useQuery({
-    queryKey: ["personnelCosts", period, companyId],
-    queryFn: async () => {
-      let query = supabase
-        .from("hr_employee_costs")
-        .select(`
-          id,
-          period,
-          bruto,
-          coste_empresa,
-          hr_employees (
-            id,
-            full_name,
-            company_id
-          )
-        `)
-        .gte("period", period)
-        .lt("period", new Date(new Date(period).setMonth(new Date(period).getMonth() + 1)).toISOString().split('T')[0])
-        .order("coste_empresa", { ascending: false });
-
-      if (companyId) {
-        query = query.eq("hr_employees.company_id", companyId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: 30000,
-  });
+  const { data: costs = [], isLoading } = useBudgetPersonnelCosts(period, companyId);
 
   const total = costs.reduce((sum, cost) => sum + (cost.coste_empresa || 0), 0);
 

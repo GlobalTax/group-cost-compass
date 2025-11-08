@@ -321,3 +321,41 @@ export const calculateAvgCostPerEmployee = (costs: { coste_empresa: number; empl
   
   return uniqueEmployees > 0 ? totalCoste / uniqueEmployees : 0;
 };
+
+/**
+ * Fetch personnel costs for budget period
+ * Used by: BudgetPersonnelCostsTable component
+ */
+export const fetchBudgetPersonnelCosts = async (
+  period: string,
+  companyId?: string | null
+) => {
+  const endPeriod = new Date(new Date(period).setMonth(new Date(period).getMonth() + 1))
+    .toISOString()
+    .split('T')[0];
+
+  let query = supabase
+    .from("hr_employee_costs")
+    .select(`
+      id,
+      period,
+      bruto,
+      coste_empresa,
+      hr_employees (
+        id,
+        full_name,
+        company_id
+      )
+    `)
+    .gte("period", period)
+    .lt("period", endPeriod)
+    .order("coste_empresa", { ascending: false });
+
+  if (companyId) {
+    query = query.eq("hr_employees.company_id", companyId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+};

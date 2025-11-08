@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle, Loader2, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { checkEmployeeMatching } from "@/lib/supabase/repositories/employees.repo";
 import { toast } from "sonner";
 
 interface MatchingPreviewProps {
@@ -32,8 +32,6 @@ export const MatchingPreview = ({ rows, companies }: MatchingPreviewProps) => {
   const handleCheckMatching = async () => {
     setIsChecking(true);
     try {
-      const companyByName = new Map(companies.map(c => [c.name.toLowerCase().trim(), c.id]));
-
       // Recopilar identificadores únicos
       const codes = new Set<string>();
       const nifs = new Set<string>();
@@ -47,45 +45,17 @@ export const MatchingPreview = ({ rows, companies }: MatchingPreviewProps) => {
         }
       });
 
-      let matchedByCode = 0;
-      let matchedByNif = 0;
-      let matchedByName = 0;
+      // Delegar a repositorio
+      const { matchedCodes, matchedNifs, matchedNames } = await checkEmployeeMatching({
+        codes: Array.from(codes),
+        nifs: Array.from(nifs),
+        names: Array.from(names),
+      });
 
-      // Chequear códigos
-      if (codes.size > 0) {
-        const { data: empsByCode } = await supabase
-          .from("hr_employees")
-          .select("employee_code")
-          .in("employee_code", Array.from(codes));
-        
-        const foundCodes = new Set(empsByCode?.map(e => e.employee_code) || []);
-        matchedByCode = Array.from(codes).filter(c => foundCodes.has(c)).length;
-      }
-
-      // Chequear NIFs
-      if (nifs.size > 0) {
-        const { data: empsByNif } = await supabase
-          .from("hr_employees")
-          .select("dni")
-          .in("dni", Array.from(nifs));
-        
-        const foundNifs = new Set(empsByNif?.map(e => e.dni) || []);
-        matchedByNif = Array.from(nifs).filter(n => foundNifs.has(n)).length;
-      }
-
-      // Chequear nombres (simplificado: solo match exacto para preview)
-      if (names.size > 0) {
-        const { data: empsByName } = await supabase
-          .from("hr_employees")
-          .select("full_name");
-        
-        const normalizedDbNames = new Set(
-          empsByName?.map(e => e.full_name.toLowerCase().trim()) || []
-        );
-        matchedByName = Array.from(names).filter(n => 
-          normalizedDbNames.has(n.toLowerCase().trim())
-        ).length;
-      }
+      // Calcular estadísticas
+      const matchedByCode = Array.from(codes).filter(c => matchedCodes.has(c)).length;
+      const matchedByNif = Array.from(nifs).filter(n => matchedNifs.has(n)).length;
+      const matchedByName = Array.from(names).filter(n => matchedNames.has(n.toLowerCase().trim())).length;
 
       const totalIdentifiers = codes.size + nifs.size + names.size;
       const totalMatched = matchedByCode + matchedByNif + matchedByName;

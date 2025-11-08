@@ -1,6 +1,7 @@
 import type { AIParseResponse } from "@/lib/types/aiParse";
 import { importEmployees, importCosts } from "../importService";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchCompanies } from "@/lib/supabase/repositories/companies.repo";
+import { supabase } from "@/lib/supabase/client";
 
 interface TransformedRow {
   [key: string]: any;
@@ -47,12 +48,10 @@ export const importFromAIResult = async (
     transformRowWithMapping(row, finalMapping)
   );
 
-  // Obtener empresas
-  const { data: companies, error: companiesError } = await supabase
-    .from("companies")
-    .select("id, name, nif");
+  // Obtener empresas (usa repositorio)
+  const companies = await fetchCompanies();
 
-  if (companiesError || !companies || companies.length === 0) {
+  if (!companies || companies.length === 0) {
     throw new Error("No se pudo obtener el catálogo de empresas");
   }
 

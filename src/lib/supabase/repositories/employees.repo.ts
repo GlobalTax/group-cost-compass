@@ -192,3 +192,45 @@ export const updateEmployeeSalary = async (
 
   return data;
 };
+
+/**
+ * Check employee matching for import preview
+ * Used by: MatchingPreview component
+ */
+export const checkEmployeeMatching = async (identifiers: {
+  codes: string[];
+  nifs: string[];
+  names: string[];
+}) => {
+  const [empsByCode, empsByNif, empsByName] = await Promise.all([
+    // Match by employee code
+    identifiers.codes.length > 0
+      ? supabase.from("hr_employees")
+          .select("employee_code")
+          .in("employee_code", identifiers.codes)
+      : Promise.resolve({ data: [], error: null }),
+    
+    // Match by NIF
+    identifiers.nifs.length > 0
+      ? supabase.from("hr_employees")
+          .select("dni")
+          .in("dni", identifiers.nifs)
+      : Promise.resolve({ data: [], error: null }),
+    
+    // Match by name
+    identifiers.names.length > 0
+      ? supabase.from("hr_employees")
+          .select("full_name")
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  if (empsByCode.error) throw empsByCode.error;
+  if (empsByNif.error) throw empsByNif.error;
+  if (empsByName.error) throw empsByName.error;
+
+  return {
+    matchedCodes: new Set(empsByCode.data?.map(e => e.employee_code) || []),
+    matchedNifs: new Set(empsByNif.data?.map(e => e.dni) || []),
+    matchedNames: new Set(empsByName.data?.map(e => e.full_name.toLowerCase().trim()) || []),
+  };
+};
