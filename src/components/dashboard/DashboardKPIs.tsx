@@ -25,6 +25,7 @@ export const DashboardKPIs = memo(({
       icon: DollarSign,
       bgColor: "bg-primary-light",
       iconColor: "text-primary",
+      testId: "kpi-coste-total",
     },
     {
       title: "Empleados Activos",
@@ -32,6 +33,7 @@ export const DashboardKPIs = memo(({
       icon: Users,
       bgColor: "bg-purple-light",
       iconColor: "text-purple",
+      testId: "kpi-empleados",
     },
     {
       title: "Coste Medio por Empleado",
@@ -39,6 +41,7 @@ export const DashboardKPIs = memo(({
       icon: TrendingUp,
       bgColor: "bg-success-light",
       iconColor: "text-success",
+      testId: "kpi-coste-promedio",
     },
     {
       title: "% Subida Salarial Anual",
@@ -47,6 +50,7 @@ export const DashboardKPIs = memo(({
       bgColor: "bg-warning-light",
       iconColor: "text-warning-foreground",
       change: salaryIncreasePercent > 0 ? "positive" : salaryIncreasePercent < 0 ? "negative" : "neutral",
+      testId: "kpi-subidas",
     },
   ], [costeTotal, activeEmployees, avgCostPerEmployee, salaryIncreasePercent]);
 
@@ -57,6 +61,7 @@ export const DashboardKPIs = memo(({
         return (
           <Card
             key={index}
+            data-testid={kpi.testId}
             className={cn(
               "p-6 border border-border hover:shadow-lg transition-all duration-300",
               "backdrop-blur-sm bg-card/50"

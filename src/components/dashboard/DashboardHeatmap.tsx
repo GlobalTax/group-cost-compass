@@ -48,7 +48,7 @@ export const DashboardHeatmap = memo(({ data }: DashboardHeatmapProps) => {
   }, [data]);
 
   return (
-    <Card className="p-6 border border-border backdrop-blur-sm bg-card/50">
+    <Card data-testid="heatmap" className="p-6 border border-border backdrop-blur-sm bg-card/50">
       <div className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground">

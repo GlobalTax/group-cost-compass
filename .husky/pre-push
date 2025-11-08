@@ -1,0 +1,20 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🧪 Ejecutando tests unitarios..."
+npm run test
+
+if [ $? -ne 0 ]; then
+  echo "❌ Tests unitarios fallidos. Push cancelado."
+  exit 1
+fi
+
+echo "🎭 Ejecutando tests E2E críticos..."
+npm run test:e2e -- --grep "@critical"
+
+if [ $? -ne 0 ]; then
+  echo "❌ Tests E2E críticos fallidos. Push cancelado."
+  exit 1
+fi
+
+echo "✅ Todos los tests pasaron. Procediendo con push..."

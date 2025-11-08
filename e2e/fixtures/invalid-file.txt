@@ -1,0 +1,5 @@
+Este es un archivo de texto plano inválido.
+No tiene formato CSV ni Excel.
+Debería generar un error al intentar importarlo.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.

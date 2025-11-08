@@ -28,7 +28,7 @@ export const CostsPreviewTable = memo(({ rows, pageSize = 15 }: CostsPreviewTabl
   }), [rows]);
 
   return (
-    <div className="space-y-4">
+    <div data-testid="preview-table" className="space-y-4">
       {/* Stats */}
       <div className="grid grid-cols-5 gap-3 text-sm">
         <div className="bg-muted p-3 rounded-lg">

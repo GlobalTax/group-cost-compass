@@ -1,0 +1,11 @@
+Código Empleado,NIF,Nombre Completo,Empresa,Fecha,Bruto,Coste Empresa
+EMP001,12345678A,Juan Pérez García,Navarro Legal y Tributario SLP,2025-01-01,3000.00,3600.00
+EMP002,87654321B,María López Martínez,Navarro Legal y Tributario SLP,2025-01-01,3500.00,4200.00
+EMP003,11223344C,Carlos Rodríguez Sánchez,Beglobal Worldwide SL,2025-01-01,2800.00,3360.00
+EMP004,44332211D,Ana García Fernández,Beglobal Worldwide SL,2025-01-01,4000.00,4800.00
+EMP005,55667788E,Luis Martínez González,Navarro Legal y Tributario SLP,2025-01-01,3200.00,3840.00
+EMP006,88776655F,Laura Sánchez López,GoLooper SL,2025-01-01,3800.00,4560.00
+EMP007,99887766G,Pedro González Ruiz,SPV Corporate Advisor SL,2025-01-01,4200.00,5040.00
+EMP008,66778899H,Carmen Fernández Díaz,Navarro Legal y Tributario SLP,2025-01-01,2900.00,3480.00
+EMP009,77889900J,Roberto Díaz Moreno,Beglobal Worldwide SL,2025-01-01,3300.00,3960.00
+EMP010,00998877K,Isabel Moreno Castro,Navarro Legal y Tributario SLP,2025-01-01,3100.00,3720.00

@@ -17,7 +17,7 @@ export const ImportProgress = ({ current, total, status }: ImportProgressProps) 
   };
 
   return (
-    <div className="space-y-3">
+    <div data-testid="import-progress" className="space-y-3">
       <div className="flex items-center gap-3">
         {status !== "complete" && (
           <Loader2 className="w-5 h-5 text-primary animate-spin" />
