@@ -117,3 +117,26 @@ export async function getRecommendedBandForLevel(
   if (error && error.code !== "PGRST116") throw error;
   return data;
 }
+
+/**
+ * Create a projected bonus payment
+ */
+export async function createProjectedBonus(bonusData: {
+  employee_id: string;
+  payment_date: string;
+  fiscal_year: number;
+  amount: number;
+  notes: string;
+}) {
+  const { data, error } = await supabase
+    .from("bonus_payments")
+    .insert({
+      ...bonusData,
+      bonus_type: "projected",
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}

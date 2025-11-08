@@ -1,6 +1,14 @@
 /**
  * Servicio de importación centralizado
  * Extrae toda la lógica de negocio de Upload.tsx
+ * 
+ * @deprecated Este archivo se mantiene solo para compatibilidad temporal.
+ * Para nuevas importaciones, usa:
+ * - a3nomImportService.ts (importaciones desde A3Nom)
+ * - intelligentImportService.ts (importaciones inteligentes)
+ * - revenueImportService.ts (importaciones de ingresos)
+ * 
+ * TODO: Migrar todos los usos restantes a los nuevos servicios
  */
 
 import { supabase } from "@/integrations/supabase/client";

@@ -359,3 +359,29 @@ export const fetchBudgetPersonnelCosts = async (
   if (error) throw error;
   return data || [];
 };
+
+/**
+ * Delete all employee costs (for bulk import)
+ * CAUTION: This deletes ALL costs
+ */
+export const deleteAllCosts = async (): Promise<void> => {
+  const { error } = await supabase
+    .from('hr_employee_costs')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  if (error) throw error;
+};
+
+/**
+ * Bulk insert employee costs
+ */
+export const bulkInsertCosts = async (costs: CostInsert[]): Promise<any[]> => {
+  const { data, error } = await supabase
+    .from('hr_employee_costs')
+    .insert(costs)
+    .select();
+  
+  if (error) throw error;
+  return data || [];
+};

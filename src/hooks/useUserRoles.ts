@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import type { AppRole } from '@/lib/auth';
 import type { AssignRoleInput, RevokeRoleInput } from '@/lib/validators/rolesSchema';
 import { validateRoleChange } from '@/lib/roleUtils';
+import { assignUserRole, revokeUserRole, fetchUserRoles } from '@/lib/supabase/repositories/userRoles.repo';
 
 export interface UserWithRoles {
   id: string;
@@ -89,18 +90,11 @@ export const useAssignRole = () => {
         throw new Error(validation.message);
       }
 
-      const { error } = await supabase.from('user_roles').insert({
+      await assignUserRole({
         user_id: userId,
         role,
         org_id: orgId,
       });
-
-      if (error) {
-        if (error.code === '23505') {
-          throw new Error('El usuario ya tiene este rol asignado');
-        }
-        throw error;
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
@@ -126,13 +120,7 @@ export const useRevokeRole = () => {
         throw new Error(validation.message);
       }
 
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId)
-        .eq('role', role);
-
-      if (error) throw error;
+      await revokeUserRole(userId, role);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
@@ -215,7 +203,7 @@ export const useRoleStats = () => {
         },
       });
 
-      const { data: roles } = await supabase.from('user_roles').select('user_id, role');
+      const roles = await fetchUserRoles();
 
       const totalUsers = usersResponse?.users?.length || 0;
       const usersWithRoles = new Set(roles?.map((r) => r.user_id) || []).size;

@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DollarSign, TrendingUp, AlertTriangle, Save } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useCreateProjectedBonus } from "@/hooks/useCreateProjectedBonus";
 
 export function BonusSimulator() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
@@ -24,6 +24,8 @@ export function BonusSimulator() {
   const { data: costs } = useEmployeeCosts(selectedEmployeeId || undefined);
   const { data: deals } = useEmployeeDeals(selectedEmployeeId || undefined);
   const { data: latestReview } = useLatestPerformanceReview(selectedEmployeeId || undefined);
+  
+  const createBonus = useCreateProjectedBonus();
 
   const selectedEmployee = employees?.find((e) => e.id === selectedEmployeeId);
 
@@ -94,26 +96,15 @@ export function BonusSimulator() {
       return;
     }
 
-    try {
-      const currentYear = new Date().getFullYear();
-
-      // Guardar bonus proyectado
-      const { error } = await supabase.from("bonus_payments").insert({
-        employee_id: selectedEmployeeId,
-        payment_date: new Date().toISOString().split("T")[0],
-        fiscal_year: currentYear,
-        bonus_type: "projected",
-        amount: totalBonus,
-        notes: `Proyección: Performance (${performanceScore}/10) + Success Fees (${selectedDealIds.size} deals)`,
-      });
-
-      if (error) throw error;
-
-      toast.success("Proyección guardada correctamente");
-    } catch (error) {
-      console.error("Error saving projection:", error);
-      toast.error("Error al guardar proyección");
-    }
+    const currentYear = new Date().getFullYear();
+    
+    await createBonus.mutateAsync({
+      employee_id: selectedEmployeeId,
+      payment_date: new Date().toISOString().split("T")[0],
+      fiscal_year: currentYear,
+      amount: totalBonus,
+      notes: `Proyección: Performance (${performanceScore}/10) + Success Fees (${selectedDealIds.size} deals)`,
+    });
   };
 
   if (isLoadingEmployees) {

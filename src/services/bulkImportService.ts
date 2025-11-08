@@ -4,6 +4,18 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { ParsedEmployee, EmployeeGroup } from "@/lib/parsers/employeeHistoryParser";
+import { 
+  deleteAllEmployees, 
+  bulkInsertEmployees as repoInsertEmployees 
+} from "@/lib/supabase/repositories/employees.repo";
+import { 
+  deleteAllCosts, 
+  bulkInsertCosts as repoInsertCosts 
+} from "@/lib/supabase/repositories/costs.repo";
+import { 
+  deleteAllTransfers,
+  createTransfer as repoCreateTransfer
+} from "@/lib/supabase/repositories/transfers.repo";
 
 export interface ImportOptions {
   clearExisting: boolean;
@@ -48,9 +60,9 @@ function generateMonthlyPeriods(startDate: string, endDate: string | null): stri
  */
 async function clearExistingData(): Promise<void> {
   // Orden importante por foreign keys
-  await supabase.from('hr_employee_costs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('hr_transfers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('hr_employees').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await deleteAllCosts();
+  await deleteAllTransfers();
+  await deleteAllEmployees();
 }
 
 /**
@@ -82,16 +94,8 @@ async function bulkInsertEmployees(
       notes: emp.annual_income === 0 ? 'Sin datos económicos históricos' : null,
     }));
     
-    const { data, error } = await supabase
-      .from('hr_employees')
-      .insert(inserts)
-      .select('id, dni, company_id, hire_date');
-    
-    if (error) {
-      throw new Error(`Error al insertar empleados: ${error.message}`);
-    }
-    
-    if (data) {
+    try {
+      const data = await repoInsertEmployees(inserts);
       created += data.length;
       
       // Mapear para relacionar con costes
@@ -100,6 +104,8 @@ async function bulkInsertEmployees(
         const key = `${emp.dni}-${emp.company_id}-${emp.hire_date}`;
         employeeMap.set(key, emp.id);
       });
+    } catch (error) {
+      throw new Error(`Error al insertar empleados: ${(error as Error).message}`);
     }
   }
   
@@ -146,15 +152,12 @@ async function bulkInsertCosts(
   for (let i = 0; i < allCosts.length; i += BATCH_SIZE) {
     const batch = allCosts.slice(i, i + BATCH_SIZE);
     
-    const { error } = await supabase
-      .from('hr_employee_costs')
-      .insert(batch);
-    
-    if (error) {
-      throw new Error(`Error al insertar costes: ${error.message}`);
+    try {
+      await repoInsertCosts(batch);
+      created += batch.length;
+    } catch (error) {
+      throw new Error(`Error al insertar costes: ${(error as Error).message}`);
     }
-    
-    created += batch.length;
   }
   
   return created;
@@ -194,16 +197,16 @@ async function detectAndCreateTransfers(groups: EmployeeGroup[]): Promise<number
       
       if (daysBetween <= 180) {
         // Es un traslado
-        const { error } = await supabase.from('hr_transfers').insert({
-          employee_id: next.id,
-          from_company: current.company_id,
-          to_company: next.company_id,
-          transfer_date: next.hire_date,
-          days_between: daysBetween,
-          reason: 'Traslado interempresa detectado automáticamente',
-        });
-        
-        if (!error) {
+        try {
+          await repoCreateTransfer({
+            employee_id: next.id,
+            from_company: current.company_id,
+            to_company: next.company_id,
+            transfer_date: next.hire_date,
+            days_between: daysBetween,
+            reason: 'Traslado interempresa detectado automáticamente',
+          });
+          
           created++;
           
           // Marcar ambos registros con transfer_group = true
@@ -211,6 +214,9 @@ async function detectAndCreateTransfers(groups: EmployeeGroup[]): Promise<number
             .from('hr_employees')
             .update({ transfer_group: true })
             .in('id', [current.id, next.id]);
+        } catch (error) {
+          // Silent error - no detiene el proceso
+          console.warn(`No se pudo crear transferencia: ${(error as Error).message}`);
         }
       }
     }

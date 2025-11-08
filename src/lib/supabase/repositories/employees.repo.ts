@@ -238,3 +238,29 @@ export const checkEmployeeMatching = async (identifiers: {
     matchedNames: new Set(empsByName.data?.map(e => e.full_name.toLowerCase().trim()) || []),
   };
 };
+
+/**
+ * Delete all employees (for bulk import)
+ * CAUTION: This deletes ALL employees
+ */
+export const deleteAllEmployees = async (): Promise<void> => {
+  const { error } = await supabase
+    .from('hr_employees')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  if (error) throw error;
+};
+
+/**
+ * Bulk insert employees
+ */
+export const bulkInsertEmployees = async (employees: any[]): Promise<any[]> => {
+  const { data, error } = await supabase
+    .from('hr_employees')
+    .insert(employees)
+    .select();
+  
+  if (error) throw error;
+  return data || [];
+};

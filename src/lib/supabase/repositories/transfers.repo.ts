@@ -74,3 +74,16 @@ export const detectPotentialTransfers = async (
   // para mejor separación de concerns
   return [];
 };
+
+/**
+ * Delete all transfers (for bulk import)
+ * CAUTION: This deletes ALL transfers
+ */
+export const deleteAllTransfers = async (): Promise<void> => {
+  const { error } = await supabase
+    .from('hr_transfers')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  if (error) throw error;
+};

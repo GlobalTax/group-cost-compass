@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import {
   createRevenueItem,
   updateRevenueItem,
@@ -9,6 +8,8 @@ import {
   bulkCreateRevenueAllocations,
   deleteRevenueAllocation,
   bulkApplyAllocations,
+  fetchRevenueTotalAmount,
+  deleteRevenueAllocations,
 } from "@/lib/supabase/repositories/revenue.repo";
 import { applyTemplateToRevenue } from "@/lib/supabase/repositories/allocationTemplates.repo";
 
@@ -99,19 +100,13 @@ export const useRevenueManagement = () => {
     }) => {
       if (templateId) {
         const promises = revenueItemIds.map(async (itemId) => {
-          const { data, error } = await supabase.from("revenue_items").select("total_amount").eq("id", itemId).single();
-          if (error) throw error;
-          return applyTemplateToRevenue(templateId, itemId, data.total_amount);
+          const totalAmount = await fetchRevenueTotalAmount(itemId);
+          return applyTemplateToRevenue(templateId, itemId, totalAmount);
         });
         await Promise.all(promises);
       } else if (customAllocations) {
         if (mode === 'replace') {
-          const { error: deleteError } = await supabase
-            .from("revenue_allocations")
-            .delete()
-            .in("revenue_item_id", revenueItemIds);
-          
-          if (deleteError) throw deleteError;
+          await deleteRevenueAllocations(revenueItemIds);
         }
         
         await bulkApplyAllocations(revenueItemIds, customAllocations);

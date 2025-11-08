@@ -244,3 +244,29 @@ export async function fetchRevenueAnalytics(filters?: {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Fetch total amount for a revenue item
+ */
+export async function fetchRevenueTotalAmount(itemId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from("revenue_items")
+    .select("total_amount")
+    .eq("id", itemId)
+    .single();
+  
+  if (error) throw error;
+  return data.total_amount;
+}
+
+/**
+ * Delete revenue allocations by item IDs
+ */
+export async function deleteRevenueAllocations(itemIds: string[]): Promise<void> {
+  const { error } = await supabase
+    .from("revenue_allocations")
+    .delete()
+    .in("revenue_item_id", itemIds);
+  
+  if (error) throw error;
+}
