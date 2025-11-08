@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 interface Company {
   id: string;
   name: string;
-  activeEmployees: number;
+  activeEmployees?: number;
 }
 
 interface CompanyOrgChartProps {
@@ -111,7 +111,7 @@ export const CompanyOrgChart = ({ companies, onCompanyClick }: CompanyOrgChartPr
                         {company.name}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {company.activeEmployees} empleados
+                        {company.activeEmployees || 0} empleados
                       </p>
                     </div>
                   </div>

@@ -15,11 +15,11 @@ interface CompanyCardProps {
   id: string;
   name: string;
   nif: string;
-  activeEmployees: number;
-  totalBruto: number;
-  totalCoste: number;
-  salaryIncreasePercent: number;
-  transfers: number;
+  activeEmployees?: number;
+  totalBruto?: number;
+  totalCoste?: number;
+  salaryIncreasePercent?: number;
+  transfers?: number;
   color?: string;
 }
 
@@ -27,11 +27,11 @@ export const CompanyCard = ({
   id,
   name,
   nif,
-  activeEmployees,
-  totalBruto,
-  totalCoste,
-  salaryIncreasePercent,
-  transfers,
+  activeEmployees = 0,
+  totalBruto = 0,
+  totalCoste = 0,
+  salaryIncreasePercent = 0,
+  transfers = 0,
   color = "bg-primary",
 }: CompanyCardProps) => {
   const navigate = useNavigate();
