@@ -8,6 +8,9 @@ import { DashboardCompaniesTable } from "@/components/dashboard/DashboardCompani
 import { useDashboardGlobal } from "@/hooks/useDashboardGlobal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { ChartErrorFallback } from "@/components/error/ErrorFallbacks";
+import { TableErrorBoundary } from "@/components/error/TableErrorBoundary";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -73,12 +76,14 @@ const Dashboard = () => {
           <Skeleton className="h-32" />
         </div>
       ) : (
-        <DashboardKPIs
-          costeTotal={data?.kpis.costeTotal || 0}
-          activeEmployees={data?.kpis.activeEmployees || 0}
-          avgCostPerEmployee={data?.kpis.avgCostPerEmployee || 0}
-          salaryIncreasePercent={data?.kpis.salaryIncreasePercent || 0}
-        />
+        <ErrorBoundary context="DashboardKPIs">
+          <DashboardKPIs
+            costeTotal={data?.kpis.costeTotal || 0}
+            activeEmployees={data?.kpis.activeEmployees || 0}
+            avgCostPerEmployee={data?.kpis.avgCostPerEmployee || 0}
+            salaryIncreasePercent={data?.kpis.salaryIncreasePercent || 0}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Charts */}
@@ -90,11 +95,17 @@ const Dashboard = () => {
           </>
         ) : (
           <>
-            <DashboardCompanyChart
-              data={data?.companiesData || []}
-              onCompanyClick={handleCompanyClick}
-            />
-            {month === "all" && <DashboardHeatmap data={data?.heatmapData || []} />}
+            <ErrorBoundary fallback={<ChartErrorFallback />} context="CompanyChart">
+              <DashboardCompanyChart
+                data={data?.companiesData || []}
+                onCompanyClick={handleCompanyClick}
+              />
+            </ErrorBoundary>
+            {month === "all" && (
+              <ErrorBoundary fallback={<ChartErrorFallback />} context="Heatmap">
+                <DashboardHeatmap data={data?.heatmapData || []} />
+              </ErrorBoundary>
+            )}
           </>
         )}
       </div>
@@ -103,7 +114,9 @@ const Dashboard = () => {
       {isLoading ? (
         <Skeleton className="h-[400px]" />
       ) : (
-        <DashboardCompaniesTable data={data?.companiesData || []} />
+        <TableErrorBoundary columns={5}>
+          <DashboardCompaniesTable data={data?.companiesData || []} />
+        </TableErrorBoundary>
       )}
     </div>
   );

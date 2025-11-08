@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useCompanies } from "@/hooks/useCompanies";
 import { useEmployees } from "@/hooks/useEmployees";
 import { Badge } from "@/components/ui/badge";
+import { TableErrorBoundary } from "@/components/error/TableErrorBoundary";
 
 const Employees = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -117,14 +118,16 @@ const Employees = () => {
         <div>
           <h2 className="text-lg font-semibold mb-4 text-foreground">Plantilla</h2>
           <Card className="p-6 border-gray-200">
-            <EmployeeTableOptimized 
-              filters={{ 
-                companyId: companyFilter !== "all" ? companyFilter : undefined, 
-                year: yearFilter,
-                searchTerm: searchTerm,
-                activeOnly: statusFilter === "active" ? true : statusFilter === "inactive" ? false : undefined
-              }} 
-            />
+            <TableErrorBoundary columns={8}>
+              <EmployeeTableOptimized 
+                filters={{ 
+                  companyId: companyFilter !== "all" ? companyFilter : undefined, 
+                  year: yearFilter,
+                  searchTerm: searchTerm,
+                  activeOnly: statusFilter === "active" ? true : statusFilter === "inactive" ? false : undefined
+                }} 
+              />
+            </TableErrorBoundary>
           </Card>
         </div>
       </div>

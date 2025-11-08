@@ -5,6 +5,9 @@
 
 import { toast } from "@/hooks/use-toast";
 
+// Re-exportar logCriticalError para uso externo
+export { logCriticalError } from "./errorLogging";
+
 export type ErrorSeverity = "info" | "warning" | "error" | "critical";
 
 export interface AppError {

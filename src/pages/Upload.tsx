@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { downloadCSV } from "@/lib/utils/dom";
 import { generateEmployeeTemplate } from "@/lib/utils/templates";
+import { ImportErrorBoundary } from "@/components/error/ImportErrorBoundary";
 import Papa from "papaparse";
 
 const Upload = () => {
@@ -182,7 +183,9 @@ const Upload = () => {
 
         {/* IA Universal Import Tab */}
         <TabsContent value="intelligent">
-          <IntelligentUpload />
+          <ImportErrorBoundary>
+            <IntelligentUpload />
+          </ImportErrorBoundary>
         </TabsContent>
 
         {/* CSV Import Tab */}
@@ -363,7 +366,9 @@ const Upload = () => {
 
         {/* A3Nom Import Tab */}
         <TabsContent value="a3nom">
-          <A3NomCostsUpload />
+          <ImportErrorBoundary>
+            <A3NomCostsUpload />
+          </ImportErrorBoundary>
         </TabsContent>
       </Tabs>
     </div>

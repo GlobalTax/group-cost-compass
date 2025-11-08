@@ -15,6 +15,8 @@ import { CostsTab } from "@/components/employees/tabs/CostsTab";
 import { TransfersTab } from "@/components/employees/tabs/TransfersTab";
 import { SalaryIncreasesTab } from "@/components/employees/tabs/SalaryIncreasesTab";
 import { CompensationTab } from "@/components/employees/tabs/CompensationTab";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { DefaultErrorFallback } from "@/components/error/ErrorFallbacks";
 
 export default function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -64,8 +66,18 @@ export default function EmployeeDetail() {
   const isActive = !employee.termination_date;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 space-y-6">
+    <ErrorBoundary
+      fallback={
+        <DefaultErrorFallback 
+          message="Error al cargar empleado" 
+          action={() => navigate("/employees")}
+          actionLabel="Volver a empleados"
+        />
+      }
+      context="EmployeeDetail"
+    >
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto p-6 space-y-6">
         {/* Back Button */}
         <Button
           variant="ghost"
@@ -173,7 +185,8 @@ export default function EmployeeDetail() {
             <CompensationTab employee={employee} annualSalary={financials.annualBaseSalary} />
           </TabsContent>
         </Tabs>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }

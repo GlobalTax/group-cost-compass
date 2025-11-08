@@ -10,6 +10,7 @@ import { Menu } from "lucide-react";
 import { AuthProvider, withAuth } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GlobalFiltersProvider } from "@/contexts/GlobalFiltersContext";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 
 // Core pages - eager loading
 import Index from "./pages/Index";
@@ -90,14 +91,15 @@ const ProtectedAdminDepartments = withAuth(['super_admin'])(AdminDepartments);
 const ProtectedAdminTeams = withAuth(['super_admin'])(AdminTeams);
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <GlobalFiltersProvider>
-            <SidebarProvider defaultOpen>
+  <ErrorBoundary context="App">
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <GlobalFiltersProvider>
+              <SidebarProvider defaultOpen>
             <a 
               href="#main-content" 
               className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg"
@@ -192,12 +194,13 @@ const App = () => (
                 </main>
               </div>
             </div>
-          </SidebarProvider>
-          </GlobalFiltersProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+            </SidebarProvider>
+            </GlobalFiltersProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
