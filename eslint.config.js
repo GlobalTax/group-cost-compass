@@ -70,5 +70,40 @@ export default tseslint.config(
       "@typescript-eslint/prefer-nullish-coalescing": "error",
       "@typescript-eslint/prefer-optional-chain": "error",
     },
+  },
+
+  // ========================================
+  // REGLAS ARQUITECTÓNICAS (enforcement)
+  // ========================================
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/supabase/repositories/**"],
+    rules: {
+      /* Bloquear imports directos de supabase fuera de repositorios */
+      "no-restricted-imports": ["error", {
+        patterns: [{
+          group: ["**/integrations/supabase/client"],
+          importNames: ["supabase"],
+          message: "⛔ No importes supabase directamente. Usa repositorios en src/lib/supabase/repositories/"
+        }]
+      }],
+      
+      /* Limitar complejidad y tamaño de funciones */
+      "max-lines-per-function": ["warn", { 
+        max: 100, 
+        skipBlankLines: true, 
+        skipComments: true 
+      }],
+      "complexity": ["warn", 15],
+      "max-depth": ["warn", 4],
+    }
+  },
+
+  // Regla global para archivos grandes
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "max-lines": ["warn", { max: 500, skipBlankLines: true, skipComments: true }]
+    }
   }
 );

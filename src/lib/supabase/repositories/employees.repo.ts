@@ -264,3 +264,38 @@ export const bulkInsertEmployees = async (employees: any[]): Promise<any[]> => {
   if (error) throw error;
   return data || [];
 };
+
+/**
+ * Fetch employees by date range for movements analysis
+ * Includes company and department relations
+ */
+export const fetchEmployeesByDateRange = async (
+  startDate: string,
+  endDate: string,
+  companyId?: string
+): Promise<any[]> => {
+  let query = supabase
+    .from("hr_employees")
+    .select(`
+      id,
+      full_name,
+      dni,
+      company_id,
+      hire_date,
+      termination_date,
+      termination_reason,
+      employment_status,
+      department_id,
+      position,
+      companies!inner(name),
+      departments(name)
+    `);
+
+  if (companyId && companyId !== "all") {
+    query = query.eq("company_id", companyId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+};

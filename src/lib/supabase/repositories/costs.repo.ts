@@ -408,3 +408,33 @@ export const bulkInsertCosts = async (costs: CostInsert[]): Promise<any[]> => {
   if (error) throw error;
   return data || [];
 };
+
+/**
+ * Fetch costs within period range for evolution analysis
+ * Includes employee and company relations
+ */
+export const fetchCostsByPeriodRange = async (
+  startPeriod: string,
+  endPeriod: string,
+  companyId?: string
+): Promise<any[]> => {
+  let query = supabase
+    .from("hr_employee_costs")
+    .select(`
+      period,
+      bruto,
+      coste_empresa,
+      employee_id,
+      hr_employees!inner(company_id)
+    `)
+    .gte("period", startPeriod)
+    .lte("period", endPeriod);
+
+  if (companyId && companyId !== "all") {
+    query = query.eq("hr_employees.company_id", companyId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+};

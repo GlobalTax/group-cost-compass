@@ -39,7 +39,20 @@ if [ "$SERVICE_VIOLATIONS" -gt 0 ]; then
 fi
 
 # ====================================================================
-# 3. Verificar hooks gordos (>50 líneas)
+# 3. Verificar queries directas a Supabase en hooks
+# ====================================================================
+echo "🪝 Verificando hooks..."
+HOOK_VIOLATIONS=$(grep -r "supabase\.from" src/hooks/ 2>/dev/null | wc -l)
+
+if [ "$HOOK_VIOLATIONS" -gt 0 ]; then
+  echo "${RED}❌ ERROR: Encontradas $HOOK_VIOLATIONS queries a Supabase en hooks${NC}"
+  echo "${YELLOW}   Los hooks deben usar servicios/repositorios, no acceder a Supabase directamente.${NC}"
+  grep -rn "supabase\.from" src/hooks/ 2>/dev/null
+  VIOLATIONS=$((VIOLATIONS + HOOK_VIOLATIONS))
+fi
+
+# ====================================================================
+# 4. Verificar hooks gordos (>50 líneas)
 # ====================================================================
 echo "🪝 Verificando tamaño de hooks..."
 FAT_HOOKS=$(find src/hooks -name "*.ts" -type f -exec sh -c '
@@ -56,7 +69,7 @@ if [ -n "$FAT_HOOKS" ]; then
 fi
 
 # ====================================================================
-# 4. Resultado final
+# 5. Resultado final
 # ====================================================================
 if [ "$VIOLATIONS" -gt 0 ]; then
   echo ""
