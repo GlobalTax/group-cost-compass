@@ -69,7 +69,21 @@ if [ -n "$FAT_HOOKS" ]; then
 fi
 
 # ====================================================================
-# 5. Resultado final
+# 5. Ejecutar tests unitarios
+# ====================================================================
+echo "🧪 Ejecutando tests unitarios..."
+
+if npm run test -- --run --silent > /tmp/test-output.txt 2>&1; then
+  echo "${GREEN}✅ Tests pasados${NC}"
+  cat /tmp/test-output.txt | grep -E "Test Files.*passed" 2>/dev/null || true
+else
+  echo "${RED}❌ ERROR: Tests fallidos${NC}"
+  cat /tmp/test-output.txt | grep -E "FAIL|Error|AssertionError" | head -20
+  VIOLATIONS=$((VIOLATIONS + 1))
+fi
+
+# ====================================================================
+# 6. Resultado final
 # ====================================================================
 if [ "$VIOLATIONS" -gt 0 ]; then
   echo ""
