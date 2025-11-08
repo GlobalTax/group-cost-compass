@@ -1,7 +1,142 @@
 import type { AIParseResponse } from "@/lib/types/aiParse";
-import { importEmployees, importCosts } from "../importService";
 import { fetchCompanies } from "@/lib/supabase/repositories/companies.repo";
+import { createEmployee } from "@/lib/supabase/repositories/employees.repo";
+import { 
+  bulkInsertCosts,
+  checkDuplicatePeriods 
+} from "@/lib/supabase/repositories/costs.repo";
 import { supabase } from "@/lib/supabase/client";
+
+// ============================================
+// Helper functions (replaces deprecated importService)
+// ============================================
+
+/**
+ * Import employees using repository
+ */
+const importEmployees = async ({
+  employees,
+  companies,
+  onProgress,
+}: {
+  employees: any[];
+  companies: Array<{ id: string; name: string }>;
+  onProgress?: (current: number, total: number) => void;
+}) => {
+  const results = { created: 0, errors: [] as string[] };
+
+  for (let i = 0; i < employees.length; i++) {
+    const emp = employees[i];
+    const company = companies.find((c) => c.name === emp.company_name);
+
+    if (!company) {
+      results.errors.push(`Empresa no encontrada: ${emp.company_name}`);
+      continue;
+    }
+
+    try {
+      await createEmployee({
+        full_name: emp.full_name,
+        dni: emp.dni || null,
+        company_id: company.id,
+        hire_date: emp.hire_date,
+        termination_date: emp.termination_date || null,
+        seniority_date: emp.seniority_date || null,
+        transfer_group: emp.transfer_group || false,
+        notes: emp.notes || null,
+      });
+
+      results.created++;
+    } catch (error) {
+      results.errors.push(`Error al crear ${emp.full_name}: ${(error as Error).message}`);
+    }
+
+    onProgress?.(i + 1, employees.length);
+  }
+
+  return results;
+};
+
+/**
+ * Import costs using repository
+ */
+const importCosts = async ({
+  validation,
+  companies,
+  onProgress,
+}: {
+  validation: any;
+  companies: Array<{ id: string; name: string }>;
+  onProgress?: (current: number, total: number) => void;
+}) => {
+  const validRows = validation.rows
+    .filter((r: any) => r.data && r.errors.length === 0)
+    .map((r: any) => r.data);
+
+  if (validRows.length === 0) {
+    throw new Error("No hay datos válidos para importar");
+  }
+
+  // Map employee identifiers
+  const identifiers = validRows.map((r: any) => r.name || r.nif || r.employee_id);
+  const { data: employees } = await supabase
+    .from("hr_employees")
+    .select("id, full_name, dni, employee_code");
+
+  const employeeMap = new Map<string, string>();
+  employees?.forEach((e: any) => {
+    if (e.full_name) employeeMap.set(e.full_name.toLowerCase(), e.id);
+    if (e.dni) employeeMap.set(e.dni, e.id);
+    if (e.employee_code) employeeMap.set(e.employee_code, e.id);
+  });
+
+  const costsToImport = validRows
+    .filter((r: any) => {
+      const identifier = (r.name || r.nif || r.employee_id || "").toLowerCase();
+      return employeeMap.has(identifier);
+    })
+    .map((r: any) => {
+      const identifier = (r.name || r.nif || r.employee_id || "").toLowerCase();
+      return {
+        employee_id: employeeMap.get(identifier)!,
+        period: `${r.date}-01`,
+        bruto: r.bruto,
+        coste_empresa: r.coste_empresa,
+      };
+    });
+
+  if (costsToImport.length === 0) {
+    throw new Error("Ningún empleado encontrado con los identificadores proporcionados");
+  }
+
+  // Check duplicates
+  const periods = [...new Set(costsToImport.map((c) => c.period))] as string[];
+  const hasDuplicates = await checkDuplicatePeriods(periods);
+
+  if (hasDuplicates) {
+    const confirmed = window.confirm(
+      "Ya existen costes para algunos períodos. ¿Desea sobrescribir?"
+    );
+    if (!confirmed) {
+      throw new Error("Importación cancelada por el usuario");
+    }
+
+    await supabase
+      .from("hr_employee_costs")
+      .delete()
+      .in("period", periods as any);
+  }
+
+  // Import in batches
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < costsToImport.length; i += BATCH_SIZE) {
+    const batch = costsToImport.slice(i, i + BATCH_SIZE);
+    await bulkInsertCosts(batch);
+    onProgress?.(Math.min(i + BATCH_SIZE, costsToImport.length), costsToImport.length);
+  }
+
+  return { imported: costsToImport.length, total: validRows.length };
+};
 
 interface TransformedRow {
   [key: string]: any;

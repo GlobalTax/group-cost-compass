@@ -111,9 +111,12 @@ const Upload = () => {
     setImportStatus("uploading");
 
     try {
-      // Usar servicio de importación
-      const { importEmployees, importCosts } = await import("@/services/importService");
+      // NOTA: Esta funcionalidad de importación básica está deprecada.
+      // Para nuevas importaciones usa A3NomCostsUpload o IntelligentUpload
+      toast.error("Esta función de importación básica ha sido deprecada. Usa las pestañas 'A3Nom' o 'Inteligente'.");
+      return;
 
+      /* Código deprecado - mantener comentado
       if (employeesValidation?.data.length > 0) {
         await importEmployees({
           employees: employeesValidation.data as ParsedEmployee[],
@@ -130,6 +133,7 @@ const Upload = () => {
         });
         toast.success(`✅ ${result.imported} registros importados correctamente`);
       }
+      */
 
       setImportStatus("complete");
       setTimeout(() => {

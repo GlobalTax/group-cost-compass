@@ -5,7 +5,30 @@ import type { CostWithRelations, MonthlyCostSummary, YearOverYearComparison } fr
 type CostInsert = Database['public']['Tables']['hr_employee_costs']['Insert'];
 
 // ============================================
-// 1. QUERY BUILDERS (reutilizables)
+// 1. UTILITY FUNCTIONS
+// ============================================
+
+/**
+ * Check if costs already exist for given periods
+ * Used during import to detect duplicates
+ */
+export const checkDuplicatePeriods = async (periods: string[]): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from('hr_employee_costs')
+    .select('period')
+    .in('period', periods)
+    .limit(1);
+
+  if (error) {
+    console.error('Error checking duplicate periods:', error);
+    return false;
+  }
+
+  return !!data && data.length > 0;
+};
+
+// ============================================
+// 2. QUERY BUILDERS (reutilizables)
 // ============================================
 
 /**

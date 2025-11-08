@@ -26,15 +26,15 @@ if [ "$COMPONENT_VIOLATIONS" -gt 0 ]; then
 fi
 
 # ====================================================================
-# 2. Verificar queries directas a Supabase en servicios (excepto deprecados)
+# 2. Verificar queries directas a Supabase en servicios
 # ====================================================================
 echo "⚙️  Verificando servicios..."
-SERVICE_VIOLATIONS=$(grep -r "supabase\.from" src/services/ 2>/dev/null | grep -v "supabase/client" | grep -v "importService.ts" | wc -l)
+SERVICE_VIOLATIONS=$(grep -r "supabase\.from" src/services/ 2>/dev/null | grep -v "supabase/client" | wc -l)
 
 if [ "$SERVICE_VIOLATIONS" -gt 0 ]; then
   echo "${RED}❌ ERROR: Encontradas $SERVICE_VIOLATIONS queries a Supabase en servicios${NC}"
   echo "${YELLOW}   Los servicios deben usar repositorios en src/lib/supabase/repositories/${NC}"
-  grep -rn "supabase\.from" src/services/ 2>/dev/null | grep -v "supabase/client" | grep -v "importService.ts"
+  grep -rn "supabase\.from" src/services/ 2>/dev/null | grep -v "supabase/client"
   VIOLATIONS=$((VIOLATIONS + SERVICE_VIOLATIONS))
 fi
 
