@@ -9196,6 +9196,98 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_exports: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          export_type: string
+          frequency: string
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          last_run_error: string | null
+          last_run_status: string | null
+          metadata: Json | null
+          next_run_at: string | null
+          org_id: string | null
+          recipient_emails: string[]
+          schedule_day: number
+          schedule_time: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          export_type: string
+          frequency: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          last_run_error?: string | null
+          last_run_status?: string | null
+          metadata?: Json | null
+          next_run_at?: string | null
+          org_id?: string | null
+          recipient_emails?: string[]
+          schedule_day: number
+          schedule_time?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          export_type?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          last_run_error?: string | null
+          last_run_status?: string | null
+          metadata?: Json | null
+          next_run_at?: string | null
+          org_id?: string | null
+          recipient_emails?: string[]
+          schedule_day?: number
+          schedule_time?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_exports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_exports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_company_costs_monthly"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "scheduled_exports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_costs_by_company_year"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "scheduled_exports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "vw_employee_annual"
+            referencedColumns: ["company_id"]
+          },
+        ]
+      }
       scheduled_reports: {
         Row: {
           created_at: string
