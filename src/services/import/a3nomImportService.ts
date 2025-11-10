@@ -147,11 +147,31 @@ export async function importA3NomData(
 ): Promise<A3NomImportResult> {
   const { parseResult, period, onProgress, createEmployeesFn, bulkCreateCostsFn } = options;
   
+  const importLogId = crypto.randomUUID();
+  const startTime = Date.now();
+  
   console.group("[A3Nom][Import] Inicio");
   console.log("Total registros:", parseResult.data.length);
   console.log("Período:", period);
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: userRole } = await supabase
+      .from("user_roles")
+      .select("org_id")
+      .eq("user_id", user?.id || "")
+      .single();
+
+    await supabase.from("import_logs").insert({
+      id: importLogId,
+      user_id: user?.id,
+      org_id: userRole?.org_id,
+      import_type: "a3nom",
+      period: period,
+      total_records: parseResult.data.length,
+      status: "processing",
+      started_at: new Date().toISOString(),
+    });
     // 1. Obtener catálogo de empresas
     const companyMap = await fetchCompanyMap();
 
@@ -258,6 +278,22 @@ export async function importA3NomData(
       }
     }
 
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+
+    await supabase
+      .from("import_logs")
+      .update({
+        status: "completed",
+        successful_records: preparationResult.costs.length,
+        failed_records: 0,
+        employees_created: employeesCreated,
+        duration_ms: duration,
+        completed_at: new Date().toISOString(),
+        warnings: preparationResult.warnings,
+      })
+      .eq("id", importLogId);
+
     console.groupEnd();
 
     return {
@@ -266,6 +302,16 @@ export async function importA3NomData(
       warnings: preparationResult.warnings,
     };
   } catch (error) {
+    await supabase
+      .from("import_logs")
+      .update({
+        status: "failed",
+        failed_records: parseResult.data.length,
+        errors: [(error as Error).message],
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", importLogId);
+    
     console.error("[A3Nom][Import] Error:", error);
     console.groupEnd();
     throw error;

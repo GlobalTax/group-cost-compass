@@ -7,6 +7,15 @@
 export { formatCurrency, formatPercentage, calculatePercentageChange } from "./utils/currency";
 export { formatDate, formatPeriod, formatPeriodShort, formatMonth } from "./utils/date";
 
+/**
+ * Formatea una duración en milisegundos a formato legible
+ */
+export const formatDuration = (ms: number): string => {
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(2)}s`;
+  return `${(ms / 60000).toFixed(2)}min`;
+};
+
 export const getCategoryLabel = (category: string, type: 'income' | 'expense') => {
   const incomeLabels: Record<string, string> = {
     billing: "Facturación",

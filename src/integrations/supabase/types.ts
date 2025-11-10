@@ -5682,6 +5682,72 @@ export type Database = {
           },
         ]
       }
+      import_logs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_ms: number | null
+          employees_created: number
+          errors: Json | null
+          failed_records: number
+          file_name: string | null
+          file_size_kb: number | null
+          id: string
+          import_type: string
+          metadata: Json | null
+          org_id: string
+          period: string | null
+          started_at: string | null
+          status: string
+          successful_records: number
+          total_records: number
+          user_id: string
+          warnings: Json | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          employees_created?: number
+          errors?: Json | null
+          failed_records?: number
+          file_name?: string | null
+          file_size_kb?: number | null
+          id?: string
+          import_type: string
+          metadata?: Json | null
+          org_id: string
+          period?: string | null
+          started_at?: string | null
+          status: string
+          successful_records?: number
+          total_records?: number
+          user_id: string
+          warnings?: Json | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          employees_created?: number
+          errors?: Json | null
+          failed_records?: number
+          file_name?: string | null
+          file_size_kb?: number | null
+          id?: string
+          import_type?: string
+          metadata?: Json | null
+          org_id?: string
+          period?: string | null
+          started_at?: string | null
+          status?: string
+          successful_records?: number
+          total_records?: number
+          user_id?: string
+          warnings?: Json | null
+        }
+        Relationships: []
+      }
       interview_feedback: {
         Row: {
           communication_rating: number | null
@@ -6990,6 +7056,45 @@ export type Database = {
             referencedColumns: ["department_id"]
           },
         ]
+      }
+      performance_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metric_name: string
+          metric_rating: string | null
+          metric_value: number
+          org_id: string | null
+          route: string
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric_name: string
+          metric_rating?: string | null
+          metric_value: number
+          org_id?: string | null
+          route: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric_name?: string
+          metric_rating?: string | null
+          metric_value?: number
+          org_id?: string | null
+          route?: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       performance_reviews: {
         Row: {

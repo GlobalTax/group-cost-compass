@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator, UserPlus, Briefcase, TrendingUp, Scale, Layers, Table, Calendar } from "lucide-react";
+import { Building2, LayoutDashboard, Users, ArrowRightLeft, FileUp, Shield, CircleDot, DollarSign, LogOut, ShieldCheck, UserCog, Settings, Database, Calculator, UserPlus, Briefcase, TrendingUp, Scale, Layers, Table, Calendar, Activity } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -70,6 +70,7 @@ const navigationItems = [
     items: [
       { title: "Usuarios", url: "/admin/users", icon: UserCog },
       { title: "Roles", url: "/admin/roles", icon: ShieldCheck },
+      { title: "Monitoring", url: "/admin/monitoring", icon: Activity },
       { title: "Importar Histórico", url: "/admin/import-history", icon: Database },
     ],
   },

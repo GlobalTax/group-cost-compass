@@ -51,6 +51,7 @@ const AdminImportHistory = lazy(() => import("./pages/AdminImportHistory"));
 const AdminOnboarding = lazy(() => import("./pages/AdminOnboarding"));
 const AdminDepartments = lazy(() => import("./pages/AdminDepartments"));
 const AdminTeams = lazy(() => import("./pages/AdminTeams"));
+const AdminMonitoring = lazy(() => import("./pages/AdminMonitoring"));
 
 // Loading fallback
 const PageLoader = () => (
@@ -108,6 +109,7 @@ const ProtectedAdminImportHistory = withAuth(['super_admin'])(AdminImportHistory
 const ProtectedAdminOnboarding = withAuth(['admin', 'super_admin'])(AdminOnboarding);
 const ProtectedAdminDepartments = withAuth(['super_admin'])(AdminDepartments);
 const ProtectedAdminTeams = withAuth(['super_admin'])(AdminTeams);
+const ProtectedAdminMonitoring = withAuth(['super_admin'])(AdminMonitoring);
 
 const App = () => (
   <ErrorBoundary context="App">
@@ -269,6 +271,11 @@ const App = () => (
                 <Route path="/admin/teams" element={
                   <Suspense fallback={<PageLoader />}>
                     <ProtectedAdminTeams />
+                  </Suspense>
+                } />
+                <Route path="/admin/monitoring" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ProtectedAdminMonitoring />
                   </Suspense>
                 } />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
