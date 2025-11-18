@@ -4,14 +4,17 @@ import { formatPeriod } from "@/lib/formatters";
 
 interface CostsAnalysisFilters {
   companyId?: string;
+  teamIds?: string[];
   year: number;
   month: number;
 }
 
-interface EmployeeDetail {
+export interface EmployeeDetail {
   id: string;
   name: string;
   company: string;
+  teamId: string | null;
+  teamName: string | null;
   bruto: number;
   costeEmpresa: number;
   variation: number;
@@ -36,7 +39,7 @@ interface CostsAnalysisResult {
 }
 
 export const useCostsAnalysis = (filters: CostsAnalysisFilters): CostsAnalysisResult => {
-  const { year, month, companyId } = filters;
+  const { year, month, companyId, teamIds } = filters;
 
   // Datos del mes actual
   const { data: currentMonthData, isLoading: isLoadingCurrent } = useCostsByPeriod({
@@ -122,6 +125,8 @@ export const useCostsAnalysis = (filters: CostsAnalysisFilters): CostsAnalysisRe
       const employeeId = cost.employee_id;
       const employeeName = cost.hr_employees.full_name;
       const companyName = cost.hr_employees.companies?.name || "Sin empresa";
+      const teamId = cost.hr_employees.team_id;
+      const teamName = cost.hr_employees.teams?.name || null;
       
       // Buscar coste del mes anterior para este empleado
       const previousCost = previousMonthData?.find(c => c.employee_id === employeeId);
@@ -136,15 +141,24 @@ export const useCostsAnalysis = (filters: CostsAnalysisFilters): CostsAnalysisRe
         id: employeeId,
         name: employeeName,
         company: companyName,
+        teamId,
+        teamName,
         bruto: cost.bruto || 0,
         costeEmpresa: currentCosteEmpresa,
         variation,
       });
     });
 
-    const employeeDetails = Array.from(employeeMap.values()).sort((a, b) => 
+    let employeeDetails = Array.from(employeeMap.values()).sort((a, b) => 
       a.name.localeCompare(b.name)
     );
+
+    // Filtrar por equipos si está especificado
+    if (teamIds && teamIds.length > 0) {
+      employeeDetails = employeeDetails.filter(emp => 
+        emp.teamId && teamIds.includes(emp.teamId)
+      );
+    }
 
     return {
       totalCost: totalCoste,
@@ -156,7 +170,7 @@ export const useCostsAnalysis = (filters: CostsAnalysisFilters): CostsAnalysisRe
       hasData: currentMonthData.length > 0,
       isLoading: isLoadingCurrent || isLoadingYear,
     };
-  }, [currentMonthData, previousMonthData, yearData, isLoadingCurrent, isLoadingYear, month, year]);
+  }, [currentMonthData, previousMonthData, yearData, isLoadingCurrent, isLoadingYear, month, year, teamIds]);
 
   return analysis;
 };

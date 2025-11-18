@@ -43,7 +43,12 @@ const buildCostsQueryWithRelations = () => {
         id,
         full_name,
         company_id,
+        team_id,
         companies (
+          id,
+          name
+        ),
+        teams (
           id,
           name
         )
@@ -54,6 +59,7 @@ const buildCostsQueryWithRelations = () => {
 export interface CostsFilters {
   employeeId?: string;
   companyId?: string;
+  teamIds?: string[];
   year?: number;
   month?: number;
   startDate?: string;

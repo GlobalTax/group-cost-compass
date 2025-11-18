@@ -27,7 +27,12 @@ export interface CostWithRelations extends EmployeeCost {
     id: string;
     full_name: string;
     company_id: string;
+    team_id: string | null;
     companies: {
+      id: string;
+      name: string;
+    } | null;
+    teams: {
       id: string;
       name: string;
     } | null;

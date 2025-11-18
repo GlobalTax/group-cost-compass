@@ -14,9 +14,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { CostsChart } from "@/components/costs/CostsChart";
 import { CostsDetailTable } from "@/components/costs/CostsDetailTable";
+import { CostsByTeamTable } from "@/components/costs/CostsByTeamTable";
 import { EmptyState } from "@/components/costs/EmptyState";
 import { ManualPayrollTable } from "@/components/costs/ManualPayrollTable";
 import { Card } from "@/components/ui/card";
+import { MultiSelectFilter } from "@/components/ui/multi-select-filter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +30,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCompanies } from "@/hooks/useCompanies";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useTeams } from "@/hooks/useTeams";
 import { useCostsAnalysis } from "@/hooks/useCostsAnalysis";
 import { useDeleteCostsByPeriod } from "@/hooks/useEmployeeCosts";
 import { exportCostsToCSV } from "@/lib/exporters/costsExporter";
@@ -38,10 +42,22 @@ const Costs = () => {
   const [year, setYear] = useState(currentDate.getFullYear());
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
   const [companyId, setCompanyId] = useState<string>("all");
+  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<string[]>([]);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: companies } = useCompanies();
-  const analysis = useCostsAnalysis({ year, month, companyId });
+  const { data: departments } = useDepartments();
+  const { data: teams } = useTeams({ 
+    departmentId: selectedDepartmentIds.length === 1 ? selectedDepartmentIds[0] : undefined 
+  });
+  
+  const analysis = useCostsAnalysis({ 
+    year, 
+    month, 
+    companyId,
+    teamIds: selectedTeamIds.length > 0 ? selectedTeamIds : undefined
+  });
   const deleteMutation = useDeleteCostsByPeriod();
 
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i);
@@ -88,7 +104,7 @@ const Costs = () => {
       />
 
       {/* Filtros */}
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 flex-wrap">
         <div className="flex flex-col gap-1.5 w-full md:w-[250px]">
           <Label htmlFor="company-filter" className="text-sm font-medium">
             Empresa
@@ -106,6 +122,29 @@ const Costs = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="flex flex-col gap-1.5 w-full md:w-[250px]">
+          <Label className="text-sm font-medium">Departamentos</Label>
+          <MultiSelectFilter
+            label="Departamentos"
+            options={departments?.map(d => ({ id: d.id, name: d.name })) || []}
+            selectedIds={selectedDepartmentIds}
+            onChange={setSelectedDepartmentIds}
+            placeholder="Todos los departamentos"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5 w-full md:w-[250px]">
+          <Label className="text-sm font-medium">Equipos</Label>
+          <MultiSelectFilter
+            label="Equipos"
+            options={teams?.map(t => ({ id: t.id, name: t.name })) || []}
+            selectedIds={selectedTeamIds}
+            onChange={setSelectedTeamIds}
+            placeholder="Todos los equipos"
+            emptyMessage={selectedDepartmentIds.length === 0 ? "Selecciona primero un departamento" : "No hay equipos"}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5 w-full md:w-[150px]">
@@ -165,7 +204,8 @@ const Costs = () => {
       {/* Tabs */}
       <Tabs defaultValue="analysis" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="analysis">Análisis</TabsTrigger>
+          <TabsTrigger value="analysis">Detalle</TabsTrigger>
+          <TabsTrigger value="teams">Por Equipo</TabsTrigger>
           <TabsTrigger value="manual">Entrada manual</TabsTrigger>
         </TabsList>
 
@@ -205,6 +245,13 @@ const Costs = () => {
 
           {/* Tabla de detalle */}
           <CostsDetailTable
+            employees={analysis.employeeDetails}
+            isLoading={analysis.isLoading}
+          />
+        </TabsContent>
+
+        <TabsContent value="teams" className="space-y-6">
+          <CostsByTeamTable
             employees={analysis.employeeDetails}
             isLoading={analysis.isLoading}
           />
