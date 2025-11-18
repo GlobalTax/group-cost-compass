@@ -22,8 +22,9 @@ import {
 import { Copy, Building2, X, Users } from "lucide-react";
 
 const CostsOverview = () => {
-  const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState(2025);
+  const currentDate = new Date();
+  const currentMonth = currentDate.toISOString().slice(0, 7);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("all");
   const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<string[]>([]);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
@@ -37,7 +38,7 @@ const CostsOverview = () => {
     departmentId: selectedDepartmentIds.length === 1 ? selectedDepartmentIds[0] : undefined 
   });
   const { data: costsData, isLoading } = useCostsOverview({
-    year: selectedYear,
+    month: selectedMonth,
     companyId: selectedCompanyId,
   });
   
@@ -76,15 +77,21 @@ const CostsOverview = () => {
     return filtered;
   }, [costsData, selectedDepartmentIds, selectedTeamIds, searchTerm, statusFilter, employees]);
 
-  // Generar lista de años (actual - 3 años hacia atrás)
-  const years = Array.from({ length: 4 }, (_, i) => currentYear - i);
+  // Generar lista de meses (últimos 24 meses)
+  const monthOptions = Array.from({ length: 24 }, (_, i) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - i);
+    const value = date.toISOString().slice(0, 7);
+    const label = new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric" }).format(date);
+    return { value, label };
+  });
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <PageHeader
-          title="Coste Total de Plantilla"
-          subtitle="Desglose completo de costes: salarios, seguridad social y bonus"
+          title="Coste Mensual de Plantilla"
+          subtitle="Desglose de costes mensuales: salarios, seguridad social y bonus"
         />
         <Button
           variant="outline"
@@ -100,16 +107,16 @@ const CostsOverview = () => {
       {/* Filtros */}
       <div className="flex flex-wrap gap-4">
         <Select
-          value={selectedYear.toString()}
-          onValueChange={(value) => setSelectedYear(parseInt(value))}
+          value={selectedMonth}
+          onValueChange={setSelectedMonth}
         >
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Año" />
+          <SelectTrigger className="w-52">
+            <SelectValue placeholder="Mes" />
           </SelectTrigger>
           <SelectContent>
-            {years.map((year) => (
-              <SelectItem key={year} value={year.toString()}>
-                {year}
+            {monthOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                <span className="capitalize">{option.label}</span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -238,7 +245,7 @@ const CostsOverview = () => {
         <Skeleton className="h-96" />
       ) : (
         filteredData && (
-          <CostsOverviewTable data={filteredData} year={selectedYear} searchTerm={searchTerm} />
+          <CostsOverviewTable data={filteredData} year={parseInt(selectedMonth.slice(0, 4))} searchTerm={searchTerm} />
         )
       )}
 
