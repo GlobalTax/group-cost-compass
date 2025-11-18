@@ -11572,6 +11572,50 @@ export type Database = {
       generate_proposal_number: { Args: { org_uuid: string }; Returns: string }
       generate_recurring_invoices: { Args: never; Returns: number }
       generate_signature_token: { Args: never; Returns: string }
+      get_companies_with_contacts: {
+        Args: {
+          org_uuid: string
+          page_offset?: number
+          page_size?: number
+          search_term?: string
+          sector_filter?: string
+          status_filter?: string
+        }
+        Returns: {
+          address_city: string
+          address_country: string
+          address_postal_code: string
+          address_street: string
+          business_sector: string
+          client_type: string
+          company_id: string
+          contact_preference: string
+          created_at: string
+          dni_nif: string
+          email: string
+          email_preferences: Json
+          hourly_rate: number
+          how_found_us: string
+          id: string
+          internal_notes: string
+          last_contact_date: string
+          legal_representative: string
+          name: string
+          org_id: string
+          payment_method: string
+          phone: string
+          preferred_language: string
+          preferred_meeting_time: string
+          primary_contact: Json
+          quantum_customer_id: string
+          relationship_type: string
+          status: string
+          tags: string[]
+          timezone: string
+          total_contacts: number
+          updated_at: string
+        }[]
+      }
       get_current_user_org_id: { Args: never; Returns: string }
       get_dashboard_stats: {
         Args: { current_month?: string; org_id_param: string }
