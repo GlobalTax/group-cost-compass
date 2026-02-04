@@ -34,9 +34,11 @@ export interface EmployeeAnnualCost {
  */
 export const useCostsOverview = (filters?: CostsOverviewFilters) => {
   const currentMonth = filters?.month || new Date().toISOString().slice(0, 7);
+  // Normalizar período a formato date (primer día del mes)
+  const periodDate = currentMonth.length === 7 ? `${currentMonth}-01` : currentMonth;
 
   return useQuery({
-    queryKey: ["costs-overview", currentMonth, filters?.companyId],
+    queryKey: ["costs-overview", periodDate, filters?.companyId],
     queryFn: async () => {
       let query = supabase
         .from("hr_employee_costs")
@@ -63,7 +65,7 @@ export const useCostsOverview = (filters?: CostsOverviewFilters) => {
             )
           )
         `)
-        .eq("period", currentMonth)
+        .eq("period", periodDate)
         .order("hr_employees(full_name)");
 
       if (filters?.companyId && filters.companyId !== "all") {
